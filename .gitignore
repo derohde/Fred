@@ -1,0 +1,10 @@
+src/.vscode
+!build/.gitignore
+dimensionality_reduction.egg-info
+.git
+dist
+.idea
+.vscode
+.vscode/
+
+
