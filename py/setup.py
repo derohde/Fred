@@ -8,6 +8,7 @@ import subprocess
 from distutils.version import LooseVersion
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
+import setuptools
 
 
 class CMakeExtension(Extension):
@@ -74,19 +75,18 @@ class CMakeBuild(build_ext):
                               cwd=self.build_temp, env=env)
         subprocess.check_call(['cmake', '--build', '.'] + build_args,
                               cwd=self.build_temp)
-        print()  # Add an empty line for cleaner output
-
 
 setup(
     name='Fred',
     version='1.0',
     author='Dennis Rohde',
     author_email='dennis.rohde@tu-dortmund.de',
-    description='Frechet Distance Library',
+    description='Frechet Distance and Clustering Library',
     long_description='',
-    # add extension module
-    ext_modules=[CMakeExtension('Fred')],
-    # add custom build_ext command
+    packages=setuptools.find_packages(),
+    ext_package="Fred",
+    ext_modules=[CMakeExtension('backend')],
+    install_requires=['cvxopt'],
     cmdclass=dict(build_ext=CMakeBuild),
     zip_safe=False,
 )

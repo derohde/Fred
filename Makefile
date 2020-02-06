@@ -1,11 +1,10 @@
 pre:
-	sudo apt install libboost-all-dev
-	sudo apt-get install python3-setuptools
-	sudo apt-get install python3-numpy
-	sudo apt-get install python3-pandas
-	sudo apt-get install python-setuptools
-	sudo apt-get install python-numpy
-	sudo apt-get install python-pandas
+	sudo apt install -y libboost-all-dev
+	sudo apt-get install -y python3-setuptools
+	sudo apt-get install -y python3-numpy
+	sudo apt-get install -y python-setuptools
+	sudo apt-get install -y python-numpy
+	sudo apt-get install -y cmake
 
 python3:
 	cd py && python3 ./setup.py install --user

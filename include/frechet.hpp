@@ -27,16 +27,16 @@ namespace Continuous {
         std::size_t number_searches;
     };
     
-    auto distance(const Curve&, const Curve&, const distance_t) -> Result;
+    Result distance(const Curve&, const Curve&, const distance_t, const bool);
     
-    auto _greedyUpperBound(const Curve&, const Curve&) -> distance_t;
-    
-    auto _distance(const Curve&, const Curve&, const distance_t, const distance_t, 
-            const distance_t = std::numeric_limits<distance_t>::epsilon()) -> Result;
+    Result _distance(const Curve&, const Curve&, distance_t, distance_t, 
+            const distance_t = std::numeric_limits<distance_t>::epsilon());
             
-    bool _lessThan(const distance_t, const Curve&, const Curve&, 
+    bool _less_than_or_equal(const distance_t, const Curve&, const Curve&, 
             std::vector<std::vector<distance_t>>&, std::vector<std::vector<distance_t>>&, 
             std::vector<std::vector<Interval>>&, std::vector<std::vector<Interval>>&);
+            
+    distance_t _greedy_upper_bound(const Curve&, const Curve&);
 }
 namespace Discrete {
     

@@ -13,6 +13,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPresult. OR IM
 #include <vector>
 #include <iostream>
 #include <cmath>
+#include <string>
+#include <sstream>
 
 #include "types.hpp"
 #include "interval.hpp"
@@ -22,36 +24,35 @@ class Point {
     
 public:    
     inline Point() {}
-    
     inline Point(const std::vector<coordinate_t> &in) : coordinates{in} {}
     
-    inline std::vector<coordinate_t>& getCoordinates() {
-        return this->coordinates;
+    inline dimensions_t size() const {
+        return coordinates.size();
     }
     
-    inline const std::vector<coordinate_t>& getCoordinates() const {
-        return this->coordinates;
-    }
-    
-    inline coordinate_t operator[](dimensions_t i) const { 
+    inline coordinate_t operator[](const dimensions_t i) const { 
         return coordinates[i]; 
+    }
+    
+    inline coordinate_t& operator[](const dimensions_t i) {
+        return coordinates[i];
     }
     
     inline Point& operator+=(const Point &point) {
         for (dimensions_t i = 0; i < coordinates.size(); ++i){
-            coordinates[i] += point.getCoordinates()[i];
+            coordinates[i] += point[i];
         }
         return *this;
     }
     
     inline Point& operator-=(const Point &point) {
         for (dimensions_t i = 0; i < coordinates.size(); ++i){
-            coordinates[i] -= point.getCoordinates()[i];
+            coordinates[i] -= point[i];
         }
         return *this;
     }
     
-    inline Point& operator/=(distance_t distance) {
+    inline Point& operator/=(const distance_t distance) {
         for (dimensions_t i = 0; i < coordinates.size(); ++i){
             coordinates[i] /= distance;
         }
@@ -61,7 +62,7 @@ public:
     inline Point operator+(const Point &point) const {
         auto result = *this;
         for (dimensions_t i = 0; i < coordinates.size(); ++i){
-            result.coordinates[i] += point.getCoordinates()[i];
+            result.coordinates[i] += point[i];
         }
     
         return result;
@@ -70,17 +71,16 @@ public:
     inline Point operator-(const Point &point) const {
         auto result = *this;
         for (dimensions_t i = 0; i < coordinates.size(); ++i){
-            result.coordinates[i] -= point.getCoordinates()[i];
+            result.coordinates[i] -= point[i];
         }
     
         return result;
     }
     
     inline Point operator*(const distance_t mult) const {
-        Point result;
-        result.coordinates = std::vector<coordinate_t> (coordinates.size());
+        Point result = *this;
         for (dimensions_t i = 0; i < coordinates.size(); ++i){
-            result.getCoordinates()[i] = coordinates[i] * mult;
+            result[i] = result[i] * mult;
         }
         return result;
     }
@@ -88,25 +88,23 @@ public:
     inline distance_t operator*(const Point &p) const {
         distance_t result = 0;
         for (dimensions_t i = 0; i < coordinates.size(); ++i) {
-            result += coordinates[i] * p.getCoordinates()[i];
+            result += coordinates[i] * p[i];
         }
         return result;
     }
     
-    inline Point operator/(distance_t dist) {
-        Point result;
-        result.coordinates = std::vector<coordinate_t>(coordinates.size());
+    inline Point operator/(const distance_t dist) const {
+        Point result = *this;
         for (dimensions_t i = 0; i < coordinates.size(); ++i){
-            result.getCoordinates()[i] = coordinates[i] / dist;
+            result[i] = result[i] / dist;
         }
         return result;
     }
     
     inline distance_t dist_sqr(const Point &point) const {
-        distance_t result = 0;
-        distance_t temp;
+        distance_t result = 0, temp;
         for (dimensions_t i = 0; i < coordinates.size(); ++i){
-            temp = coordinates[i] - point.getCoordinates()[i];
+            temp = coordinates[i] - point[i];
             result += temp * temp;
         }
         return result;
@@ -147,6 +145,7 @@ public:
         return Interval(std::max(0., lambda1), std::min(1., lambda2));
     }
     
+    std::string str() const;
 };
 
 

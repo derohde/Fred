@@ -11,6 +11,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #pragma once
 
 #include <random>
+#include <algorithm>
+
+namespace Random {
 
 template <typename T = double>
 class Uniform_Random_Generator {
@@ -25,10 +28,10 @@ public:
         return distribution(mersenne_twister);
     }
     
-    inline std::vector<T> get(const unsigned long n) {
-        std::vector<T> results;
-        for (auto i = n; i > 0; --i) {
-            results.push_back(get());
+    inline std::vector<T> get(const std::size_t n) {
+        std::vector<T> results(n);
+        for (std::size_t i = 0; i < n; ++i) {
+            results[i] = get();
         }
         return results;
     }
@@ -48,32 +51,45 @@ public:
         return distribution(mersenne_twister);
     }
     
-    inline std::vector<T> get(const unsigned long n) {
-        std::vector<T> results;
-        for (auto i = n; i > 0; --i) {
-            results.push_back(get());
+    inline std::vector<T> get(const std::size_t n) {
+        std::vector<T> results(n);
+        for (std::size_t i = 0; i < n; ++i) {
+            results[i] = get();
         }
         return results;
     }
 };
 
-/*template <typename T = double>
-class Rademacher_Random_Generator {
-    std::mt19937_64 mersenne_twister;
-    std::discrete_distribution<double> distribution;
-
-public:
-    Rademacher_Random_Generator() : mersenne_twister{std::random_device{}()}, distribution{-1/2, 1/2} {}
+template <typename T = double>
+class Custom_Probability_Generator {
+    Uniform_Random_Generator<T> uform_gen;
+    std::vector<T> cumulative_probabilities;
     
-    inline double get() {
-        return distribution(mersenne_twister);
+public:
+    Custom_Probability_Generator(const std::vector<T> &probabilities) : uform_gen{0, 1} {
+        if (probabilities.empty()) return;
+        cumulative_probabilities = std::vector<T>(probabilities.size());
+        cumulative_probabilities[0] = probabilities[0];
+        for (std::size_t i = 1; i < probabilities.size(); ++i) 
+            cumulative_probabilities[i] = probabilities[i] + cumulative_probabilities[i-1];
     }
     
-    inline std::vector<T> get(const unsigned long n) {
-        std::vector<T> results;
-        for (auto i = n; i > 0; --i) {
-            results.push_back(get());
+    inline T get() {
+        const auto n = cumulative_probabilities.size();
+        const auto r = uform_gen.get();
+        const auto upper = std::upper_bound(cumulative_probabilities.cbegin(), cumulative_probabilities.cend(), r);
+        assert(upper != cumulative_probabilities.cend());
+        const auto result = std::distance(cumulative_probabilities.cbegin(), upper);
+        return result;
+    }
+    
+    inline std::vector<T> get(const std::size_t n) {
+        std::vector<T> results(n);
+        for (std::size_t i = 0; i < n; ++i) {
+            results[i] = get();
         }
         return results;
     }
-};*/
+};
+
+};

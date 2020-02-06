@@ -20,7 +20,7 @@ namespace JLTransform {
         
         if (in.empty()) return in;
         
-        auto rg = Gauss_Random_Generator<coordinate_t>(0, 1);
+        auto rg = Random::Gauss_Random_Generator<coordinate_t>(0, 1);
         
         auto number_points = 0;
         for (auto &elem: in) number_points += elem.size();
@@ -38,13 +38,13 @@ namespace JLTransform {
         
         for (auto &elem: mat) elem = rg.get(in[0].dimensions());
                     
-        Curves result;
+        Curves result(in.size(), in.get_m());
         
         auto sqrtk = std::sqrt(new_number_dimensions);
         
         #pragma omp parallel for
         for (curve_size_t l = 0; l < in.size(); ++l) {
-            result.push_back(Curve(new_number_dimensions));
+            result[l] = Curve(in[l].size(), in[l].dimensions());
             
             for (curve_size_t i = 0; i < in[l].size(); ++i) {
                 std::vector<coordinate_t> new_coords(new_number_dimensions);
@@ -61,7 +61,7 @@ namespace JLTransform {
                 }
                 
                 Point new_point(new_coords);
-                result[l].push_back(new_point);
+                result[l][i] = new_point;
             }
             
             #if DEBUG

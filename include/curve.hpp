@@ -11,9 +11,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #pragma once
 
 #include <iostream> 
+#include <string>
+#include <sstream>
 
-#include <boost/python/numpy.hpp>
 #include <boost/python.hpp>
+#include <boost/python/numpy.hpp>
 
 #include "types.hpp"
 #include "point.hpp"
@@ -23,12 +25,24 @@ namespace np = boost::python::numpy;
 namespace p = boost::python;
 
 class Curve {
+    dimensions_t number_dimensions;
+    Points points;
+    
 public:
     typedef curve_size_t index_t;
     
-    Curve(const dimensions_t dimensions) : number_dimensions{dimensions} {}
+    Curve() {}
+    Curve(const curve_size_t m, const dimensions_t dimensions) : points{m}, number_dimensions{dimensions} {}
     Curve(const Points &points, const dimensions_t dimensions);
     Curve(const np::ndarray &in);
+    
+    inline Point operator[](const index_t i) const {
+        return points[i];
+    }
+    
+    inline Point& operator[](const index_t i) {
+        return points[i];
+    }
     
     inline curve_size_t size() const { 
         return points.size(); 
@@ -42,20 +56,12 @@ public:
         return number_dimensions; 
     }
     
-    inline const Point& operator[](const index_t i) const { 
-        return points[i]; 
-    }
-    
     inline const Point& front() const { 
         return points.front();
     }
     
     inline const Point& back() const {
         return points.back();
-    }
-    
-    inline void push_back(const Point &point) {
-        points.push_back(point);
     }
     
     inline Points::iterator begin() { 
@@ -74,16 +80,35 @@ public:
         return points.cend(); 
     }
     
-private:
-    const dimensions_t number_dimensions;
-    Points points;
+    std::string str() const;
 };
 
 class Curves : public std::vector<Curve> {
+    curve_size_t m;
+    
 public:
+    Curves() {}
+    Curves(const curve_size_t n, const curve_size_t m) : std::vector<Curve>{n}, m{m} {}
+
+    inline void add(Curve &curve) {
+        push_back(curve);
+        if (curve.size() > m) m = curve.size();
+    }
+
     inline const auto get(curve_size_t i) const {
         return const_cast<const Curves*>(this)->operator[](i);
     }
+    
+    inline curve_size_t get_m() const {
+        return m;
+    }
+    
+    inline curve_size_t number() const {
+        return size();
+    }
+    
+    std::string str() const;
 };
 
-std::ostream& operator<<(std::ostream& out, const Curve& curve);
+std::ostream& operator<<(std::ostream& out, const Curve&);
+std::ostream& operator<<(std::ostream& out, const Curves&);

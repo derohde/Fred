@@ -10,16 +10,20 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include "point.hpp"
 
-std::ostream& operator<<(std::ostream &out, const Point &p)
-{
+std::string Point::str() const {
+    std::stringstream ss;
+    ss << *this;
+    return ss.str();
+}
+
+std::ostream& operator<<(std::ostream &out, const Point &p) {
     out << "(";
-    for (dimensions_t i = 0; i < p.getCoordinates().size(); i++){
-        out << p.getCoordinates().at(i);
-        if( i != p.getCoordinates().size() - 1){
-            out << ",";
-        }
+    
+    for (dimensions_t i = 0; i < p.size() - 1; ++i){
+        out << p[i] << ",";
     }
-    out << ")" << std::endl;
+    
+    out << p[p.size() - 1] << ")";
 
     return out;
 }

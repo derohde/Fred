@@ -22,51 +22,97 @@ Curve::Curve(const Points &points, const dimensions_t dimensions) :
     #endif
 }
 
-Curve::Curve(const np::ndarray &in): number_dimensions(in.shape(1)) {
-    auto dimensions = in.get_nd();
-    if (dimensions != 2 or in.get_dtype() != np::dtype::get_builtin<coordinate_t>()){
-        std::cerr << "A Polygonal_Curve requires an 2-dimensional numpy array of type double."<< std::endl;
-        std::cerr << "Current dimensiont: " << dimensions << std::endl;
+Curve::Curve(const np::ndarray &in): number_dimensions(in.get_nd()) {
+    if (number_dimensions > 2){
+        std::cerr << "A Curve requires a 1- or 2-dimensional numpy array of type double."<< std::endl;
+        std::cerr << "Current dimensions: " << number_dimensions << std::endl;
+        std::cerr << "Current type: " << p::extract<char const*>(p::str(in.get_dtype())) << std::endl;
+        std::cerr << "WARNING: constructed empty curve" << std::endl;
+        return;
+    }
+    if (in.get_dtype() != np::dtype::get_builtin<coordinate_t>()) {
+        std::cerr << "A Polygonal_Curve requires a 1- or 2-dimensional numpy array of type double."<< std::endl;
+        std::cerr << "Current dimensions: " << number_dimensions << std::endl;
+        std::cerr << "Current type: " << p::extract<char const*>(p::str(in.get_dtype())) << std::endl;
+        std::cerr << "WARNING: constructed empty curve" << std::endl;
         return;
     }
     auto number_points = in.shape(0);
-    auto point_size = in.shape(1);
-    
-    #if DEBUG
-    std::cout << "constructing curve of size " << number_points << " and " << point_size << " dimensions" << std::endl;
-    #endif
-    
-    auto strides0 = in.strides(0) / sizeof(coordinate_t);
-    auto strides1 = in.strides(1) / sizeof(coordinate_t);
-    
-    auto data = reinterpret_cast<const coordinate_t*>(in.get_data());
-    
-    points = Points(number_points);
-    
-    for (index_t i = 0; i < number_points; ++i, data += strides0) {
-        points[i] = Point(std::vector<coordinate_t> (point_size));
+    if (number_dimensions == 2) {
+        auto point_size = in.shape(1);
         
-        auto coord_data = data;
+        #if DEBUG
+        std::cout << "constructing curve of size " << number_points << " and " << point_size << " dimensions" << std::endl;
+        #endif
         
-        for(index_t j = 0; j < point_size; ++j, coord_data += strides1){
-          points[i].getCoordinates()[j] = *coord_data;
+        auto strides0 = in.strides(0) / sizeof(coordinate_t);
+        auto strides1 = in.strides(1) / sizeof(coordinate_t);
+        
+        auto data = reinterpret_cast<const coordinate_t*>(in.get_data());
+        
+        points = Points(number_points);
+        
+        for (index_t i = 0; i < number_points; ++i, data += strides0) {
+            points[i] = Point(std::vector<coordinate_t>(point_size));
+            
+            auto coord_data = data;
+            
+            for(index_t j = 0; j < point_size; ++j, coord_data += strides1){
+              points[i][j] = *coord_data;
+            }
+        }
+    } else {
+        auto strides0 = in.strides(0) / sizeof(coordinate_t);
+        
+        auto data = reinterpret_cast<const coordinate_t*>(in.get_data());
+        
+        points = Points(number_points);
+        
+        for (index_t i = 0; i < number_points; ++i, data += strides0) {
+            points[i] = Point(std::vector<coordinate_t>(1));
+            
+            points[i][0] = *data;
         }
     }
     
     if (points.empty()) { 
-        std::cerr << "warning: constructed empty curve" << std::endl;
+        std::cerr << "WARNING: constructed empty curve" << std::endl;
     return; 
     }
 }
 
-std::ostream& operator<<(std::ostream &out, const Curve &curve)
-{
+std::string Curve::str() const {
+    std::stringstream ss;
+    ss << *this;
+    return ss.str();
+}
+
+std::string Curves::str() const {
+    std::stringstream ss;
+    ss << *this;
+    return ss.str();
+}
+
+std::ostream& operator<<(std::ostream &out, const Curve &curve) {
     out << "[";
-    for (const auto &point: curve) {
-        out << point << ", ";
+    
+    for (curve_size_t i = 0; i < curve.size() - 1; ++i) {
+        out << curve[i] << ", ";
     }
-    out << "]" << std::endl;
+    
+    out << curve[curve.size() -1] << "]";
 
     return out;
 }
 
+std::ostream& operator<<(std::ostream &out, const Curves &curves) {
+    out << "{";
+    
+    for (curve_size_t i = 0; i < curves.size() - 1; ++i) {
+        out << curves[i] << ", ";
+    }
+    
+    out << curves[curves.size() -1] << "}";
+
+    return out;
+}

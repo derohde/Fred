@@ -19,12 +19,17 @@ namespace Frechet {
 
 namespace Continuous {
 
-auto distance(const Curve &curve1, const Curve &curve2, const distance_t eps) -> Result {
-    distance_t lb, ub;
+auto distance(const Curve &curve1, const Curve &curve2, const distance_t eps, const bool round) -> Result {
+    if ((curve1.size() < 2) or (curve2.size() < 2)) {
+        std::cerr << "WARNING: comparison possible only for curves of at least two points" << std::endl;
+        Result result;
+        result.value = std::numeric_limits<distance_t>::signaling_NaN();
+        return result;
+    } 
     
     auto start = boost::chrono::process_real_cpu_clock::now();
-    lb = std::sqrt(std::max(curve1[0].dist_sqr(curve2[0]), curve1[curve1.size()-1].dist_sqr(curve2[curve2.size()-1])));
-    ub = _greedyUpperBound(curve1, curve2);
+    const auto lb = std::sqrt(std::max(curve1[0].dist_sqr(curve2[0]), curve1[curve1.size()-1].dist_sqr(curve2[curve2.size()-1])));
+    const auto ub = _greedy_upper_bound(curve1, curve2);
     auto end = boost::chrono::process_real_cpu_clock::now();
 
     #if DEBUG
@@ -33,14 +38,15 @@ auto distance(const Curve &curve1, const Curve &curve2, const distance_t eps) ->
 
     auto dist = _distance(curve1, curve2, ub, lb, eps);
     dist.time_bounds = (end-start).count() / 1000000000.0;
+    if (round) dist.value =  std::round(dist.value * 1e3) / 1e3;
 
     return dist;
 }
 
-auto _greedyUpperBound(const Curve &curve1, const Curve &curve2) -> distance_t {
+auto _greedy_upper_bound(const Curve &curve1, const Curve &curve2) -> distance_t {
     distance_t result = 0;
     
-    curve_size_t len1 = curve1.size(), len2 = curve2.size();
+    const curve_size_t len1 = curve1.size(), len2 = curve2.size();
     curve_size_t i = 0, j = 0;
     
     while ((i < len1 - 1) and (j < len2 - 1)) {
@@ -58,9 +64,9 @@ auto _greedyUpperBound(const Curve &curve1, const Curve &curve2) -> distance_t {
         }
     }
 
-    for(; i < len1 - 1; ++i) result = std::max(result, curve1[i].dist_sqr(curve2[j]));
-    
-    for(; j < len2 - 1; ++j) result = std::max(result, curve1[i].dist_sqr(curve2[j]));
+    while (i < len1) result = std::max(result, curve1[i++].dist_sqr(curve2[j]));
+    --i;
+    while (j < len2) result = std::max(result, curve1[i].dist_sqr(curve2[j++]));
     
     return std::sqrt(result);
 }
@@ -84,7 +90,7 @@ auto _distance(const Curve &curve1, const Curve &curve2, distance_t ub, distance
         while (ub - lb > eps) {
             ++number_searches;
             split = (ub + lb)/2;
-            auto isLessThan = _lessThan(split, curve1, curve2, reachable1, reachable2, free_intervals1, free_intervals2);
+            auto isLessThan = _less_than_or_equal(split, curve1, curve2, reachable1, reachable2, free_intervals1, free_intervals2);
             if (isLessThan) {
                 ub = split;
             }
@@ -97,7 +103,7 @@ auto _distance(const Curve &curve1, const Curve &curve2, distance_t ub, distance
         }
     }
     
-    distance_t value = std::round((ub + lb)/2. * 1e3) / 1e3;
+    distance_t value = (ub + lb)/2.;
     auto end = boost::chrono::process_real_cpu_clock::now();
     result.value = value;
     result.time_searches = (end-start).count() / 1000000000.0;
@@ -105,7 +111,7 @@ auto _distance(const Curve &curve1, const Curve &curve2, distance_t ub, distance
     return result;
 }
 
-bool _lessThan(const distance_t distance, Curve const& curve1, Curve const& curve2, 
+bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve const& curve2, 
         std::vector<std::vector<distance_t>> &reachable1, std::vector<std::vector<distance_t>> &reachable2,
         std::vector<std::vector<Interval>> &free_intervals1, std::vector<std::vector<Interval>> &free_intervals2) {
     assert(curve1.size() >= 2);

@@ -19,9 +19,9 @@ class Interval {
     coordinate_t beg, en;
     
 public:
-    Interval() : beg(1), en(0) {}
+    Interval() : beg{1}, en{0} {}
 
-    Interval(coordinate_t begin, coordinate_t end) : beg(begin), en(end) {}
+    Interval(const coordinate_t begin, const coordinate_t end) : beg{begin}, en{end} {}
 
     inline bool operator<(const Interval &other) const {
         return (beg < other.begin()) or ((beg == other.begin()) and (en < other.end()));
