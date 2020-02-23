@@ -22,19 +22,32 @@ namespace Clustering {
 
 class Centers : public std::vector<curve_size_t> {
 public:
-    inline const auto get(const curve_size_t i) const {
-        return const_cast<Centers*>(this)->operator[](i);
+    inline curve_size_t operator[](const curve_size_t i) const {
+        return std::vector<curve_size_t>::operator[](i);
+    }
+    
+    inline curve_size_t& operator[](const curve_size_t i) {
+        return std::vector<curve_size_t>::operator[](i);
     }
 };
 
 class Cluster_Assignment : public std::unordered_map<curve_size_t, std::vector<curve_size_t>> {
 public:
-    inline const auto count(const curve_size_t i) const {
-        return const_cast<Cluster_Assignment*>(this)->operator[](i).size();
+    
+    inline const std::vector<curve_size_t>& operator[](const curve_size_t i) const {
+        return std::unordered_map<curve_size_t, std::vector<curve_size_t>>::at(i);
+    }
+    
+    inline std::vector<curve_size_t>& operator[](const curve_size_t i) {
+        return std::unordered_map<curve_size_t, std::vector<curve_size_t>>::at(i);
+    }
+    
+    inline auto count(const curve_size_t i) const {
+        return operator[](i).size();
     }
     
     inline const auto get(const curve_size_t i, const curve_size_t j) const {
-        return const_cast<Cluster_Assignment*>(this)->operator[](i)[j];
+        return operator[](i)[j];
     }
     
 };
@@ -46,10 +59,18 @@ struct Clustering_Result {
     Cluster_Assignment assignment;
     
     inline auto get(const curve_size_t i) const {
-        return centers.get(i);
+        return centers[i];
     }
     inline auto size() const {
         return centers.size();
+    }
+    
+    inline Centers::const_iterator cbegin() const {
+        return centers.cbegin();
+    }
+    
+    inline Centers::const_iterator cend() const {
+        return centers.cend();
     }
 };
 

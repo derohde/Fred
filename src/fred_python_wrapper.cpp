@@ -100,6 +100,7 @@ BOOST_PYTHON_MODULE(backend)
         .def("__len__", &Point::size)
         .def("__getitem__", static_cast<coordinate_t (Point::*)(const dimensions_t) const>(&Point::operator[]))
         .def("__str__", &Point::str)
+        .def("__iter__", range(&Point::cbegin, &Point::cend))
     ;
     
     class_<Curve>("Curve", init<np::ndarray>())
@@ -108,22 +109,25 @@ BOOST_PYTHON_MODULE(backend)
         .def("__getitem__", static_cast<Point (Curve::*)(const curve_size_t) const>(&Curve::operator[]))
         .def("__len__", &Curve::size)
         .def("__str__", &Curve::str)
+        .def("__iter__", range<return_value_policy<copy_const_reference>>(&Curve::cbegin, &Curve::cend))
     ;
     
     class_<Curves>("Curves", init<>())
-        .def("add", &Curves::add)
-        .def("__getitem__", &Curves::get)
-        .def("__len__", &Curves::number)
         .add_property("m", &Curves::get_m)
+        .def("add", &Curves::add)
+        .def("__getitem__", static_cast<Curve (Curves::*)(const curve_size_t) const>(&Curves::operator[]))
+        .def("__len__", &Curves::number)
         .def("__str__", &Curves::str)
+        .def("__iter__", range<return_value_policy<copy_const_reference>>(&Curves::cbegin, &Curves::cend))
     ;
     
     class_<Clustering::Clustering_Result>("Clustering_Result", init<>())
-        .def("__getitem__", &Clustering::Clustering_Result::get)
-        .def("__len__", &Clustering::Clustering_Result::size)
         .add_property("value", &Clustering::Clustering_Result::value)
         .add_property("time", &Clustering::Clustering_Result::running_time)
         .add_property("assignment", &Clustering::Clustering_Result::assignment)
+        .def("__getitem__", &Clustering::Clustering_Result::get)
+        .def("__len__", &Clustering::Clustering_Result::size)
+        .def("__iter__", range(&Clustering::Clustering_Result::cbegin, &Clustering::Clustering_Result::cend))
     ;
     
     class_<Clustering::Cluster_Assignment>("Clustering_Assignment", init<>())
@@ -147,8 +151,8 @@ BOOST_PYTHON_MODULE(backend)
     class_<Coreset::Onemedian_Coreset>("Onemedian_coreset")
         .add_property("lambd", &Coreset::Onemedian_Coreset::get_lambda)
         .add_property("Lambd", &Coreset::Onemedian_Coreset::get_Lambda)
-        .def("curves", &Coreset::Onemedian_Coreset::get_curves)
         .add_property("cost", &Coreset::Onemedian_Coreset::get_cost)
+        .def("curves", &Coreset::Onemedian_Coreset::get_curves)
     ;
     
     def("dimension_reduction", jl_transform, jl_transform_overloads());

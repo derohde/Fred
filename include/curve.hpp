@@ -44,18 +44,6 @@ public:
         return points[i];
     }
     
-    inline curve_size_t size() const { 
-        return points.size(); 
-    }
-    
-    inline bool empty() const { 
-        return points.empty(); 
-    }
-    
-    inline dimensions_t dimensions() const { 
-        return number_dimensions; 
-    }
-    
     inline const Point& front() const { 
         return points.front();
     }
@@ -72,12 +60,24 @@ public:
         return points.end(); 
     }
     
-    inline Points::const_iterator begin() const { 
-        return points.cbegin(); 
+    inline Points::const_iterator cbegin() const {
+        return points.cbegin();
     }
     
-    inline Points::const_iterator end() const { 
-        return points.cend(); 
+    inline Points::const_iterator cend() const {
+        return points.cend();
+    }
+    
+    inline curve_size_t size() const { 
+        return points.size(); 
+    }
+    
+    inline bool empty() const { 
+        return points.empty(); 
+    }
+    
+    inline dimensions_t dimensions() const { 
+        return number_dimensions; 
     }
     
     std::string str() const;
@@ -89,14 +89,14 @@ class Curves : public std::vector<Curve> {
 public:
     Curves() {}
     Curves(const curve_size_t n, const curve_size_t m) : std::vector<Curve>{n}, m{m} {}
-
+    
     inline void add(Curve &curve) {
         push_back(curve);
         if (curve.size() > m) m = curve.size();
     }
-
-    inline const auto get(curve_size_t i) const {
-        return const_cast<const Curves*>(this)->operator[](i);
+    
+    inline Curve operator[](const curve_size_t i) const {
+        return std::vector<Curve>::operator[](i);
     }
     
     inline curve_size_t get_m() const {
@@ -105,6 +105,14 @@ public:
     
     inline curve_size_t number() const {
         return size();
+    }
+    
+    virtual std::vector<Curve>::const_iterator cbegin() const {
+        return std::vector<Curve>::cbegin();
+    }
+    
+    virtual std::vector<Curve>::const_iterator cend() const {
+        return std::vector<Curve>::cend();
     }
     
     std::string str() const;

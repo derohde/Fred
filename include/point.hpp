@@ -38,6 +38,14 @@ public:
         return coordinates[i];
     }
     
+    inline std::vector<coordinate_t>::const_iterator cbegin() const {
+        return coordinates.cbegin();
+    }
+    
+    inline std::vector<coordinate_t>::const_iterator cend() const {
+        return coordinates.cend();
+    }
+    
     inline Point& operator+=(const Point &point) {
         for (dimensions_t i = 0; i < coordinates.size(); ++i){
             coordinates[i] += point[i];
