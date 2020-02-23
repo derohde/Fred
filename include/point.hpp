@@ -24,6 +24,7 @@ class Point {
     
 public:    
     inline Point() {}
+    inline Point(const dimensions_t d) : coordinates(d, std::numeric_limits<coordinate_t>::signaling_NaN()) {}
     inline Point(const std::vector<coordinate_t> &in) : coordinates{in} {}
     
     inline dimensions_t size() const {

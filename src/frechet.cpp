@@ -25,7 +25,13 @@ auto distance(const Curve &curve1, const Curve &curve2, const distance_t eps, co
         Result result;
         result.value = std::numeric_limits<distance_t>::signaling_NaN();
         return result;
-    } 
+    }
+    if (curve1.dimensions() != curve2.dimensions()) {
+        std::cerr << "WARNING: comparison possible only for curves of equal number of dimensions" << std::endl;
+        Result result;
+        result.value = std::numeric_limits<distance_t>::signaling_NaN();
+        return result;
+    }
     
     auto start = boost::chrono::process_real_cpu_clock::now();
     const auto lb = std::sqrt(std::max(curve1[0].dist_sqr(curve2[0]), curve1[curve1.size()-1].dist_sqr(curve2[curve2.size()-1])));

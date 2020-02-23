@@ -10,8 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include "curve.hpp"
 
-Curve::Curve(const Points &points, const dimensions_t dimensions) : 
-    points(points), number_dimensions(dimensions) {
+Curve::Curve(const Points &points, const dimensions_t dimensions) : points(points) {
     if (points.empty()) { 
         std::cerr << "warning: constructed empty curve" << std::endl;
         return; 
@@ -22,7 +21,8 @@ Curve::Curve(const Points &points, const dimensions_t dimensions) :
     #endif
 }
 
-Curve::Curve(const np::ndarray &in): number_dimensions(in.get_nd()) {
+Curve::Curve(const np::ndarray &in) {
+    const auto number_dimensions = in.get_nd();
     if (number_dimensions > 2){
         std::cerr << "A Curve requires a 1- or 2-dimensional numpy array of type double."<< std::endl;
         std::cerr << "Current dimensions: " << number_dimensions << std::endl;

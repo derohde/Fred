@@ -25,15 +25,14 @@ namespace np = boost::python::numpy;
 namespace p = boost::python;
 
 class Curve {
-    dimensions_t number_dimensions;
     Points points;
     
 public:
     typedef curve_size_t index_t;
     
     Curve() {}
-    Curve(const curve_size_t m, const dimensions_t dimensions) : points{m}, number_dimensions{dimensions} {}
-    Curve(const Points &points, const dimensions_t dimensions);
+    Curve(const curve_size_t m, const dimensions_t d) : points(m, Point(d)) {}
+    Curve(const Points &points, const dimensions_t d);
     Curve(const np::ndarray &in);
     
     inline Point operator[](const index_t i) const {
@@ -77,7 +76,8 @@ public:
     }
     
     inline dimensions_t dimensions() const { 
-        return number_dimensions; 
+        if (points.empty()) return 0;
+        else return points[0].size();
     }
     
     std::string str() const;
