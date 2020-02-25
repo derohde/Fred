@@ -13,8 +13,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 typedef double distance_t;
 typedef double coordinate_t;
 
-typedef unsigned long long dimensions_t;
-typedef unsigned long long curve_size_t;
+typedef unsigned long dimensions_t;
+typedef unsigned long curve_size_t;
+typedef unsigned long curve_number_t;
 
 class Point;
 class Curve;
@@ -24,5 +25,5 @@ using Vector = Point;
 
 using Points = std::vector<Point>;
 using Intervals = std::vector<Interval>;
-
+using Coordinates = std::vector<coordinate_t>;
 

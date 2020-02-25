@@ -45,8 +45,9 @@ namespace Discrete {
         double time;
     };
     
-    auto distance(const Curve&, const Curve&) -> Result;
-    auto _dp(std::vector<std::vector<distance_t>> &a, const curve_size_t i, const curve_size_t j, 
-            const Curve &curve1, const Curve &curve2) -> distance_t;
+    Result distance(const Curve&, const Curve&);
+    
+    distance_t _dp(std::vector<std::vector<distance_t>> &a, const curve_size_t i, const curve_size_t j, 
+            const Curve &curve1, const Curve &curve2);
 }
 }

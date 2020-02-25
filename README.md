@@ -73,8 +73,8 @@ clustering = fred.discrete_kmedian(2, curves)
 
 print("clustering cost is {}".format(clustering.value))
 
-for i in range(len(clustering)):
-    print("center {} is {}".format(i, curves[clustering[i]]))
+for i, center in enumerate(clustering):
+    print("center {} is {}".format(i, curves[center]))
 ```
   
 ## Installation

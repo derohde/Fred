@@ -19,101 +19,103 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPresult. OR IM
 #include "types.hpp"
 #include "interval.hpp"
 
-class Point {
-    std::vector<coordinate_t> coordinates;
-    
+class Point : public Coordinates {    
 public:    
     inline Point() {}
-    inline Point(const dimensions_t d) : coordinates(d, std::numeric_limits<coordinate_t>::signaling_NaN()) {}
-    inline Point(const std::vector<coordinate_t> &in) : coordinates{in} {}
+    inline Point(const dimensions_t d) : Coordinates(d) {}
     
-    inline dimensions_t size() const {
-        return coordinates.size();
+    inline dimensions_t dimensions() const {
+        return size();
     }
     
-    inline coordinate_t operator[](const dimensions_t i) const { 
-        return coordinates[i]; 
+    inline coordinate_t get(const dimensions_t i) const { 
+        return Coordinates::operator[](i); 
     }
     
-    inline coordinate_t& operator[](const dimensions_t i) {
-        return coordinates[i];
+    #pragma omp declare simd
+    inline const coordinate_t& operator[](const dimensions_t i) const { 
+        return Coordinates::operator[](i); 
     }
     
-    inline std::vector<coordinate_t>::const_iterator cbegin() const {
-        return coordinates.cbegin();
-    }
-    
-    inline std::vector<coordinate_t>::const_iterator cend() const {
-        return coordinates.cend();
+    #pragma omp declare simd
+    inline coordinate_t& operator[](const dimensions_t i) { 
+        return Coordinates::operator[](i); 
     }
     
     inline Point& operator+=(const Point &point) {
-        for (dimensions_t i = 0; i < coordinates.size(); ++i){
-            coordinates[i] += point[i];
+        #pragma omp for simd schedule(auto)
+        for (dimensions_t i = 0; i < dimensions(); ++i){
+            operator[](i) += point[i];
         }
         return *this;
     }
     
     inline Point& operator-=(const Point &point) {
-        for (dimensions_t i = 0; i < coordinates.size(); ++i){
-            coordinates[i] -= point[i];
+        #pragma omp for simd schedule(auto)
+        for (dimensions_t i = 0; i < dimensions(); ++i){
+            operator[](i) -= point[i];
         }
         return *this;
     }
     
     inline Point& operator/=(const distance_t distance) {
-        for (dimensions_t i = 0; i < coordinates.size(); ++i){
-            coordinates[i] /= distance;
+        #pragma omp for simd schedule(auto)
+        for (dimensions_t i = 0; i < dimensions(); ++i){
+            operator[](i) /= distance;
         }
         return *this;
     }
     
     inline Point operator+(const Point &point) const {
         auto result = *this;
-        for (dimensions_t i = 0; i < coordinates.size(); ++i){
-            result.coordinates[i] += point[i];
+        #pragma omp for simd schedule(auto)
+        for (dimensions_t i = 0; i < dimensions(); ++i){
+            result.operator[](i) += point[i];
         }
-    
         return result;
     }
     
     inline Point operator-(const Point &point) const {
         auto result = *this;
-        for (dimensions_t i = 0; i < coordinates.size(); ++i){
-            result.coordinates[i] -= point[i];
+        #pragma omp for simd schedule(auto)
+        for (dimensions_t i = 0; i < dimensions(); ++i){
+            result.operator[](i) -= point[i];
         }
-    
         return result;
     }
     
     inline Point operator*(const distance_t mult) const {
         Point result = *this;
-        for (dimensions_t i = 0; i < coordinates.size(); ++i){
-            result[i] = result[i] * mult;
+        #pragma omp for simd schedule(auto)
+        for (dimensions_t i = 0; i < dimensions(); ++i){
+            result.operator[](i) *= mult;
         }
         return result;
     }
     
     inline distance_t operator*(const Point &p) const {
         distance_t result = 0;
-        for (dimensions_t i = 0; i < coordinates.size(); ++i) {
-            result += coordinates[i] * p[i];
+        #pragma omp simd reduction(+: result) 
+        for (dimensions_t i = 0; i < dimensions(); ++i) {
+            result += operator[](i) * p[i];
         }
         return result;
     }
     
     inline Point operator/(const distance_t dist) const {
         Point result = *this;
-        for (dimensions_t i = 0; i < coordinates.size(); ++i){
-            result[i] = result[i] / dist;
+        #pragma omp for simd schedule(auto)
+        for (dimensions_t i = 0; i < dimensions(); ++i){
+            result.operator[](i) /= dist;
         }
         return result;
     }
     
     inline distance_t dist_sqr(const Point &point) const {
         distance_t result = 0, temp;
-        for (dimensions_t i = 0; i < coordinates.size(); ++i){
-            temp = coordinates[i] - point[i];
+        #pragma omp simd private(temp) reduction(+: result)
+        for (dimensions_t i = 0; i < dimensions(); ++i){
+            temp = operator[](i) - point[i];
             result += temp * temp;
         }
         return result;
@@ -125,8 +127,9 @@ public:
     
     inline distance_t length_sqr() const {
         distance_t result = 0;
-        for (dimensions_t i = 0; i < coordinates.size(); ++i){
-            result += coordinates[i] * coordinates[i];
+        #pragma omp simd reduction(+: result)
+        for (dimensions_t i = 0; i < dimensions(); ++i){
+            result += operator[](i) * operator[](i);
         }
         return result;
     }
@@ -148,7 +151,7 @@ public:
         
         const distance_t discriminant_sqrt = std::sqrt(discriminant);
         
-        const distance_t r1 = - p / 2. + discriminant_sqrt, r2 = - p / 2. - discriminant_sqrt;
+        const distance_t minus_p_h = - p / 2., r1 = minus_p_h + discriminant_sqrt, r2 = minus_p_h - discriminant_sqrt;
         const distance_t lambda1 = std::min(r1, r2), lambda2 = std::max(r1, r2);
                 
         return Interval(std::max(0., lambda1), std::min(1., lambda2));

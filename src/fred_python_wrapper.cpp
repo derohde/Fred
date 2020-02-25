@@ -43,7 +43,7 @@ Curves jl_transform(const Curves &in, const double epsilon, const bool empirical
 
 BOOST_PYTHON_FUNCTION_OVERLOADS(jl_transform_overloads, jl_transform, 2, 3);
 
-Clustering::Clustering_Result kcenter(const curve_size_t num_centers, const Curves &in, 
+Clustering::Clustering_Result kcenter(const curve_number_t num_centers, const Curves &in, 
                                         const distance_t eps = 0.001, const bool round = true, const bool with_assignment = false) {
     auto result = Clustering::gonzalez(num_centers, in, eps, round, false, with_assignment);
     
@@ -72,7 +72,7 @@ Clustering::Clustering_Result onemedian_exhaustive(const Curves &in,
 
 BOOST_PYTHON_FUNCTION_OVERLOADS(onemedian_exhaustive_overloads, onemedian_exhaustive, 1, 4);
 
-Clustering::Clustering_Result kmedian(const curve_size_t num_centers, const Curves &in, 
+Clustering::Clustering_Result kmedian(const curve_number_t num_centers, const Curves &in, 
                                         const distance_t eps = 0.001, const bool round = true, const bool with_assignment = false) {
 
     auto result = Clustering::arya(num_centers, in, eps, round, with_assignment);
@@ -97,17 +97,17 @@ BOOST_PYTHON_MODULE(backend)
     scope().attr("epsilon") = epss;
     
     class_<Point>("Point", init<>())
-        .def("__len__", &Point::size)
-        .def("__getitem__", static_cast<coordinate_t (Point::*)(const dimensions_t) const>(&Point::operator[]))
+        .def("__len__", &Point::dimensions)
+        .def("__getitem__", &Point::get)
         .def("__str__", &Point::str)
         .def("__iter__", range(&Point::cbegin, &Point::cend))
     ;
     
     class_<Curve>("Curve", init<np::ndarray>())
         .add_property("dimensions", &Curve::dimensions)
-        .add_property("points", &Curve::size)
-        .def("__getitem__", static_cast<Point (Curve::*)(const curve_size_t) const>(&Curve::operator[]))
-        .def("__len__", &Curve::size)
+        .add_property("complexity", &Curve::complexity)
+        .def("__getitem__", &Curve::get)
+        .def("__len__", &Curve::complexity)
         .def("__str__", &Curve::str)
         .def("__iter__", range<return_value_policy<copy_const_reference>>(&Curve::cbegin, &Curve::cend))
     ;
@@ -115,7 +115,7 @@ BOOST_PYTHON_MODULE(backend)
     class_<Curves>("Curves", init<>())
         .add_property("m", &Curves::get_m)
         .def("add", &Curves::add)
-        .def("__getitem__", static_cast<Curve (Curves::*)(const curve_size_t) const>(&Curves::operator[]))
+        .def("__getitem__", &Curves::get)
         .def("__len__", &Curves::number)
         .def("__str__", &Curves::str)
         .def("__iter__", range<return_value_policy<copy_const_reference>>(&Curves::cbegin, &Curves::cend))

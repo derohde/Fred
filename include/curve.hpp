@@ -24,60 +24,23 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 namespace np = boost::python::numpy;
 namespace p = boost::python;
 
-class Curve {
-    Points points;
-    
-public:
-    typedef curve_size_t index_t;
-    
+class Curve : public Points {
+public:    
     Curve() {}
-    Curve(const curve_size_t m, const dimensions_t d) : points(m, Point(d)) {}
-    Curve(const Points &points, const dimensions_t d);
+    Curve(const curve_size_t m, const dimensions_t dimensions) : Points(m, Point(dimensions)) {}
+    Curve(const Points &points);
     Curve(const np::ndarray &in);
     
-    inline Point operator[](const index_t i) const {
-        return points[i];
+    inline Point get(const curve_size_t i) const {
+        return Points::operator[](i);
     }
     
-    inline Point& operator[](const index_t i) {
-        return points[i];
-    }
-    
-    inline const Point& front() const { 
-        return points.front();
-    }
-    
-    inline const Point& back() const {
-        return points.back();
-    }
-    
-    inline Points::iterator begin() { 
-        return points.begin(); 
-    }
-    
-    inline Points::iterator end() { 
-        return points.end(); 
-    }
-    
-    inline Points::const_iterator cbegin() const {
-        return points.cbegin();
-    }
-    
-    inline Points::const_iterator cend() const {
-        return points.cend();
-    }
-    
-    inline curve_size_t size() const { 
-        return points.size(); 
-    }
-    
-    inline bool empty() const { 
-        return points.empty(); 
+    inline curve_size_t complexity() const { 
+        return size(); 
     }
     
     inline dimensions_t dimensions() const { 
-        if (points.empty()) return 0;
-        else return points[0].size();
+        return empty() ? 0 : Points::operator[](0).dimensions();
     }
     
     std::string str() const;
@@ -88,14 +51,14 @@ class Curves : public std::vector<Curve> {
     
 public:
     Curves() {}
-    Curves(const curve_size_t n, const curve_size_t m) : std::vector<Curve>{n}, m{m} {}
+    Curves(const curve_number_t n, const curve_size_t m) : std::vector<Curve>(n), m{m} {}
     
     inline void add(Curve &curve) {
         push_back(curve);
-        if (curve.size() > m) m = curve.size();
+        if (curve.complexity() > m) m = curve.complexity();
     }
     
-    inline Curve operator[](const curve_size_t i) const {
+    inline Curve get(const curve_number_t i) const {
         return std::vector<Curve>::operator[](i);
     }
     
@@ -103,7 +66,7 @@ public:
         return m;
     }
     
-    inline curve_size_t number() const {
+    inline curve_number_t number() const {
         return size();
     }
     

@@ -23,7 +23,7 @@ namespace Coreset {
     
 class Onemedian_Coreset {
 
-    std::vector<curve_size_t> coreset;
+    std::vector<curve_number_t> coreset;
     std::vector<distance_t> lambda;
     const distance_t Lambda = 76;
     distance_t cost;
@@ -48,7 +48,7 @@ public:
         std::vector<double> probabilities(n);
         lambda = std::vector<distance_t>(n);
         
-        for (curve_size_t i = 0; i < n; ++i) {
+        for (curve_number_t i = 0; i < n; ++i) {
             lambda[i] = 52.0 / n + 24.0 / cost * Frechet::Continuous::distance(in[i], in[center], eps, round).value;
             probabilities[i] = (lambda[i]) / Lambda;
         }
@@ -56,7 +56,7 @@ public:
         auto prob_gen = Random::Custom_Probability_Generator<double>(probabilities);
         const std::size_t ssize = std::ceil(constant * 1/epsilon * 1/epsilon * std::log(m));
         const auto coreset_ind = prob_gen.get(ssize);
-        for (curve_size_t i = 0; i < ssize; ++i) {
+        for (curve_number_t i = 0; i < ssize; ++i) {
             coreset.push_back(coreset_ind[i]);
         }
     }
@@ -77,7 +77,7 @@ public:
     }
     
     inline np::ndarray get_curves() const {
-        np::dtype dt = np::dtype::get_builtin<curve_size_t>();
+        np::dtype dt = np::dtype::get_builtin<curve_number_t>();
         p::list l;
         np::ndarray result = np::array(l, dt);
         for (const auto &elem: coreset) {

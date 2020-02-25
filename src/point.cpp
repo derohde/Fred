@@ -17,13 +17,14 @@ std::string Point::str() const {
 }
 
 std::ostream& operator<<(std::ostream &out, const Point &p) {
+    if (p.empty()) return out;
     out << "(";
     
-    for (dimensions_t i = 0; i < p.size() - 1; ++i){
+    for (dimensions_t i = 0; i < p.dimensions() - 1; ++i){
         out << p[i] << ",";
     }
     
-    out << p[p.size() - 1] << ")";
+    out << p[p.dimensions() - 1] << ")";
 
     return out;
 }

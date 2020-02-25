@@ -19,8 +19,8 @@ namespace Frechet {
 
 namespace Continuous {
 
-auto distance(const Curve &curve1, const Curve &curve2, const distance_t eps, const bool round) -> Result {
-    if ((curve1.size() < 2) or (curve2.size() < 2)) {
+Result distance(const Curve &curve1, const Curve &curve2, const distance_t eps, const bool round) {
+    if ((curve1.complexity() < 2) or (curve2.complexity() < 2)) {
         std::cerr << "WARNING: comparison possible only for curves of at least two points" << std::endl;
         Result result;
         result.value = std::numeric_limits<distance_t>::signaling_NaN();
@@ -34,7 +34,7 @@ auto distance(const Curve &curve1, const Curve &curve2, const distance_t eps, co
     }
     
     auto start = boost::chrono::process_real_cpu_clock::now();
-    const auto lb = std::sqrt(std::max(curve1[0].dist_sqr(curve2[0]), curve1[curve1.size()-1].dist_sqr(curve2[curve2.size()-1])));
+    const auto lb = std::sqrt(std::max(curve1[0].dist_sqr(curve2[0]), curve1[curve1.complexity()-1].dist_sqr(curve2[curve2.complexity()-1])));
     const auto ub = _greedy_upper_bound(curve1, curve2);
     auto end = boost::chrono::process_real_cpu_clock::now();
 
@@ -49,35 +49,7 @@ auto distance(const Curve &curve1, const Curve &curve2, const distance_t eps, co
     return dist;
 }
 
-auto _greedy_upper_bound(const Curve &curve1, const Curve &curve2) -> distance_t {
-    distance_t result = 0;
-    
-    const curve_size_t len1 = curve1.size(), len2 = curve2.size();
-    curve_size_t i = 0, j = 0;
-    
-    while ((i < len1 - 1) and (j < len2 - 1)) {
-        result = std::max(result, curve1[i].dist_sqr(curve2[j]));
-        
-        distance_t dist1 = curve1[i+1].dist_sqr(curve2[j]),
-            dist2 = curve1[i].dist_sqr(curve2[j+1]),
-            dist3 = curve1[i+1].dist_sqr(curve2[j+1]);
-        
-        if ((dist1 <= dist2) and (dist1 <= dist3)) ++i;
-        else if ((dist2 <= dist1) and (dist2 <= dist3)) ++j;
-        else {
-            ++i;
-            ++j;
-        }
-    }
-
-    while (i < len1) result = std::max(result, curve1[i++].dist_sqr(curve2[j]));
-    --i;
-    while (j < len2) result = std::max(result, curve1[i].dist_sqr(curve2[j++]));
-    
-    return std::sqrt(result);
-}
-
-auto _distance(const Curve &curve1, const Curve &curve2, distance_t ub, distance_t lb, const distance_t eps) -> Result {
+Result _distance(const Curve &curve1, const Curve &curve2, distance_t ub, distance_t lb, const distance_t eps) {
     Result result;
     auto start = boost::chrono::process_real_cpu_clock::now();
     
@@ -86,11 +58,16 @@ auto _distance(const Curve &curve1, const Curve &curve2, distance_t ub, distance
     
     if (ub - lb > eps) {
         auto infty = std::numeric_limits<distance_t>::infinity();
-        std::vector<std::vector<distance_t>> reachable1(curve1.size()-1, std::vector<distance_t>(curve2.size(), infty));
-        std::vector<std::vector<distance_t>> reachable2(curve1.size(), std::vector<distance_t>(curve2.size()-1, infty));
+        std::vector<std::vector<distance_t>> reachable1(curve1.complexity()-1, std::vector<distance_t>(curve2.complexity(), infty));
+        std::vector<std::vector<distance_t>> reachable2(curve1.complexity(), std::vector<distance_t>(curve2.complexity()-1, infty));
         
-        std::vector<std::vector<Interval>> free_intervals1(curve2.size(), std::vector<Interval>(curve1.size(), Interval()));
-        std::vector<std::vector<Interval>> free_intervals2(curve1.size(), std::vector<Interval>(curve2.size(), Interval()));
+        std::vector<std::vector<Interval>> free_intervals1(curve2.complexity(), std::vector<Interval>(curve1.complexity(), Interval()));
+        std::vector<std::vector<Interval>> free_intervals2(curve1.complexity(), std::vector<Interval>(curve2.complexity(), Interval()));
+
+        if (std::isnan(lb) or std::isnan(ub)) {
+            result.value = std::numeric_limits<distance_t>::signaling_NaN();
+            return result;
+        }
 
         //Binary search over the feasible distances
         while (ub - lb > eps) {
@@ -120,8 +97,8 @@ auto _distance(const Curve &curve1, const Curve &curve2, distance_t ub, distance
 bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve const& curve2, 
         std::vector<std::vector<distance_t>> &reachable1, std::vector<std::vector<distance_t>> &reachable2,
         std::vector<std::vector<Interval>> &free_intervals1, std::vector<std::vector<Interval>> &free_intervals2) {
-    assert(curve1.size() >= 2);
-    assert(curve2.size() >= 2);
+    assert(curve1.complexity() >= 2);
+    assert(curve2.complexity() >= 2);
     
     distance_t dist_sqr = distance * distance;
     auto infty = std::numeric_limits<distance_t>::infinity();
@@ -129,53 +106,57 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
     if (curve1[0].dist_sqr(curve2[0]) > dist_sqr or curve1.back().dist_sqr(curve2.back()) > dist_sqr) return false;
 
     for (auto &elem: reachable1) {
+        #pragma omp parallel for
         for (curve_size_t i = 0; i < elem.size(); ++i) {
             elem[i] = infty;
         }
     }
     
     for (auto &elem: reachable2) {
+        #pragma omp parallel for
         for (curve_size_t i = 0; i < elem.size(); ++i) {
             elem[i] = infty;
         }
     }
     
     for (auto &elem: free_intervals1) {
+        #pragma omp parallel for
         for (curve_size_t i = 0; i < elem.size(); ++i) {
             elem[i] = Interval();
         }
     }
     
     for (auto &elem: free_intervals2) {
+        #pragma omp parallel for
         for (curve_size_t i = 0; i < elem.size(); ++i) {
             elem[i] = Interval();
         }
     }
     
-    for (curve_size_t i = 0; i < curve1.size() - 1; ++i) {
+    for (curve_size_t i = 0; i < curve1.complexity() - 1; ++i) {
         reachable1[i][0] = 0.;
         if (curve2[0].dist_sqr(curve1[i+1]) > dist_sqr) { break; }
     }
-    for (curve_size_t j = 0; j < curve2.size() - 1; ++j) {
+    for (curve_size_t j = 0; j < curve2.complexity() - 1; ++j) {
         reachable2[0][j] = 0.;
         if (curve1[0].dist_sqr(curve2[j+1]) > dist_sqr) { break; }
     }
 
-    #pragma omp parallel for
-    for (curve_size_t i = 0; i < curve1.size(); ++i) {
-        for (curve_size_t j = 0; j < curve2.size(); ++j) {
-            if (i < curve1.size() - 1 and j > 0) {
+    #pragma omp parallel for schedule(dynamic)
+    for (curve_size_t i = 0; i < curve1.complexity(); ++i) {
+        for (curve_size_t j = 0; j < curve2.complexity(); ++j) {
+            if ((i < curve1.complexity() - 1) and (j > 0)) {
                 free_intervals1[j][i] = curve2[j].intersection_interval(dist_sqr, curve1[i], curve1[i+1]);
             }
-            if (j < curve2.size() - 1 and i > 0) {
+            if ((j < curve2.complexity() - 1) and (i > 0)) {
                 free_intervals2[i][j] = curve1[i].intersection_interval(dist_sqr, curve2[j], curve2[j+1]);
             }
         }
     }
 
-    for (curve_size_t i = 0; i < curve1.size(); ++i) {
-        for (curve_size_t j = 0; j < curve2.size(); ++j) {
-            if (i < curve1.size() - 1 and j > 0) {
+    for (curve_size_t i = 0; i < curve1.complexity(); ++i) {
+        for (curve_size_t j = 0; j < curve2.complexity(); ++j) {
+            if ((i < curve1.complexity() - 1) and (j > 0)) {
                 if (not free_intervals1[j][i].is_empty()) {
                     if (reachable2[i][j-1] != infty) {
                         reachable1[i][j] = free_intervals1[j][i].begin();
@@ -185,7 +166,7 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
                     }
                 }
             }
-            if (j < curve2.size() - 1 and i > 0) {
+            if ((j < curve2.complexity() - 1) and (i > 0)) {
                 if (not free_intervals2[i][j].is_empty()) {
                     if (reachable1[i-1][j] != infty) {
                         reachable2[i][j] = free_intervals2[i][j].begin();
@@ -203,12 +184,51 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
     return reachable1.back().back() < infty;
 }
 
+distance_t _greedy_upper_bound(const Curve &curve1, const Curve &curve2) {
+    distance_t result = 0;
+    
+    const curve_size_t len1 = curve1.complexity(), len2 = curve2.complexity();
+    curve_size_t i = 0, j = 0;
+    
+    while ((i < len1 - 1) and (j < len2 - 1)) {
+        result = std::max(result, curve1[i].dist_sqr(curve2[j]));
+        
+        distance_t dist1 = curve1[i+1].dist_sqr(curve2[j]),
+            dist2 = curve1[i].dist_sqr(curve2[j+1]),
+            dist3 = curve1[i+1].dist_sqr(curve2[j+1]);
+        
+        if ((dist1 <= dist2) and (dist1 <= dist3)) ++i;
+        else if ((dist2 <= dist1) and (dist2 <= dist3)) ++j;
+        else {
+            ++i;
+            ++j;
+        }
+    }
+
+    while (i < len1) result = std::max(result, curve1[i++].dist_sqr(curve2[j]));
+    --i;
+    while (j < len2) result = std::max(result, curve1[i].dist_sqr(curve2[j++]));
+    
+    return std::sqrt(result);
+}
 
 }
 
 namespace Discrete {
     
-    auto _dp(std::vector<std::vector<distance_t>> &a, const curve_size_t i, const curve_size_t j, const Curve &curve1, const Curve &curve2) -> distance_t {
+    Result distance(const Curve &curve1, const Curve &curve2) {
+        Result result;
+        auto start = boost::chrono::process_real_cpu_clock::now();
+        std::vector<std::vector<distance_t>> a(curve1.complexity(), std::vector<distance_t>(curve2.complexity(), -1));
+        auto value = std::sqrt(_dp(a, curve1.complexity() - 1, curve2.complexity() - 1, curve1, curve2));
+        auto end = boost::chrono::process_real_cpu_clock::now();
+        result.time = (end-start).count() / 1000000000.0;
+        result.value = value;
+        return result;
+        
+    }
+    
+    distance_t _dp(std::vector<std::vector<distance_t>> &a, const curve_size_t i, const curve_size_t j, const Curve &curve1, const Curve &curve2) {
         if (a[i][j] > -1) return a[i][j];
         else if (i == 0 and j == 0) return curve1[i].dist_sqr(curve2[j]);
         else if (i > 0 and j == 0) return std::max(_dp(a, i-1, 0, curve1, curve2), curve1[i].dist_sqr(curve2[j]));
@@ -222,18 +242,6 @@ namespace Discrete {
                         curve1[i].dist_sqr(curve2[j]));
         }
         return a[i][j];
-    }
-    
-    auto distance(const Curve &curve1, const Curve &curve2) -> Result {
-        Result result;
-        auto start = boost::chrono::process_real_cpu_clock::now();
-        std::vector<std::vector<distance_t>> a(curve1.size(), std::vector<distance_t>(curve2.size(), -1));
-        auto value = std::sqrt(_dp(a, curve1.size()-1, curve2.size()-1, curve1, curve2));
-        auto end = boost::chrono::process_real_cpu_clock::now();
-        result.time = (end-start).count() / 1000000000.0;
-        result.value = value;
-        return result;
-        
     }
 }
 
