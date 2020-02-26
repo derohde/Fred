@@ -43,7 +43,7 @@ public:
     }
     
     inline Point& operator+=(const Point &point) {
-        #pragma omp parallel for simd
+        #pragma omp simd
         for (dimensions_t i = 0; i < dimensions(); ++i){
             operator[](i) += point[i];
         }
@@ -51,7 +51,7 @@ public:
     }
     
     inline Point& operator-=(const Point &point) {
-        #pragma omp parallel for simd
+        #pragma omp simd
         for (dimensions_t i = 0; i < dimensions(); ++i){
             operator[](i) -= point[i];
         }
@@ -59,7 +59,7 @@ public:
     }
     
     inline Point& operator/=(const distance_t distance) {
-        #pragma omp parallel for simd
+        #pragma omp simd
         for (dimensions_t i = 0; i < dimensions(); ++i){
             operator[](i) /= distance;
         }
@@ -68,7 +68,7 @@ public:
     
     inline Point operator+(const Point &point) const {
         auto result = *this;
-        #pragma omp parallel for simd
+        #pragma omp simd
         for (dimensions_t i = 0; i < dimensions(); ++i){
             result.operator[](i) += point[i];
         }
@@ -77,7 +77,7 @@ public:
     
     inline Point operator-(const Point &point) const {
         auto result = *this;
-        #pragma omp parallel for simd
+        #pragma omp simd
         for (dimensions_t i = 0; i < dimensions(); ++i){
             result.operator[](i) -= point[i];
         }
@@ -86,7 +86,7 @@ public:
     
     inline Point operator*(const distance_t mult) const {
         Point result = *this;
-        #pragma omp parallel for simd
+        #pragma omp simd
         for (dimensions_t i = 0; i < dimensions(); ++i){
             result.operator[](i) *= mult;
         }
@@ -95,7 +95,7 @@ public:
     
     inline distance_t operator*(const Point &p) const {
         distance_t result = 0;
-        #pragma omp parallel for simd reduction(+: result)
+        #pragma omp simd reduction(+: result)
         for (dimensions_t i = 0; i < dimensions(); ++i) {
             result += operator[](i) * p[i];
         }
@@ -104,7 +104,7 @@ public:
     
     inline Point operator/(const distance_t dist) const {
         Point result = *this;
-        #pragma omp parallel for simd
+        #pragma omp simd
         for (dimensions_t i = 0; i < dimensions(); ++i){
             result.operator[](i) /= dist;
         }
@@ -113,7 +113,7 @@ public:
     
     inline distance_t dist_sqr(const Point &point) const {
         distance_t result = 0, temp;
-        #pragma omp parallel for simd private(temp) reduction(+: result)
+        #pragma omp simd private(temp) reduction(+: result)
         for (dimensions_t i = 0; i < dimensions(); ++i){
             temp = operator[](i) - point[i];
             result += temp * temp;
@@ -127,7 +127,7 @@ public:
     
     inline distance_t length_sqr() const {
         distance_t result = 0;
-        #pragma omp parallel for simd reduction(+: result)
+        #pragma omp simd reduction(+: result)
         for (dimensions_t i = 0; i < dimensions(); ++i){
             result += operator[](i) * operator[](i);
         }

@@ -112,28 +112,28 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
     if (curve1[0].dist_sqr(curve2[0]) > dist_sqr or curve1.back().dist_sqr(curve2.back()) > dist_sqr) return false;
 
     for (auto &elem: reachable1) {
-        #pragma omp parallel for simd
+        #pragma omp parallel for
         for (curve_size_t i = 0; i < elem.size(); ++i) {
             elem[i] = infty;
         }
     }
     
     for (auto &elem: reachable2) {
-        #pragma omp parallel for simd
+        #pragma omp parallel for
         for (curve_size_t i = 0; i < elem.size(); ++i) {
             elem[i] = infty;
         }
     }
     
     for (auto &elem: free_intervals1) {
-        #pragma omp parallel for simd
+        #pragma omp parallel for
         for (curve_size_t i = 0; i < elem.size(); ++i) {
             elem[i] = Interval();
         }
     }
     
     for (auto &elem: free_intervals2) {
-        #pragma omp parallel for simd
+        #pragma omp parallel for
         for (curve_size_t i = 0; i < elem.size(); ++i) {
             elem[i] = Interval();
         }
@@ -149,7 +149,7 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
         if (curve1[0].dist_sqr(curve2[j+1]) > dist_sqr) { break; }
     }
     
-    #pragma omp parallel for simd collapse(2)
+    #pragma omp parallel for collapse(2)
     for (curve_size_t i = 0; i < curve1.complexity(); ++i) {
         for (curve_size_t j = 0; j < curve2.complexity(); ++j) {
             if ((i < curve1.complexity() - 1) and (j > 0)) {
