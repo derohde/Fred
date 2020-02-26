@@ -50,7 +50,7 @@ Curve::Curve(const np::ndarray &in) : Points(in.shape(0)) {
         const auto point_size = in.shape(1);
         const auto strides1 = in.strides(1) / sizeof(coordinate_t);
                 
-        #pragma omp parallel for schedule(auto)
+        #pragma omp parallel for simd
         for (curve_size_t i = 0; i < number_points; ++i) {
             Points::operator[](i) = Point(point_size);
             
@@ -62,7 +62,7 @@ Curve::Curve(const np::ndarray &in) : Points(in.shape(0)) {
         }
     } else {        
                 
-        #pragma omp parallel for schedule(auto)
+        #pragma omp parallel for simd
         for (curve_size_t i = 0; i < number_points; ++i) {
             Points::operator[](i) = Point(1);
             

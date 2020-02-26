@@ -38,7 +38,7 @@ Curves transform_naive(const Curves &in, const distance_t epsilon, const bool em
     
     auto sqrtk = std::sqrt(new_number_dimensions);
     
-    #pragma omp parallel for schedule(auto)
+    #pragma omp parallel for
     for (curve_number_t l = 0; l < in.size(); ++l) {
         result[l] = Curve(in[l].complexity(), new_number_dimensions);
         
