@@ -158,7 +158,8 @@ public:
     }
     
     std::string str() const;
+    
+    std::string repr() const;
 };
-
 
 std::ostream& operator<<(std::ostream&, const Point&);

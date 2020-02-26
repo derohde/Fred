@@ -101,6 +101,7 @@ BOOST_PYTHON_MODULE(backend)
         .def("__getitem__", &Point::get)
         .def("__str__", &Point::str)
         .def("__iter__", range(&Point::cbegin, &Point::cend))
+        .def("__repr__", &Point::repr)
     ;
     
     class_<Curve>("Curve", init<np::ndarray>())
@@ -110,6 +111,7 @@ BOOST_PYTHON_MODULE(backend)
         .def("__len__", &Curve::complexity)
         .def("__str__", &Curve::str)
         .def("__iter__", range<return_value_policy<copy_const_reference>>(&Curve::cbegin, &Curve::cend))
+        .def("__repr__", &Curve::repr)
     ;
     
     class_<Curves>("Curves", init<>())
@@ -119,6 +121,21 @@ BOOST_PYTHON_MODULE(backend)
         .def("__len__", &Curves::number)
         .def("__str__", &Curves::str)
         .def("__iter__", range<return_value_policy<copy_const_reference>>(&Curves::cbegin, &Curves::cend))
+        .def("__repr__", &Curves::repr)
+    ;
+    
+    class_<fc::Result>("Continuous_Frechet_Result", init<>())
+        .add_property("time_searches", &fc::Result::time_searches)
+        .add_property("time_bounds", &fc::Result::time_bounds)
+        .add_property("number_searches", &fc::Result::number_searches)
+        .add_property("value", &fc::Result::value)
+        .def("__repr__", &fc::Result::repr)
+    ;
+    
+    class_<fd::Result>("Discrete_Frechet_Result", init<>())
+        .add_property("time", &fd::Result::time)
+        .add_property("value", &fd::Result::value)
+        .def("__repr__", &fd::Result::repr)
     ;
     
     class_<Clustering::Clustering_Result>("Clustering_Result", init<>())
@@ -134,18 +151,6 @@ BOOST_PYTHON_MODULE(backend)
         .def("__len__", &Clustering::Cluster_Assignment::size)
         .def("count", &Clustering::Cluster_Assignment::count)
         .def("get", &Clustering::Cluster_Assignment::get)
-    ;
-    
-    class_<fc::Result>("Continuous_Frechet_Result", init<>())
-        .add_property("time_searches", &Frechet::Continuous::Result::time_searches)
-        .add_property("time_bounds", &Frechet::Continuous::Result::time_bounds)
-        .add_property("number_searches", &Frechet::Continuous::Result::number_searches)
-        .add_property("value", &Frechet::Continuous::Result::value)
-    ;
-    
-    class_<fd::Result>("Discrete_Frechet_Result", init<>())
-        .add_property("time", &fd::Result::time)
-        .add_property("value", &fd::Result::value)
     ;
     
     class_<Coreset::Onemedian_Coreset>("Onemedian_coreset")

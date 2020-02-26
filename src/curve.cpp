@@ -36,37 +36,37 @@ Curve::Curve(const np::ndarray &in) : Points(in.shape(0)) {
         std::cerr << "WARNING: constructed empty curve" << std::endl;
         return;
     }
-    auto number_points = in.shape(0);
+    const auto number_points = in.shape(0);
+    const auto strides0 = in.strides(0) / sizeof(coordinate_t);
+    
+    const auto data = reinterpret_cast<const coordinate_t*>(in.get_data());
+    
     if (n_dimensions == 2) {
-        auto point_size = in.shape(1);
         
         #if DEBUG
         std::cout << "constructing curve of size " << number_points << " and " << point_size << " dimensions" << std::endl;
         #endif
         
-        auto strides0 = in.strides(0) / sizeof(coordinate_t);
-        auto strides1 = in.strides(1) / sizeof(coordinate_t);
-        
-        auto data = reinterpret_cast<const coordinate_t*>(in.get_data());
+        const auto point_size = in.shape(1);
+        const auto strides1 = in.strides(1) / sizeof(coordinate_t);
                 
-        for (curve_size_t i = 0; i < number_points; ++i, data += strides0) {
+        #pragma omp parallel for schedule(auto)
+        for (curve_size_t i = 0; i < number_points; ++i) {
             Points::operator[](i) = Point(point_size);
             
-            auto coord_data = data;
+            auto coord_data = data + i * strides0;
             
             for(curve_size_t j = 0; j < point_size; ++j, coord_data += strides1){
               Points::operator[](i)[j] = *coord_data;
             }
         }
-    } else {
-        auto strides0 = in.strides(0) / sizeof(coordinate_t);
-        
-        auto data = reinterpret_cast<const coordinate_t*>(in.get_data());
+    } else {        
                 
-        for (curve_size_t i = 0; i < number_points; ++i, data += strides0) {
+        #pragma omp parallel for schedule(auto)
+        for (curve_size_t i = 0; i < number_points; ++i) {
             Points::operator[](i) = Point(1);
             
-            Points::operator[](i)[0] = *data;
+            Points::operator[](i)[0] = *(data + i * strides0);
         }
     }
     
@@ -74,6 +74,18 @@ Curve::Curve(const np::ndarray &in) : Points(in.shape(0)) {
         std::cerr << "WARNING: constructed empty curve" << std::endl;
     return; 
     }
+}
+
+std::string Curve::repr() const {
+    std::stringstream ss;
+    ss << "fred.Curve of complexity " << complexity() << " and " << dimensions() << " dimensions";
+    return ss.str();
+}
+
+std::string Curves::repr() const {
+    std::stringstream ss;
+    ss << "fred.Curves collection with " << number() << " curves";
+    return ss.str();
 }
 
 std::string Curve::str() const {

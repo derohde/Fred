@@ -10,64 +10,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #pragma once
 
+#include <vector>
+
 #include "types.hpp"
 #include "curve.hpp"
 #include "random.hpp"
 
 namespace JLTransform {
     
-    Curves transform_naive(const Curves &in, const distance_t epsilon, const bool empirical_k = true) {
-        
-        if (in.empty()) return in;
-        
-        auto rg = Random::Gauss_Random_Generator<coordinate_t>(0, 1);
-        
-        curve_number_t number_points = 0;
-        for (const auto &elem: in) number_points += elem.complexity();
-        
-        const distance_t epsilonsq = epsilon * epsilon;       
-        const distance_t epsiloncu = epsilonsq * epsilon;
-        const dimensions_t new_number_dimensions = empirical_k ? std::ceil(2 * std::log(number_points) * 1/epsilonsq):
-            std::ceil(4 * std::log(number_points) * 1 /((epsilonsq/2) - (epsiloncu/3)));
-                                                    
-        std::vector<std::vector<coordinate_t>> mat (new_number_dimensions);
-        
-        #if DEBUG
-        std::cout << "populating " << new_number_dimensions << "x" << in[0].dimensions() << " matrix" << std::endl;
-        #endif
-        
-        for (auto &elem: mat) elem = rg.get(in[0].dimensions());
-                    
-        Curves result(in.size(), in.get_m());
-        
-        auto sqrtk = std::sqrt(new_number_dimensions);
-        
-        #pragma omp parallel for
-        for (curve_number_t l = 0; l < in.size(); ++l) {
-            result[l] = Curve(in[l].complexity(), new_number_dimensions);
-            
-            for (curve_size_t i = 0; i < in[l].complexity(); ++i) {
-                
-                for (dimensions_t j = 0; j < new_number_dimensions; ++j) {
-                    result[l][i][j] = mat[j][0] * in[l][i][0];
-                    
-                    for (dimensions_t k = 1; k < in[l].dimensions(); ++k) {
-                        result[l][i][j] += mat[j][k] * in[l][i][k];
-                    }
-                    
-                    result[l][i][j] /= sqrtk;
-                    
-                }
-                
-            }
-            
-            #if DEBUG
-            std::cout << "projected curve no. " << l << " from " << in[l].dimensions() << " to " << new_number_dimensions << " dimensions" << std::endl;
-            #endif
-            
-        }
-        
-        return result;
-    }
+Curves transform_naive(const Curves&, const distance_t, const bool);
     
 }

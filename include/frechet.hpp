@@ -25,6 +25,8 @@ namespace Continuous {
         double time_searches;
         double time_bounds;
         std::size_t number_searches;
+        
+        std::string repr() const;
     };
     
     Result distance(const Curve&, const Curve&, const distance_t, const bool);
@@ -43,6 +45,8 @@ namespace Discrete {
     struct Result {
         distance_t value;
         double time;
+        
+        std::string repr() const;
     };
     
     Result distance(const Curve&, const Curve&);

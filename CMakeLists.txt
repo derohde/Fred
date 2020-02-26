@@ -46,4 +46,5 @@ PYTHON_ADD_MODULE(backend
             src/point.cpp
             src/interval.cpp
             src/frechet.cpp
+            src/jl_transform.cpp
 )

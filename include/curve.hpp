@@ -26,8 +26,8 @@ namespace p = boost::python;
 
 class Curve : public Points {
 public:    
-    Curve() {}
-    Curve(const curve_size_t m, const dimensions_t dimensions) : Points(m, Point(dimensions)) {}
+    inline Curve() {}
+    inline Curve(const curve_size_t m, const dimensions_t dimensions) : Points(m, Point(dimensions)) {}
     Curve(const Points &points);
     Curve(const np::ndarray &in);
     
@@ -44,6 +44,8 @@ public:
     }
     
     std::string str() const;
+    
+    std::string repr() const;
 };
 
 class Curves : public std::vector<Curve> {
@@ -70,15 +72,9 @@ public:
         return size();
     }
     
-    virtual std::vector<Curve>::const_iterator cbegin() const {
-        return std::vector<Curve>::cbegin();
-    }
-    
-    virtual std::vector<Curve>::const_iterator cend() const {
-        return std::vector<Curve>::cend();
-    }
-    
     std::string str() const;
+    
+    std::string repr() const;
 };
 
 std::ostream& operator<<(std::ostream& out, const Curve&);

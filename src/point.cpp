@@ -16,6 +16,12 @@ std::string Point::str() const {
     return ss.str();
 }
 
+std::string Point::repr() const {
+    std::stringstream ss;
+    ss << "fred.point of " << dimensions() << " dimensions";
+    return ss.str();
+}
+
 std::ostream& operator<<(std::ostream &out, const Point &p) {
     if (p.empty()) return out;
     out << "(";

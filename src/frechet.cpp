@@ -18,6 +18,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 namespace Frechet {
 
 namespace Continuous {
+    
+std::string Result::repr() const {
+    std::stringstream ss;
+    ss << value;
+    return ss.str();
+}
 
 Result distance(const Curve &curve1, const Curve &curve2, const distance_t eps, const bool round) {
     if ((curve1.complexity() < 2) or (curve2.complexity() < 2)) {
@@ -143,7 +149,7 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
         if (curve1[0].dist_sqr(curve2[j+1]) > dist_sqr) { break; }
     }
     
-    #pragma omp parallel for
+    #pragma omp parallel for schedule(auto)
     for (curve_size_t i = 0; i < curve1.complexity(); ++i) {
         for (curve_size_t j = 0; j < curve2.complexity(); ++j) {
             if ((i < curve1.complexity() - 1) and (j > 0)) {
@@ -216,33 +222,39 @@ distance_t _greedy_upper_bound(const Curve &curve1, const Curve &curve2) {
 
 namespace Discrete {
     
-    Result distance(const Curve &curve1, const Curve &curve2) {
-        Result result;
-        auto start = boost::chrono::process_real_cpu_clock::now();
-        std::vector<std::vector<distance_t>> a(curve1.complexity(), std::vector<distance_t>(curve2.complexity(), -1));
-        auto value = std::sqrt(_dp(a, curve1.complexity() - 1, curve2.complexity() - 1, curve1, curve2));
-        auto end = boost::chrono::process_real_cpu_clock::now();
-        result.time = (end-start).count() / 1000000000.0;
-        result.value = value;
-        return result;
-        
-    }
+std::string Result::repr() const {
+    std::stringstream ss;
+    ss << value;
+    return ss.str();
+}
     
-    distance_t _dp(std::vector<std::vector<distance_t>> &a, const curve_size_t i, const curve_size_t j, const Curve &curve1, const Curve &curve2) {
-        if (a[i][j] > -1) return a[i][j];
-        else if (i == 0 and j == 0) return curve1[i].dist_sqr(curve2[j]);
-        else if (i > 0 and j == 0) return std::max(_dp(a, i-1, 0, curve1, curve2), curve1[i].dist_sqr(curve2[j]));
-        else if (i == 0 and j > 0) return std::max(_dp(a, 0, j-1, curve1, curve2), curve1[i].dist_sqr(curve2[j]));
-        else {
-            a[i][j] = std::max(
-                        std::min(
-                            std::min(_dp(a, i-1, j, curve1, curve2), 
-                                _dp(a, i-1, j-1, curve1, curve2)), 
-                            _dp(a, i, j-1, curve1, curve2)), 
-                        curve1[i].dist_sqr(curve2[j]));
-        }
-        return a[i][j];
+Result distance(const Curve &curve1, const Curve &curve2) {
+    Result result;
+    auto start = boost::chrono::process_real_cpu_clock::now();
+    std::vector<std::vector<distance_t>> a(curve1.complexity(), std::vector<distance_t>(curve2.complexity(), -1));
+    auto value = std::sqrt(_dp(a, curve1.complexity() - 1, curve2.complexity() - 1, curve1, curve2));
+    auto end = boost::chrono::process_real_cpu_clock::now();
+    result.time = (end-start).count() / 1000000000.0;
+    result.value = value;
+    return result;
+    
+}
+
+distance_t _dp(std::vector<std::vector<distance_t>> &a, const curve_size_t i, const curve_size_t j, const Curve &curve1, const Curve &curve2) {
+    if (a[i][j] > -1) return a[i][j];
+    else if (i == 0 and j == 0) return curve1[i].dist_sqr(curve2[j]);
+    else if (i > 0 and j == 0) return std::max(_dp(a, i-1, 0, curve1, curve2), curve1[i].dist_sqr(curve2[j]));
+    else if (i == 0 and j > 0) return std::max(_dp(a, 0, j-1, curve1, curve2), curve1[i].dist_sqr(curve2[j]));
+    else {
+        a[i][j] = std::max(
+                    std::min(
+                        std::min(_dp(a, i-1, j, curve1, curve2), 
+                            _dp(a, i-1, j-1, curve1, curve2)), 
+                        _dp(a, i, j-1, curve1, curve2)), 
+                    curve1[i].dist_sqr(curve2[j]));
     }
+    return a[i][j];
+}
 }
 
 }
