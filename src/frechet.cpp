@@ -137,12 +137,13 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
         reachable1[i][0] = 0.;
         if (curve2[0].dist_sqr(curve1[i+1]) > dist_sqr) { break; }
     }
+    
     for (curve_size_t j = 0; j < curve2.complexity() - 1; ++j) {
         reachable2[0][j] = 0.;
         if (curve1[0].dist_sqr(curve2[j+1]) > dist_sqr) { break; }
     }
-
-    #pragma omp parallel for schedule(dynamic)
+    
+    #pragma omp parallel for
     for (curve_size_t i = 0; i < curve1.complexity(); ++i) {
         for (curve_size_t j = 0; j < curve2.complexity(); ++j) {
             if ((i < curve1.complexity() - 1) and (j > 0)) {
@@ -153,7 +154,6 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
             }
         }
     }
-
     for (curve_size_t i = 0; i < curve1.complexity(); ++i) {
         for (curve_size_t j = 0; j < curve2.complexity(); ++j) {
             if ((i < curve1.complexity() - 1) and (j > 0)) {
