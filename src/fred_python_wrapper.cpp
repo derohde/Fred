@@ -16,6 +16,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include "jl_transform.hpp"
 #include "clustering.hpp"
 #include "coreset.hpp"
+#include "grid.hpp"
 
 using namespace boost::python;
 namespace np = boost::python::numpy;
