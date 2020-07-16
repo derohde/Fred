@@ -10,7 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include "curve.hpp"
 
-Curve::Curve(const Points &points) : Points(points), end{points.size()-1} {
+Curve::Curve(const Points &points) : Points(points), vend{points.size()-1} {
     if (points.empty()) { 
         std::cerr << "warning: constructed empty curve" << std::endl;
         return; 
@@ -37,7 +37,7 @@ Curve::Curve(const np::ndarray &in) : Points(in.shape(0)) {
         return;
     }
     const auto number_points = in.shape(0);
-    end = number_points - 1;
+    vend = number_points - 1;
     const auto strides0 = in.strides(0) / sizeof(coordinate_t);
     
     const auto data = reinterpret_cast<const coordinate_t*>(in.get_data());

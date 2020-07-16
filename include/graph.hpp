@@ -34,7 +34,7 @@ public:
         
         for (curve_size_t i = 0; i < complexity - 1; ++i) {
             for (curve_size_t j = i + 1; j < complexity; ++j) {
-                curve.set_subcurve(i,j);
+                curve.set_subcurve(i, j);
                 Curve segment;
                 segment.push_back(curve.front());
                 segment.push_back(curve.back());
@@ -45,26 +45,65 @@ public:
         }
     }
     
-    distance_t cheapest_way_to(const curve_size_t l, const curve_size_t j) {
-        if (j == 0 and l == 0) return 0;
-        else if((j == 0 and l > 0) or l <= 0) return std::numeric_limits<distance_t>::infinity();
-        else {
-            std::vector<distance_t> andere(j);
-            for (curve_size_t i = j-1; i > 0; --i) {
-                auto search = edges.find(std::make_pair(i,j));
-                andere[i] = search->second + cheapest_way_to(l - 1, i);
-            }
-            auto search = edges.find(std::make_pair(0,j));
-            andere[0] = search->second;
-            auto best = std::min_element(andere.begin(), andere.end());
-            return andere[std::distance(andere.begin(), best)];
-        }
-    }
-    
-    Curve weak_minimum_error_simplification(const curve_size_t l) {
+    Curve weak_minimum_error_simplification(const curve_size_t ll) {
+        if (ll >= curve.complexity()) return curve;
+        
+        auto l = ll - 1;
+        
         Curve result;
-        std::cout << cheapest_way_to(l-1, curve.complexity() - 1) << std::endl;
+        
+        if (ll <= 2) {
+            result.push_back(curve.front());
+            result.push_back(curve.back());
+            return result;
+        }
+        
+        std::vector<std::vector<distance_t>> distances(curve.complexity(), std::vector<distance_t>(l, 0));
+        std::vector<std::vector<curve_size_t>> predecessors(curve.complexity(), std::vector<curve_size_t>(l));
+                
+        for (curve_size_t i = 0; i < l; ++i) {
+            
+            if (i == 0) {
+                
+                for (curve_size_t j = 1; j < curve.complexity(); ++j) {
+                    
+                    distances[j][0] = edges.find(std::make_pair(0, j))->second;
+                    predecessors[j][0] = 0;
+                    
+                }
+                
+            } else {
+                
+                for (curve_size_t j = 1; j < curve.complexity(); ++j) {
+                    
+                    std::vector<distance_t> others(j);
+                    
+                    for (curve_size_t k = 0; k < j; ++k) {
+                        
+                        others[k] = std::max(edges.find(std::make_pair(k, j))->second, distances[k][i - 1]);
+                        
+                    }
+                    
+                    auto best = std::distance(others.begin(), std::min_element(others.begin(), others.end()));
+                    
+                    distances[j][i] = others[best];
+                    predecessors[j][i] = best;
+                }
+            }
+        }
+        
+        auto ell = l;
+        result.push_back(curve.back());
+        auto predecessor = predecessors[curve.complexity() - 1][ell - 1];
+        
+        while(ell > 0) {
+            result.push_back(curve[predecessor]);
+            predecessor = predecessors[predecessor][--ell - 1];
+        }
+        
+        std::reverse(result.begin(), result.end());
         return result;
     }
+    
 };
  
