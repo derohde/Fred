@@ -17,6 +17,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include "clustering.hpp"
 #include "coreset.hpp"
 #include "grid.hpp"
+#include "graph.hpp"
 
 using namespace boost::python;
 namespace np = boost::python::numpy;
@@ -25,11 +26,9 @@ namespace fd = Frechet::Discrete;
 
 distance_t epss = 0.001;
 
-fc::Result continuous_frechet(const Curve &curve1, const Curve &curve2, const distance_t eps = 0.001, const bool round = true) { 
-    return fc::distance(curve1, curve2, eps, round);
+fc::Result continuous_frechet(const Curve &curve1, const Curve &curve2) { 
+    return fc::distance(curve1, curve2);
 }
-
-BOOST_PYTHON_FUNCTION_OVERLOADS(continuous_frechet_overloads, continuous_frechet, 2, 4);
 
 fd::Result discrete_frechet(const Curve &curve1, const Curve &curve2) {
     return fd::distance(curve1, curve2);
@@ -44,51 +43,67 @@ Curves jl_transform(const Curves &in, const double epsilon, const bool empirical
 
 BOOST_PYTHON_FUNCTION_OVERLOADS(jl_transform_overloads, jl_transform, 2, 3);
 
-Clustering::Clustering_Result kcenter(const curve_number_t num_centers, const Curves &in, 
-                                        const distance_t eps = 0.001, const bool round = true, const bool with_assignment = false) {
-    auto result = Clustering::gonzalez(num_centers, in, eps, round, false, with_assignment);
+void set_frechet_epsilon(const double eps) {
+    fc::epsilon = eps;
+}
+
+void set_frechet_rounding(const bool round) {
+    fc::round = round;
+}
+
+distance_t get_frechet_epsilon() {
+    return fc::epsilon;
+}
+
+bool get_frechet_rounding() {
+    return fc::round;
+}
+
+Clustering::Clustering_Result kcenter(const curve_number_t num_centers, const Curves &in, const bool with_assignment = false) {
+    auto result = Clustering::gonzalez(num_centers, in, false, with_assignment);
     
     return result;
 }
 
-BOOST_PYTHON_FUNCTION_OVERLOADS(kcenter_overloads, kcenter, 2, 5);
+BOOST_PYTHON_FUNCTION_OVERLOADS(kcenter_overloads, kcenter, 2, 3);
 
-Clustering::Clustering_Result onemedian_sampling(const Curves &in, const double epsilon, 
-                                                    const distance_t eps = 0.001, const bool round = true, const bool with_assignment = false) {
+Clustering::Clustering_Result onemedian_sampling(const Curves &in, const double epsilon, const bool with_assignment = false) {
     
-    auto result = Clustering::one_median_sampling(epsilon, in, eps, round, with_assignment);
-    
-    return result;
-}
-
-BOOST_PYTHON_FUNCTION_OVERLOADS(onemedian_sampling_overloads, onemedian_sampling, 2, 5);
-
-Clustering::Clustering_Result onemedian_exhaustive(const Curves &in, 
-                                                    const distance_t eps = 0.001, const bool round = true, const bool with_assignment = false) {
-
-    auto result = Clustering::one_median_exhaustive(in, eps, round, with_assignment);
+    auto result = Clustering::one_median_sampling(epsilon, in, with_assignment);
     
     return result;
 }
 
-BOOST_PYTHON_FUNCTION_OVERLOADS(onemedian_exhaustive_overloads, onemedian_exhaustive, 1, 4);
+BOOST_PYTHON_FUNCTION_OVERLOADS(onemedian_sampling_overloads, onemedian_sampling, 2, 3);
 
-Clustering::Clustering_Result kmedian(const curve_number_t num_centers, const Curves &in, 
-                                        const distance_t eps = 0.001, const bool round = true, const bool with_assignment = false) {
+Clustering::Clustering_Result onemedian_exhaustive(const Curves &in, const bool with_assignment = false) {
 
-    auto result = Clustering::arya(num_centers, in, eps, round, with_assignment);
+    auto result = Clustering::one_median_exhaustive(in, with_assignment);
     
     return result;
 }
 
-BOOST_PYTHON_FUNCTION_OVERLOADS(kmedian_overloads, kmedian, 2, 5);
+BOOST_PYTHON_FUNCTION_OVERLOADS(onemedian_exhaustive_overloads, onemedian_exhaustive, 1, 2);
 
-Coreset::Onemedian_Coreset onemedian_coreset(const Curves &in, const double epsilon, 
-                                                const double eps = 0.001, const bool round = true, const double constant = 1) {
-    return Coreset::Onemedian_Coreset(in, epsilon, eps, round, constant);
+Clustering::Clustering_Result kmedian(const curve_number_t num_centers, const Curves &in, const bool with_assignment = false) {
+
+    auto result = Clustering::arya(num_centers, in, with_assignment);
+    
+    return result;
 }
 
-BOOST_PYTHON_FUNCTION_OVERLOADS(onemedian_coreset_overloads, onemedian_coreset, 2, 5);
+BOOST_PYTHON_FUNCTION_OVERLOADS(kmedian_overloads, kmedian, 2, 3);
+
+Coreset::Onemedian_Coreset onemedian_coreset(const Curves &in, const double epsilon, const double constant = 1) {
+    return Coreset::Onemedian_Coreset(in, epsilon, constant);
+}
+
+BOOST_PYTHON_FUNCTION_OVERLOADS(onemedian_coreset_overloads, onemedian_coreset, 2, 3);
+
+Curve weak_minimum_error_simplification(Curve &curve, curve_size_t l) {
+    Curve_Graph graph(curve);
+    return graph.weak_minimum_error_simplification(l);
+}
 
 BOOST_PYTHON_MODULE(backend)
 {
@@ -161,12 +176,17 @@ BOOST_PYTHON_MODULE(backend)
         .def("curves", &Coreset::Onemedian_Coreset::get_curves)
     ;
     
+    def("set_continuous_frechet_epsilon", set_frechet_epsilon);
+    def("set_continuous_frechet_rounding", set_frechet_rounding);
+    def("get_continuous_frechet_epsilon", get_frechet_epsilon);
+    def("get_continuous_frechet_rounding", get_frechet_rounding);
     def("dimension_reduction", jl_transform, jl_transform_overloads());
-    def("continuous_frechet", continuous_frechet, continuous_frechet_overloads());
+    def("continuous_frechet", continuous_frechet);
     def("discrete_frechet", discrete_frechet);
     def("discrete_kcenter", kcenter, kcenter_overloads());
     def("discrete_kmedian", kmedian, kmedian_overloads());
     def("discrete_onemedian_sampling", onemedian_sampling, onemedian_sampling_overloads());
     def("discrete_onemedian_exhaustive", onemedian_exhaustive, onemedian_exhaustive_overloads());
     def("onemedian_coreset", onemedian_coreset, onemedian_coreset_overloads());
+    def("weak_minimum_error_simplification", weak_minimum_error_simplification);
 }

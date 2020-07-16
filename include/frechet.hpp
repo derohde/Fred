@@ -20,6 +20,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 namespace Frechet {
 namespace Continuous {
     
+    extern distance_t epsilon;
+    extern bool round;
+    
     struct Result {
         distance_t value;
         double time_searches;
@@ -29,10 +32,9 @@ namespace Continuous {
         std::string repr() const;
     };
     
-    Result distance(const Curve&, const Curve&, const distance_t, const bool);
+    Result distance(const Curve&, const Curve&);
     
-    Result _distance(const Curve&, const Curve&, distance_t, distance_t, 
-            const distance_t = std::numeric_limits<distance_t>::epsilon());
+    Result _distance(const Curve&, const Curve&, distance_t, distance_t);
             
     bool _less_than_or_equal(const distance_t, const Curve&, const Curve&, 
             std::vector<std::vector<distance_t>>&, std::vector<std::vector<distance_t>>&, 

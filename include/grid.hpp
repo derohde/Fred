@@ -17,17 +17,19 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <cmath>
 
 #include "types.hpp"
-#include "point.hpp" 
+#include "point.hpp"
 
 class Grid {
     
-    Grid() {};
+    Points P;
+    
+    Grid(Points P) : P{P} {};
     Grid(const Grid&);
     ~Grid() {};
     
 public:
     
-    static Grid build_from_cube(const Point &p, const distance_t width, const distance_t edge_length) {
+    static Grid build_cube_grid(const Point &p, const distance_t width, const distance_t edge_length) {
         const curve_size_t half_number_points_per_dimension = std::ceil(edge_length / width);
         const auto dimensions = p.dimensions();
         const curve_number_t number_points = std::pow(2 * half_number_points_per_dimension, dimensions);
@@ -38,20 +40,32 @@ public:
             coord1d[half_number_points_per_dimension + i] = i * width; 
         }
         
-        Points P = Points(number_points);
+        Points P(number_points);
+        auto counter = std::vector<curve_size_t>(dimensions, 0);
+        
         for (curve_number_t i = 0; i < number_points; ++i) {
             P[i] = Point(dimensions);
             for (dimensions_t j = 0; j < dimensions; ++j) {
-                const auto id_q = std::floor(i/((j + 1) * 2 * half_number_points_per_dimension)), id_r = i - id_q * (j + 1) * 2 * half_number_points_per_dimension;
-                if (j == 0)
-                    P[i][j] = coord1d[id_r];
-                else
-                    P[i][j] = coord1d[id_q];
+                
+                P[i][j] = coord1d[counter[j]];
+                
             }
             P[i] += p;
+            for (dimensions_t j = 0; j < dimensions, i < P.size() - 1; ++j) {
+                if (counter[j] < coord1d.size() - 1) {
+                    ++counter[j];
+                    break;
+                } else {
+                    counter[j] = 0;
+                }
+            }
         }
         
-        for (auto &p: P) std::cout << P << std::endl;
+        return Grid{P};
+    }
+    
+    const Points& get_points() const {
+        return P;
     }
     
 };

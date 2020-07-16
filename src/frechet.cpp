@@ -19,13 +19,16 @@ namespace Frechet {
 
 namespace Continuous {
     
+distance_t epsilon = 0.001;
+bool round = true;
+    
 std::string Result::repr() const {
     std::stringstream ss;
     ss << value;
     return ss.str();
 }
 
-Result distance(const Curve &curve1, const Curve &curve2, const distance_t eps, const bool round) {
+Result distance(const Curve &curve1, const Curve &curve2) {
     if ((curve1.complexity() < 2) or (curve2.complexity() < 2)) {
         std::cerr << "WARNING: comparison possible only for curves of at least two points" << std::endl;
         Result result;
@@ -48,21 +51,21 @@ Result distance(const Curve &curve1, const Curve &curve2, const distance_t eps, 
     std::cout << "narrowed to [" << lb << ", " << ub.value << "]" << std::endl;
     #endif
 
-    auto dist = _distance(curve1, curve2, ub, lb, eps);
+    auto dist = _distance(curve1, curve2, ub, lb);
     dist.time_bounds = (end-start).count() / 1000000000.0;
     if (round) dist.value =  std::round(dist.value * 1e3) / 1e3;
 
     return dist;
 }
 
-Result _distance(const Curve &curve1, const Curve &curve2, distance_t ub, distance_t lb, const distance_t eps) {
+Result _distance(const Curve &curve1, const Curve &curve2, distance_t ub, distance_t lb) {
     Result result;
     auto start = boost::chrono::process_real_cpu_clock::now();
     
     distance_t split = (ub + lb)/2;
     std::size_t number_searches = 0;
     
-    if (ub - lb > eps) {
+    if (ub - lb > epsilon) {
         auto infty = std::numeric_limits<distance_t>::infinity();
         std::vector<std::vector<distance_t>> reachable1(curve1.complexity()-1, std::vector<distance_t>(curve2.complexity(), infty));
         std::vector<std::vector<distance_t>> reachable2(curve1.complexity(), std::vector<distance_t>(curve2.complexity()-1, infty));
@@ -76,7 +79,7 @@ Result _distance(const Curve &curve1, const Curve &curve2, distance_t ub, distan
         }
 
         //Binary search over the feasible distances
-        while (ub - lb > eps) {
+        while (ub - lb > epsilon) {
             ++number_searches;
             split = (ub + lb)/2;
             auto isLessThan = _less_than_or_equal(split, curve1, curve2, reachable1, reachable2, free_intervals1, free_intervals2);
