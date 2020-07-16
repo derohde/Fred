@@ -118,6 +118,7 @@ BOOST_PYTHON_MODULE(backend)
         .def("__str__", &Point::str)
         .def("__iter__", range(&Point::cbegin, &Point::cend))
         .def("__repr__", &Point::repr)
+        .add_property("values", &Point::as_ndarray)
     ;
     
     class_<Curve>("Curve", init<np::ndarray>())

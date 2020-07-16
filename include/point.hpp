@@ -16,8 +16,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <string>
 #include <sstream>
 
+#include <boost/python.hpp>
+#include <boost/python/numpy.hpp>
+
 #include "types.hpp"
 #include "interval.hpp"
+
+namespace np = boost::python::numpy;
+namespace p = boost::python;
 
 class Point : public Coordinates {    
 public:    
@@ -155,6 +161,17 @@ public:
         const distance_t lambda1 = std::min(r1, r2), lambda2 = std::max(r1, r2);
                 
         return Interval(std::max(0., lambda1), std::min(1., lambda2));
+    }
+    
+    inline auto as_ndarray() const {
+        np::dtype dt = np::dtype::get_builtin<coordinate_t>();
+        p::list l;
+        np::ndarray result = np::array(l, dt);
+        for (const auto &elem : *this) {
+            l.append(elem);
+        }
+        result = np::array(l, dt);
+        return result;
     }
     
     std::string str() const;
