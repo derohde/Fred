@@ -13,7 +13,7 @@ By default, Fred will automatically determine the number of threads to use. If y
 
 ### Curves
 - signature: `fred.Curves()`
-- methods: add (add curve), [] (get curve), len (get number curves)
+- methods: fred.Curves.add: add curve, fred.Curves[i]: get ith curve, len(fred.Curves): number curves
 
 ### continous Fréchet distance
 - signature: `fred.continuous_frechet(curve1, curve2)`
@@ -27,20 +27,25 @@ By default, Fred will automatically determine the number of threads to use. If y
 - signature: `fred.discrete_frechet(curve1, curve2)`
 - returns: `fred.Discrete_Frechet_Result` with members `value` and `time`
 
-### discrete (k,l)-center clustering (continuous Fréchet)
+### Clustering
+
+#### discrete (k,l)-center clustering (continuous Fréchet)
 - from [**Approximating (k,l)-center clustering for curves**](https://dl.acm.org/doi/10.5555/3310435.3310616)
 - signature: `fred.discrete_klcenter(k, l, curves, with_assignment)`, `with_assignment`: defaults to false; assigns curves to nearest centers if true
-- returns: `fred.Clustering_Result` with mebers `value`: objective value, `time`, `assignment`: empty if with_assignment=false
+- returns: `fred.Clustering_Result` with mebers `value`: objective value, `time`: running-time, `assignment`: empty if with_assignment=false
 
-### discrete (k,l)-median clustering (continuous Fréchet)
+#### discrete (k,l)-median clustering (continuous Fréchet)
 - Algorithm 6 in [**Coresets for (k,l)-Clustering under the Fréchet distance**](https://arxiv.org/pdf/1901.01870.pdf) + simplification
 - signature: `fred.discrete_klmedian(k, l, curves, with_assignment)` with parameter `with_assignment`: defaults to false; assigns curves to nearest centers if true
-- returns: `fred.Clustering_Result` with mebers `value`: objective value, `time`, `assignment`: empty if with_assignment=false
+- returns: `fred.Clustering_Result` with mebers `value`: objective value, `time`: running-time, `assignment`: empty if with_assignment=false
 
-### discrete one-median clustering (continuous Fréchet) via sampling 
+#### discrete one-median clustering (continuous Fréchet) via sampling 
 - [Section 3 in **Random Projections and Sampling Algorithms for Clustering of High Dimensional Polygonal Curves**](https://papers.nips.cc/paper/9443-random-projections-and-sampling-algorithms-for-clustering-of-high-dimensional-polygonal-curves)
 - signature: `fred.discrete_onemedian_sampling(curves, epsilon_sampling, with_assignment)` with parameters `epsilon_sampling`: (1+epsilon) approximation parameter, `with_assignment`: defaults to false; assigns curves to nearest centers if true
-- returns: `fred.Clustering_Result` with mebers `value`: objective value, `time`, `assignment`: empty if with_assignment=false
+- returns: `fred.Clustering_Result` with mebers `value`: objective value, `time`: running-time, `assignment`: empty if with_assignment=false
+
+#### Cluster Assignment
+- methods: len(fred.Cluster_Assignment): number of centers, fred.Cluster_Assignment.count(i): number of curves assigned to center i, fred.Cluster_Assignment.get(i,j): get index of jth curve assigned to center i
 
 ### dimension reduction via. gaussian random projection 
 - [Section 2 in **Random Projections and Sampling Algorithms for Clustering of High Dimensional Polygonal Curves**](https://papers.nips.cc/paper/9443-random-projections-and-sampling-algorithms-for-clustering-of-high-dimensional-polygonal-curves)

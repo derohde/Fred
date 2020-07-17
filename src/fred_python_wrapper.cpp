@@ -171,7 +171,7 @@ BOOST_PYTHON_MODULE(backend)
         .def("__iter__", range(&Clustering::Clustering_Result::cbegin, &Clustering::Clustering_Result::cend))
     ;
     
-    class_<Clustering::Cluster_Assignment>("Clustering_Assignment", init<>())
+    class_<Clustering::Cluster_Assignment>("Cluster_Assignment", init<>())
         .def("__len__", &Clustering::Cluster_Assignment::size)
         .def("count", &Clustering::Cluster_Assignment::count)
         .def("get", &Clustering::Cluster_Assignment::get)
