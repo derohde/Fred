@@ -51,9 +51,9 @@ By default, Fred will automatically determine the number of threads to use. If y
 
 #### Cluster Assignment
 - signature: `fred.Cluster_Assignment`
-- methods: len(fred.Cluster_Assignment): number of centers, fred.Cluster_Assignment.count(i): number of curves assigned to center i, fred.Cluster_Assignment.get(i,j): get index of jth curve assigned to center i
+- methods: `len(fred.Cluster_Assignment)`: number of centers, `fred.Cluster_Assignment.count(i)`: number of curves assigned to center i, `fred.Cluster_Assignment.get(i,j)`: get index of jth curve assigned to center i
 
-### dimension reduction via. gaussian random projection 
+### Dimension Reduction via Gaussian Random Projection 
 - [Section 2 in **Random Projections and Sampling Algorithms for Clustering of High Dimensional Polygonal Curves**](https://papers.nips.cc/paper/9443-random-projections-and-sampling-algorithms-for-clustering-of-high-dimensional-polygonal-curves)
 - signature: `fred.dimension_reduction(curves, epsilon, empirical_constant)` with parameters `epsilon`: (1+epsilon) approximation parameter, `empirical_constant`: use constant of empirical study (faster, but less accurate)
 - returns: `fred.Curves` collection of curves
