@@ -44,7 +44,13 @@ By default, Fred will automatically determine the number of threads to use. If y
 - signature: `fred.discrete_onemedian_sampling(curves, epsilon_sampling, with_assignment)` with parameters `epsilon_sampling`: (1+epsilon) approximation parameter, `with_assignment`: defaults to false; assigns curves to nearest centers if true
 - returns: `fred.Clustering_Result` with mebers `value`: objective value, `time`: running-time, `assignment`: empty if with_assignment=false
 
+#### Clustering Result
+- signature: `fred.Clustering_Result`
+- methods: `len(fred.Clustering_Result)`: number of centers, `fred.Clustering_Result[i]`: get ith center
+- members: `value`: objective value, `time`: running-time, `assignment`: empty if with_assignment=false
+
 #### Cluster Assignment
+- signature: `fred.Cluster_Assignment`
 - methods: len(fred.Cluster_Assignment): number of centers, fred.Cluster_Assignment.count(i): number of curves assigned to center i, fred.Cluster_Assignment.get(i,j): get index of jth curve assigned to center i
 
 ### dimension reduction via. gaussian random projection 
