@@ -15,15 +15,15 @@ By default, Fred will automatically determine the number of threads to use. If y
 - signature: `fred.Curves()`
 - methods: fred.Curves.add: add curve, fred.Curves[i]: get ith curve, len(fred.Curves): number curves
 
-### continous Fréchet distance
+#### continous Fréchet distance
 - signature: `fred.continuous_frechet(curve1, curve2)`
 - returns: `fred.Continuous_Frechet_Result` with members `value`, `time_bounds`: running-time for upper and lower bound, `number_searches`: number of free space diagrams built, `time_searches`: running-time for free spaces
 
-#### continuous Frechet distance config
+###### continuous Frechet distance config
 - approximation error: `fred.set_continuous_frechet_epsilon(epsilon)` with parameter `epsilon`, which defaults to 0.001
 - rounding (rounding up to 3 decimals): `fred.set_continuous_frechet_rounding(round)` with parameter `round`, which defaults to true
 
-### discrete Fréchet distance
+#### discrete Fréchet distance
 - signature: `fred.discrete_frechet(curve1, curve2)`
 - returns: `fred.Discrete_Frechet_Result` with members `value` and `time`
 
