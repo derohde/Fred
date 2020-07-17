@@ -59,13 +59,13 @@ bool get_frechet_rounding() {
     return fc::round;
 }
 
-Clustering::Clustering_Result kcenter(const curve_number_t num_centers, const Curves &in, const bool with_assignment = false) {
-    auto result = Clustering::gonzalez(num_centers, in, false, with_assignment);
+Clustering::Clustering_Result klcenter(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, const bool with_assignment = false) {
+    auto result = Clustering::gonzalez(num_centers, ell, in, false, with_assignment);
     
     return result;
 }
 
-BOOST_PYTHON_FUNCTION_OVERLOADS(kcenter_overloads, kcenter, 2, 3);
+BOOST_PYTHON_FUNCTION_OVERLOADS(klcenter_overloads, klcenter, 3, 4);
 
 Clustering::Clustering_Result onemedian_sampling(const Curves &in, const double epsilon, const bool with_assignment = false) {
     
@@ -85,23 +85,23 @@ Clustering::Clustering_Result onemedian_exhaustive(const Curves &in, const bool 
 
 BOOST_PYTHON_FUNCTION_OVERLOADS(onemedian_exhaustive_overloads, onemedian_exhaustive, 1, 2);
 
-Clustering::Clustering_Result kmedian(const curve_number_t num_centers, const Curves &in, const bool with_assignment = false) {
+Clustering::Clustering_Result klmedian(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, const bool with_assignment = false) {
 
-    auto result = Clustering::arya(num_centers, in, with_assignment);
+    auto result = Clustering::arya(num_centers, ell, in, with_assignment);
     
     return result;
 }
 
-BOOST_PYTHON_FUNCTION_OVERLOADS(kmedian_overloads, kmedian, 2, 3);
+BOOST_PYTHON_FUNCTION_OVERLOADS(klmedian_overloads, klmedian, 3, 4);
 
-Coreset::Onemedian_Coreset onemedian_coreset(const Curves &in, const double epsilon, const double constant = 1) {
-    return Coreset::Onemedian_Coreset(in, epsilon, constant);
+Coreset::Onemedian_Coreset onemedian_coreset(const Curves &in, const curve_size_t ell, const double epsilon, const double constant = 1) {
+    return Coreset::Onemedian_Coreset(ell, in, epsilon, constant);
 }
 
-BOOST_PYTHON_FUNCTION_OVERLOADS(onemedian_coreset_overloads, onemedian_coreset, 2, 3);
+BOOST_PYTHON_FUNCTION_OVERLOADS(onemedian_coreset_overloads, onemedian_coreset, 3, 4);
 
 Curve weak_minimum_error_simplification(Curve &curve, curve_size_t l) {
-    Curve_Graph graph(curve);
+    Subcurve_Graph graph(curve);
     return graph.weak_minimum_error_simplification(l);
 }
 
@@ -184,8 +184,8 @@ BOOST_PYTHON_MODULE(backend)
     def("dimension_reduction", jl_transform, jl_transform_overloads());
     def("continuous_frechet", continuous_frechet);
     def("discrete_frechet", discrete_frechet);
-    def("discrete_kcenter", kcenter, kcenter_overloads());
-    def("discrete_kmedian", kmedian, kmedian_overloads());
+    def("discrete_klcenter", klcenter, klcenter_overloads());
+    def("discrete_klmedian", klmedian, klmedian_overloads());
     def("discrete_onemedian_sampling", onemedian_sampling, onemedian_sampling_overloads());
     def("discrete_onemedian_exhaustive", onemedian_exhaustive, onemedian_exhaustive_overloads());
     def("onemedian_coreset", onemedian_coreset, onemedian_coreset_overloads());

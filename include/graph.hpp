@@ -22,14 +22,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include "curve.hpp"
 #include "frechet.hpp"
 
-class Curve_Graph {
+class Subcurve_Graph {
 
     Curve& curve;
     std::map<std::pair<curve_size_t, curve_size_t>, distance_t> edges;
     
 public:
     
-    Curve_Graph(Curve &curve) : curve{curve} {
+    Subcurve_Graph(Curve &curve) : curve{curve} {
         const auto complexity = curve.complexity();
         
         for (curve_size_t i = 0; i < complexity - 1; ++i) {
