@@ -23,7 +23,7 @@ namespace Continuous {
     extern distance_t epsilon;
     extern bool round;
     
-    struct Result {
+    struct Distance {
         distance_t value;
         double time_searches;
         double time_bounds;
@@ -32,9 +32,9 @@ namespace Continuous {
         std::string repr() const;
     };
     
-    Result distance(const Curve&, const Curve&);
+    Distance distance(const Curve&, const Curve&);
     
-    Result _distance(const Curve&, const Curve&, distance_t, distance_t);
+    Distance _distance(const Curve&, const Curve&, distance_t, distance_t);
             
     bool _less_than_or_equal(const distance_t, const Curve&, const Curve&, 
             std::vector<std::vector<distance_t>>&, std::vector<std::vector<distance_t>>&, 
@@ -44,14 +44,14 @@ namespace Continuous {
 }
 namespace Discrete {
     
-    struct Result {
+    struct Distance {
         distance_t value;
         double time;
         
         std::string repr() const;
     };
     
-    Result distance(const Curve&, const Curve&);
+    Distance distance(const Curve&, const Curve&);
     
     distance_t _dp(std::vector<std::vector<distance_t>> &a, const curve_size_t i, const curve_size_t j, 
             const Curve &curve1, const Curve &curve2);

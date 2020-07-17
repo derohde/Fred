@@ -22,22 +22,22 @@ namespace Continuous {
 distance_t epsilon = 0.001;
 bool round = true;
     
-std::string Result::repr() const {
+std::string Distance::repr() const {
     std::stringstream ss;
     ss << value;
     return ss.str();
 }
 
-Result distance(const Curve &curve1, const Curve &curve2) {
+Distance distance(const Curve &curve1, const Curve &curve2) {
     if ((curve1.complexity() < 2) or (curve2.complexity() < 2)) {
         std::cerr << "WARNING: comparison possible only for curves of at least two points" << std::endl;
-        Result result;
+        Distance result;
         result.value = std::numeric_limits<distance_t>::signaling_NaN();
         return result;
     }
     if (curve1.dimensions() != curve2.dimensions()) {
         std::cerr << "WARNING: comparison possible only for curves of equal number of dimensions" << std::endl;
-        Result result;
+        Distance result;
         result.value = std::numeric_limits<distance_t>::signaling_NaN();
         return result;
     }
@@ -58,8 +58,8 @@ Result distance(const Curve &curve1, const Curve &curve2) {
     return dist;
 }
 
-Result _distance(const Curve &curve1, const Curve &curve2, distance_t ub, distance_t lb) {
-    Result result;
+Distance _distance(const Curve &curve1, const Curve &curve2, distance_t ub, distance_t lb) {
+    Distance result;
     auto start = boost::chrono::process_real_cpu_clock::now();
     
     distance_t split = (ub + lb)/2;
@@ -144,12 +144,12 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
     
     for (curve_size_t i = 0; i < curve1.complexity() - 1; ++i) {
         reachable1[i][0] = 0.;
-        if (curve2[0].dist_sqr(curve1[i+1]) > dist_sqr) { break; }
+        if (curve2[0].dist_sqr(curve1[i+1]) > dist_sqr) break;
     }
     
     for (curve_size_t j = 0; j < curve2.complexity() - 1; ++j) {
         reachable2[0][j] = 0.;
-        if (curve1[0].dist_sqr(curve2[j+1]) > dist_sqr) { break; }
+        if (curve1[0].dist_sqr(curve2[j+1]) > dist_sqr) break;
     }
     
     #pragma omp parallel for collapse(2)
@@ -214,26 +214,28 @@ distance_t _greedy_upper_bound(const Curve &curve1, const Curve &curve2) {
             ++j;
         }
     }
-
+    
     while (i < len1) result = std::max(result, curve1[i++].dist_sqr(curve2[j]));
+    
     --i;
+    
     while (j < len2) result = std::max(result, curve1[i].dist_sqr(curve2[j++]));
     
     return std::sqrt(result);
 }
 
-}
+} // end namespace Continuous
 
 namespace Discrete {
     
-std::string Result::repr() const {
+std::string Distance::repr() const {
     std::stringstream ss;
     ss << value;
     return ss.str();
 }
     
-Result distance(const Curve &curve1, const Curve &curve2) {
-    Result result;
+Distance distance(const Curve &curve1, const Curve &curve2) {
+    Distance result;
     auto start = boost::chrono::process_real_cpu_clock::now();
     std::vector<std::vector<distance_t>> a(curve1.complexity(), std::vector<distance_t>(curve2.complexity(), -1));
     auto value = std::sqrt(_dp(a, curve1.complexity() - 1, curve2.complexity() - 1, curve1, curve2));
@@ -259,6 +261,7 @@ distance_t _dp(std::vector<std::vector<distance_t>> &a, const curve_size_t i, co
     }
     return a[i][j];
 }
-}
 
-}
+} // end namespace Discrete
+
+} // end namespace Frechet

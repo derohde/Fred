@@ -40,14 +40,12 @@ class CMakeBuild(build_ext):
             os.path.dirname(self.get_ext_fullpath(ext.name)))
             
         import sys
-        if (sys.version_info > (3, 0)):
-            bpy = "python3"
-            bnpy = "numpy3"
-        else:
-            bpy = "python"
-            bnpy = "numpy"
+        bpy = "python{}{}".format(sys.version_info[0], sys.version_info[1])
+        bnpy = "numpy{}{}".format(sys.version_info[0], sys.version_info[1])
             
         cmake_args = ['-DBPY=' + bpy, '-DBNPY=' + bnpy,
+                      '-DBOOST_ROOT=~/boost',
+                      '-DBOOST_LIBRARYDIR=~/boost/lib',
                       '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
                       '-DPYTHON_EXECUTABLE=' + sys.executable,]
 

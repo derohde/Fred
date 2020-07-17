@@ -31,14 +31,15 @@ class Onemedian_Coreset {
 public:
     Onemedian_Coreset() {}
     
-    inline Onemedian_Coreset(const Curves &in, const distance_t epsilon, const double constant = 1) {
-        compute(in, epsilon, constant);
+    inline Onemedian_Coreset(const curve_size_t ell, const Curves &in, const distance_t epsilon, const double constant = 1) {
+        compute(ell, in, epsilon, constant);
     }
     
-    inline void compute(const Curves &in, const distance_t epsilon, const double eps, const bool round = true, const double constant = 1) {
+    inline void compute(const curve_size_t ell, const Curves &in, const distance_t epsilon, const double eps, const bool round = true, const double constant = 1) {
         const auto n = in.size();
         const auto m = in.get_m();
-        const auto c_approx = Clustering::arya(1, in, false);
+        auto distances = Clustering::Distance_Matrix(in.size(), in.size());
+        const auto c_approx = Clustering::arya(1, ell, in, distances, false);
         const auto center = c_approx.centers[0];
         cost = c_approx.value;
         if (cost == 0) {
@@ -49,7 +50,7 @@ public:
         lambda = std::vector<distance_t>(n);
         
         for (curve_number_t i = 0; i < n; ++i) {
-            lambda[i] = 52.0 / n + 24.0 / cost * Frechet::Continuous::distance(in[i], in[center]).value;
+            lambda[i] = 52.0 / n + 24.0 / cost * Frechet::Continuous::distance(in[i], center).value;
             probabilities[i] = (lambda[i]) / Lambda;
         }
         

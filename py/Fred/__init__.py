@@ -4,11 +4,29 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot_curve(*curves):
+def plot_curve(*curves, save=None):
     for curve in curves:
-        points = list()
-        for i in range(0, len(curve)):
-            points.append(curve[i].values)
-        points = np.array(points)
-        plt.plot(points[:, 0], points[:, 1])
-    plt.show()
+        if isinstance(curve, backend.Curve):
+            if curve.dimensions >= 2:
+                plt.plot(curve.values[:, 0], curve.values[:, 1], label = curve.name)
+            else:
+                plt.plot(curve.values, label = curve.name)
+        elif isinstance(curve, backend.Curves):
+            for curv in curve:
+                if curv.dimensions >= 2:
+                    plt.plot(curv.values[:, 0], curv.values[:, 1], label = curv.name)
+                else:
+                    plt.plot(curv.values, label = curv.name)
+        elif isinstance(curve, backend.Clustering_Result):
+            for center in curve:
+                if center.dimensions >= 2:
+                    plt.plot(center.values[:, 0], center.values[:, 1], label = center.name)
+                else:
+                    plt.plot(center.values, label = center.name)
+                
+    plt.legend(title='Curve names:')
+    plt.title('Fred Curves')
+    if save is None:
+        plt.show()
+    else:
+        plt.savefig("{}.svg".format(save), dpi=150)

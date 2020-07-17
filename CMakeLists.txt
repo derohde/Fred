@@ -47,4 +47,5 @@ PYTHON_ADD_MODULE(backend
             src/interval.cpp
             src/frechet.cpp
             src/jl_transform.cpp
+            src/simplification.cpp
 )

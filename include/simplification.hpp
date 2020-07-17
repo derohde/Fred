@@ -14,7 +14,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <iostream>
 #include <string>
 #include <sstream>
-#include <map>
 #include <algorithm>
 #include <cmath>
 
@@ -22,30 +21,39 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include "curve.hpp"
 #include "frechet.hpp"
 
-class Curve_Graph {
+namespace Simplification {
+
+ class Subcurve_Shortcut_Graph {
 
     Curve& curve;
-    std::map<std::pair<curve_size_t, curve_size_t>, distance_t> edges;
+    std::vector<std::vector<distance_t>> edges;
     
 public:
     
-    Curve_Graph(Curve &curve) : curve{curve} {
+    Subcurve_Shortcut_Graph(Curve &curve) : curve{curve}, edges{std::vector<std::vector<distance_t>>(curve.complexity(), std::vector<distance_t>(curve.complexity(), std::numeric_limits<distance_t>::infinity()))} {
         const auto complexity = curve.complexity();
+        Curve segment(2, curve.front().dimensions());
+        auto distance = Frechet::Continuous::Distance();
         
         for (curve_size_t i = 0; i < complexity - 1; ++i) {
+            
             for (curve_size_t j = i + 1; j < complexity; ++j) {
+                
                 curve.set_subcurve(i, j);
-                Curve segment;
-                segment.push_back(curve.front());
-                segment.push_back(curve.back());
-                auto distance = Frechet::Continuous::distance(curve, segment);
-                edges.emplace(std::make_pair(i, j) , distance.value);
+                
+                segment[0] = curve.front();
+                segment[1] = curve.back();
+                
+                distance = Frechet::Continuous::distance(curve, segment);
+                edges[i][j] = distance.value;
+                
                 curve.reset_subcurve();
             }
+            
         }
     }
     
-    Curve weak_minimum_error_simplification(const curve_size_t ll) {
+    Curve weak_minimum_error_simplification(const curve_size_t ll) const {
         if (ll >= curve.complexity()) return curve;
         
         auto l = ll - 1;
@@ -58,16 +66,19 @@ public:
             return result;
         }
         
-        std::vector<std::vector<distance_t>> distances(curve.complexity(), std::vector<distance_t>(l, 0));
+        std::vector<std::vector<distance_t>> distances(curve.complexity(), std::vector<distance_t>(l, std::numeric_limits<distance_t>::infinity()));
         std::vector<std::vector<curve_size_t>> predecessors(curve.complexity(), std::vector<curve_size_t>(l));
-                
+        
+        std::vector<distance_t> others;
+        curve_size_t best = 0;
+        
         for (curve_size_t i = 0; i < l; ++i) {
             
             if (i == 0) {
                 
                 for (curve_size_t j = 1; j < curve.complexity(); ++j) {
                     
-                    distances[j][0] = edges.find(std::make_pair(0, j))->second;
+                    distances[j][0] = edges[0][j];
                     predecessors[j][0] = 0;
                     
                 }
@@ -76,15 +87,15 @@ public:
                 
                 for (curve_size_t j = 1; j < curve.complexity(); ++j) {
                     
-                    std::vector<distance_t> others(j);
+                    others.resize(j);
                     
                     for (curve_size_t k = 0; k < j; ++k) {
                         
-                        others[k] = std::max(edges.find(std::make_pair(k, j))->second, distances[k][i - 1]);
+                        others[k] = std::max(distances[k][i - 1], edges[k][j]);
                         
                     }
                     
-                    auto best = std::distance(others.begin(), std::min_element(others.begin(), others.end()));
+                    best = std::distance(others.begin(), std::min_element(others.begin(), others.end()));
                     
                     distances[j][i] = others[best];
                     predecessors[j][i] = best;
@@ -92,18 +103,23 @@ public:
             }
         }
         
-        auto ell = l;
+        curve_size_t ell = l;
+        
         result.push_back(curve.back());
-        auto predecessor = predecessors[curve.complexity() - 1][ell - 1];
+        auto predecessor = predecessors[curve.complexity() - 1][--ell];
         
-        while(ell > 0) {
+        for (curve_size_t i = 0; i  < l; ++i) {
             result.push_back(curve[predecessor]);
-            predecessor = predecessors[predecessor][--ell - 1];
+            predecessor = predecessors[predecessor][--ell];
         }
-        
+                
         std::reverse(result.begin(), result.end());
         return result;
     }
     
 };
+
+Curve approximate_weak_minimum_link_simplification(const Curve&, const distance_t);
+Curve approximate_weak_minimum_error_simplification(const Curve&, const curve_size_t);
  
+};

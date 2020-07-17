@@ -24,15 +24,18 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 namespace np = boost::python::numpy;
 namespace p = boost::python;
 
-class Curve : public Points {
+class Curve : private Points {
     
-    curve_size_t vstart = 0, vend;
+    curve_size_t vstart = 0, vend = 0;
+    std::string name;
     
-public:    
-    inline Curve() : vend{0} {}
-    inline Curve(const curve_size_t m, const dimensions_t dimensions) : Points(m, Point(dimensions)), vend{m-1} {}
-    Curve(const Points &points);
-    Curve(const np::ndarray &in);
+public:
+    typedef typename Points::iterator iterator;
+    
+    inline Curve(const std::string &name = "unnamed curve") : vstart{0}, vend{0}, name{name} {}
+    inline Curve(const curve_size_t m, const dimensions_t dimensions, const std::string &name = "unnamed curve") : Points(m, Point(dimensions)), vstart{0}, vend{m-1} {}
+    Curve(const Points &points, const std::string &name = "unnamed curve");
+    Curve(const np::ndarray &in, const std::string &name = "unnamed curve");
     
     inline Point get(const curve_size_t i) const {
         return Points::operator[](vstart + i);
@@ -62,12 +65,39 @@ public:
         return Points::operator[](vend);
     }
     
-    inline curve_size_t complexity() const { 
-        return vend - vstart + 1; 
+    inline const auto begin() const {
+        return Points::begin();
+    }
+    
+    inline const auto end() const {
+        return Points::end();
+    }
+    
+    inline auto begin() {
+        return Points::begin();
+    }
+    
+    inline auto end() {
+        return Points::end();
+    }
+    
+    inline auto empty() const {
+        return Points::empty();
+    }
+    
+    inline void resize(const curve_size_t n) {
+        const auto oldsize = size(), difference = n - oldsize;
+        Points::resize(n);
+        vend += difference;
+        if (vend < vstart) vstart = vend;
+    }
+    
+    inline curve_size_t complexity() const {
+        return empty() ? 0 : vend - vstart + 1; 
     }
     
     inline curve_size_t size() const {
-        return vend - vstart + 1;
+        return empty() ? 0 : vend - vstart + 1;
     }
     
     inline dimensions_t dimensions() const { 
@@ -93,6 +123,21 @@ public:
         Points::push_back(point);
         vend = Points::size() - 1;
     }
+    
+    inline auto as_ndarray() const {
+        np::dtype dt = np::dtype::get_builtin<coordinate_t>();
+        p::list l;
+        np::ndarray result = np::array(l, dt);
+        for (const auto &elem : *this) {
+            l.append(elem.as_ndarray());
+        }
+        result = np::array(l, dt);
+        return result;
+    }
+    
+    void set_name(const std::string&);
+    
+    std::string get_name() const;
     
     std::string str() const;
     
@@ -122,6 +167,8 @@ public:
     inline curve_number_t number() const {
         return size();
     }
+    
+    Curves simplify(const curve_size_t);
     
     std::string str() const;
     
