@@ -21,7 +21,7 @@ def plot_curve(*curves):
                 for j in range(0, len(curve[i])):
                     points.append(curve[i][j].values)
                 points = np.array(points)
-                if curve.dimensions >= 2:
+                if curve[i].dimensions >= 2:
                     plt.plot(points[:, 0], points[:, 1])
                 else:
                     plt.plot(points)

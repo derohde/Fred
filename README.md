@@ -86,11 +86,11 @@ curves.add(ps5)
 curves.add(ps6)
 
 curves = fred.dimension_reduction(curves, 0.95) # fred is pretty fast but with high dimensional data
-                                                # a dimension reduction massively improves running time
+                                                # a dimension reduction massively improves running-time
                                                 # even for smaller values of epsilon
                                   
                                                
-clustering = fred.discrete_kmedian(2, curves)
+clustering = fred.discrete_klmedian(2,, 100, curves)
 
 print("clustering cost is {}".format(clustering.value))
 
