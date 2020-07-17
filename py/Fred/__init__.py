@@ -25,6 +25,17 @@ def plot_curve(*curves):
                     plt.plot(points[:, 0], points[:, 1], label = curve[i].name)
                 else:
                     plt.plot(points, label = curve[i].name)
+        elif isinstance(curve, backend.Clustering_Result):
+            for i in range(0, len(curve)):
+                points = list()
+                for j in range(0, len(curve[i])):
+                    points.append(curve[i][j].values)
+                points = np.array(points)
+                if curve[i].dimensions >= 2:
+                    plt.plot(points[:, 0], points[:, 1], label = curve[i].name)
+                else:
+                    plt.plot(points, label = curve[i].name)
+                
     plt.legend(title='Curve names:')
     plt.title('Fred Curves')
     plt.show()
