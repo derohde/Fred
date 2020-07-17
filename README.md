@@ -4,6 +4,13 @@ A fast, scalable and light-weight C++ Fréchet distance library, exposed to pyth
 ## Ingredients C++ Backend
 `import Fred.backend as fred`
 
+### Curve
+- signature: `fred.Curve(np.ndarray)`
+
+### Curves
+- signature: `fred.Curves()`
+- methods: add (add curve), [] (get curve), len (get number curves)
+
 ### continous Fréchet distance
 - signature: `fred.continuous_frechet(curve1, curve2)`
 - returns: `fred.Continuous_Frechet_Result` with members `value`, `time_bounds`: running-time for upper and lower bound, `number_searches`: number of free space diagrams built, `time_searches`: running-time for free spaces
@@ -16,14 +23,14 @@ A fast, scalable and light-weight C++ Fréchet distance library, exposed to pyth
 - signature: `fred.discrete_frechet(curve1, curve2)`
 - returns: `fred.Discrete_Frechet_Result` with members `value` and `time`
 
-### discrete k-center clustering (continuous Fréchet)
+### discrete (k,l)-center clustering (continuous Fréchet)
 - from [**Approximating (k,l)-center clustering for curves**](https://dl.acm.org/doi/10.5555/3310435.3310616)
-- signature: `fred.discrete_kcenter(k,l, curves, with_assignment)`, `with_assignment`: defaults to false; assigns curves to nearest centers if true
+- signature: `fred.discrete_klcenter(k, l, curves, with_assignment)`, `with_assignment`: defaults to false; assigns curves to nearest centers if true
 - returns: `fred.Clustering_Result` with mebers `value`: objective value, `time`, `assignment`: empty if with_assignment=false
 
-### discrete k-median clustering (continuous Fréchet)
-- Algorithm 6 in [**Coresets for (k,l)-Clustering under the Fréchet distance**](https://arxiv.org/pdf/1901.01870.pdf)
-- signature: `fred.discrete_kmedian(k, curves, with_assignment)` with parameter `with_assignment`: defaults to false; assigns curves to nearest centers if true
+### discrete (k,l)-median clustering (continuous Fréchet)
+- Algorithm 6 in [**Coresets for (k,l)-Clustering under the Fréchet distance**](https://arxiv.org/pdf/1901.01870.pdf) + simplification
+- signature: `fred.discrete_klmedian(k, l, curves, with_assignment)` with parameter `with_assignment`: defaults to false; assigns curves to nearest centers if true
 - returns: `fred.Clustering_Result` with mebers `value`: objective value, `time`, `assignment`: empty if with_assignment=false
 
 ### discrete one-median clustering (continuous Fréchet) via sampling 
@@ -53,6 +60,7 @@ print(curve2d1)
 
 print("distance is {}".format(fred.continuous_frechet(curve2d1, curve2d2).value))
 
+print("download HUGE curves")
 
 import requests, zipfile, io             # you can use all libraries 
                                          # that work with numpy to read data into fred
@@ -87,7 +95,7 @@ clustering = fred.discrete_kmedian(2, curves)
 print("clustering cost is {}".format(clustering.value))
 
 for i, center in enumerate(clustering):
-    print("center {} is {}".format(i, curves[center]))
+    print("center {} is {}".format(i, center))
 ```
   
 ## Installation

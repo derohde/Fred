@@ -16,7 +16,7 @@ def plot_curve(*curves):
             else:
                 plt.plot(points)
         elif isinstance(curve, backend.Curves):
-            for i in rane(0, len(curve)):
+            for i in range(0, len(curve)):
                 points = list()
                 for j in range(0, len(curve[i])):
                     points.append(curve[i][j].values)
