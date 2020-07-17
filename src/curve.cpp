@@ -106,6 +106,10 @@ std::string Curve::get_name() const {
     return name;
 }
 
+void Curve::set_name(const std::string &name) {
+    this->name = name;
+}
+
 std::ostream& operator<<(std::ostream &out, const Curve &curve) {
     if (curve.empty()) return out;
     out << "[";

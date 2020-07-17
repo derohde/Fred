@@ -223,7 +223,9 @@ Clustering_Result gonzalez(const curve_number_t num_centers, const curve_size_t 
     Curves simpl_centers;
     for (const auto center: centers) {
         Subcurve_Graph graph(const_cast<Curve&>(in[center]));
-        simpl_centers.push_back(graph.weak_minimum_error_simplification(ell));
+        auto simple_center = graph.weak_minimum_error_simplification(ell);
+        simple_center.set_name("Simplification of " + in[center].get_name());
+        simpl_centers.push_back(simple_center);
     }
     
     auto end = boost::chrono::process_real_cpu_clock::now();
