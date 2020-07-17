@@ -10,7 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include "curve.hpp"
 
-Curve::Curve(const Points &points) : Points(points), vend{points.size()-1} {
+Curve::Curve(const Points &points, const std::string &name) : Points(points), vend{points.size() - 1}, name{name} {
     if (points.empty()) { 
         std::cerr << "warning: constructed empty curve" << std::endl;
         return; 
@@ -20,7 +20,7 @@ Curve::Curve(const Points &points) : Points(points), vend{points.size()-1} {
     #endif
 }
 
-Curve::Curve(const np::ndarray &in) : Points(in.shape(0)) {
+Curve::Curve(const np::ndarray &in, const std::string &name) : Points(in.shape(0)), name{name} {
     const auto n_dimensions = in.get_nd();
     if (n_dimensions > 2){
         std::cerr << "A Curve requires a 1- or 2-dimensional numpy array of type double."<< std::endl;
@@ -79,7 +79,7 @@ Curve::Curve(const np::ndarray &in) : Points(in.shape(0)) {
 
 std::string Curve::repr() const {
     std::stringstream ss;
-    ss << "fred.Curve of complexity " << complexity() << " and " << dimensions() << " dimensions";
+    ss << "fred.Curve '" << name << "' of complexity " << complexity() << " and " << dimensions() << " dimensions";
     return ss.str();
 }
 
@@ -91,6 +91,7 @@ std::string Curves::repr() const {
 
 std::string Curve::str() const {
     std::stringstream ss;
+    ss << name << std::endl;
     ss << *this;
     return ss.str();
 }
@@ -99,6 +100,10 @@ std::string Curves::str() const {
     std::stringstream ss;
     ss << *this;
     return ss.str();
+}
+
+std::string Curve::get_name() const {
+    return name;
 }
 
 std::ostream& operator<<(std::ostream &out, const Curve &curve) {

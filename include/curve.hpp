@@ -27,12 +27,13 @@ namespace p = boost::python;
 class Curve : public Points {
     
     curve_size_t vstart = 0, vend;
+    std::string name;
     
 public:    
-    inline Curve() : vend{0} {}
-    inline Curve(const curve_size_t m, const dimensions_t dimensions) : Points(m, Point(dimensions)), vend{m-1} {}
-    Curve(const Points &points);
-    Curve(const np::ndarray &in);
+    inline Curve(const std::string &name = "unnamed curve") : vend{0}, name{name} {}
+    inline Curve(const curve_size_t m, const dimensions_t dimensions, const std::string &name = "unnamed curve") : Points(m, Point(dimensions)), vend{m-1} {}
+    Curve(const Points &points, const std::string &name = "unnamed curve");
+    Curve(const np::ndarray &in, const std::string &name = "unnamed curve");
     
     inline Point get(const curve_size_t i) const {
         return Points::operator[](vstart + i);
@@ -93,6 +94,10 @@ public:
         Points::push_back(point);
         vend = Points::size() - 1;
     }
+    
+    void set_name(const std::string&);
+    
+    std::string get_name() const;
     
     std::string str() const;
     

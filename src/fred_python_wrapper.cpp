@@ -24,7 +24,7 @@ namespace np = boost::python::numpy;
 namespace fc = Frechet::Continuous;
 namespace fd = Frechet::Discrete;
 
-distance_t epss = 0.001;
+const distance_t default_epsilon = 0.001;
 
 fc::Result continuous_frechet(const Curve &curve1, const Curve &curve2) { 
     return fc::distance(curve1, curve2);
@@ -110,7 +110,7 @@ BOOST_PYTHON_MODULE(backend)
     Py_Initialize();
     np::initialize();
     
-    scope().attr("epsilon") = epss;
+    scope().attr("default_epsilon_continuous_frechet") = default_epsilon;
     
     class_<Point>("Point", init<>())
         .def("__len__", &Point::dimensions)
@@ -122,8 +122,10 @@ BOOST_PYTHON_MODULE(backend)
     ;
     
     class_<Curve>("Curve", init<np::ndarray>())
+        .def(init<np::ndarray, std::string>())
         .add_property("dimensions", &Curve::dimensions)
         .add_property("complexity", &Curve::complexity)
+        .add_property("name", &Curve::get_name)
         .def("__getitem__", &Curve::get)
         .def("__len__", &Curve::complexity)
         .def("__str__", &Curve::str)
