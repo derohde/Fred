@@ -4,6 +4,10 @@ A fast, scalable and light-weight C++ Fréchet distance library, exposed to pyth
 ## Ingredients C++ Backend
 `import Fred.backend as fred`
 
+### Number of Threads
+
+By default, Fred will automatically determine the number of threads to use. If you want to set an upper limit, call `fred.set_maximum_number_threads(number)`.
+
 ### Curve
 - signature: `fred.Curve(np.ndarray)`
 

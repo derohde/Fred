@@ -105,6 +105,11 @@ Curve weak_minimum_error_simplification(Curve &curve, curve_size_t l) {
     return graph.weak_minimum_error_simplification(l);
 }
 
+void set_number_threads(std::uint64_t number) {
+    omp_set_dynamic(0);
+    omp_set_num_threads(number);
+}
+
 BOOST_PYTHON_MODULE(backend)
 {
     Py_Initialize();
@@ -192,4 +197,6 @@ BOOST_PYTHON_MODULE(backend)
     def("discrete_onemedian_exhaustive", onemedian_exhaustive, onemedian_exhaustive_overloads());
     def("onemedian_coreset", onemedian_coreset, onemedian_coreset_overloads());
     def("weak_minimum_error_simplification", weak_minimum_error_simplification);
+    
+    def("set_maximum_number_threads", set_number_threads);
 }
