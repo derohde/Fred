@@ -102,7 +102,9 @@ BOOST_PYTHON_FUNCTION_OVERLOADS(onemedian_coreset_overloads, onemedian_coreset, 
 
 Curve weak_minimum_error_simplification(Curve &curve, curve_size_t l) {
     Subcurve_Graph graph(curve);
-    return graph.weak_minimum_error_simplification(l);
+    auto scurve = graph.weak_minimum_error_simplification(l);
+    scurve.set_name("Simplification of " + curve.get_name());
+    return scurve;
 }
 
 void set_number_threads(std::uint64_t number) {
