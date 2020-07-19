@@ -73,17 +73,17 @@ public:
                 
             } else {
                 
-                for (curve_size_t j = 1; j < curve.complexity(); ++j) {
+                for (curve_size_t j = 1 + i; j < curve.complexity(); ++j) {
                     
-                    std::vector<distance_t> others(j);
+                    std::vector<distance_t> others(j - i + 1);
                     
-                    for (curve_size_t k = 0; k < j; ++k) {
+                    for (curve_size_t k = i; k < j; ++k) {
                         
-                        others[k] = std::max(edges[k][j], distances[k][i - 1]);
+                        others[k - i] = std::max(edges[k][j], distances[k][i - 1]);
                         
                     }
                     
-                    auto best = std::distance(others.begin(), std::min_element(others.begin(), others.end()));
+                    const auto best = std::distance(others.begin(), std::min_element(others.begin(), others.end())) + i;
                     
                     distances[j][i] = others[best];
                     predecessors[j][i] = best;
