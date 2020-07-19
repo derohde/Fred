@@ -95,6 +95,17 @@ public:
         vend = Points::size() - 1;
     }
     
+    inline auto as_ndarray() const {
+        np::dtype dt = np::dtype::get_builtin<coordinate_t>();
+        p::list l;
+        np::ndarray result = np::array(l, dt);
+        for (const auto &elem : *this) {
+            l.append(elem.as_ndarray());
+        }
+        result = np::array(l, dt);
+        return result;
+    }
+    
     void set_name(const std::string&);
     
     std::string get_name() const;

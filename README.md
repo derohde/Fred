@@ -10,10 +10,12 @@ By default, Fred will automatically determine the number of threads to use. If y
 
 ### Curve
 - signature: `fred.Curve(np.ndarray)`
+- properties: `fred.Curve.values`: curves as `np.ndarray`, `fred.Curve.name`: get name of curve, `fred.Curve.dimensions`: dimension of curve, `fred.Curve.complexity`: number of points of curve
 
 ### Curves
 - signature: `fred.Curves()`
 - methods: `fred.Curves.add(curve)`: add curve, `fred.Curves[i]`: get ith curve, `len(fred.Curves)`: number curves, `fred.Curves.simplify(l)`: return set of simplified curves
+- properties:  `fred.Curves.m`: maximum complexity of the contained curves
 
 #### continous Fréchet distance
 - signature: `fred.continuous_frechet(curve1, curve2)`
