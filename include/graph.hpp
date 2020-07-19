@@ -58,7 +58,7 @@ public:
             return result;
         }
         
-        std::vector<std::vector<distance_t>> distances(curve.complexity(), std::vector<distance_t>(l, 0));
+        std::vector<std::vector<distance_t>> distances(curve.complexity(), std::vector<distance_t>(l, std::numeric_limits<distance_t>::infinity()));
         std::vector<std::vector<curve_size_t>> predecessors(curve.complexity(), std::vector<curve_size_t>(l));
                 
         for (curve_size_t i = 0; i < l; ++i) {

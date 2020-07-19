@@ -73,13 +73,13 @@ curve1d = fred.Curve(np.array([1., 2.])) # Curve stores a polygonal curve with
                                          # at least two points of at least one 
                                          # and equal number of dimensions
 
-curve2d1 = fred.Curve(np.array([[1., 0.], [2., 0.], [3., 0.]])) # any number of dimensions and points works
-curve2d2 = fred.Curve(np.array([[1., -1.], [2., -1.], [3., -1.]])) 
+curve2d1 = fred.Curve(np.array([[1., 0.], [2., 1.], [3., 0.]])) # any number of dimensions and points works
+curve2d2 = fred.Curve(np.array([[1., -1.], [2., -2.], [3., -1.]])) 
 
 print(curve2d1)
 
-Fred.plot(curve2d1, curve2d2)
-Fred.plot(fred.weak_minimum_error_simplification(2))
+Fred.plot_curve(curve2d1, curve2d2)
+Fred.plot_curve(curve2d2, fred.weak_minimum_error_simplification(curve2d2, 2))
 
 print("distance is {}".format(fred.continuous_frechet(curve2d1, curve2d2).value))
 
@@ -108,13 +108,13 @@ curves.add(ps4)
 curves.add(ps5)
 curves.add(ps6)
 
-Fred.plot(curves)
+Fred.plot_curve(curves)
 
 curves = fred.dimension_reduction(curves, 0.95) # fred is pretty fast but with high dimensional data
                                                 # a dimension reduction massively improves running-time
                                                 # even for smaller values of epsilon
                                                 
-Fred.plot(curves)
+Fred.plot_curve(curves)
                                   
 clustering = fred.discrete_klcenter(2,, 100, curves) # fast but coarse
           
@@ -126,7 +126,7 @@ for i, center in enumerate(clustering):
     print("center {} is {}".format(i, center))
     
     
-Fred.plot(clustering)
+Fred.plot_curve(clustering)
 ```
   
 ## Installation
