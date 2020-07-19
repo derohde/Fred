@@ -67,23 +67,23 @@ Clustering::Clustering_Result klcenter(const curve_number_t num_centers, const c
 
 BOOST_PYTHON_FUNCTION_OVERLOADS(klcenter_overloads, klcenter, 3, 4);
 
-Clustering::Clustering_Result onemedian_sampling(const Curves &in, const double epsilon, const bool with_assignment = false) {
+Clustering::Clustering_Result onemedian_sampling(const curve_size_t ell,  Curves &in, const double epsilon, const bool with_assignment = false) {
     
-    auto result = Clustering::one_median_sampling(epsilon, in, with_assignment);
-    
-    return result;
-}
-
-BOOST_PYTHON_FUNCTION_OVERLOADS(onemedian_sampling_overloads, onemedian_sampling, 2, 3);
-
-Clustering::Clustering_Result onemedian_exhaustive(const Curves &in, const bool with_assignment = false) {
-
-    auto result = Clustering::one_median_exhaustive(in, with_assignment);
+    auto result = Clustering::one_median_sampling(ell, in, epsilon, with_assignment);
     
     return result;
 }
 
-BOOST_PYTHON_FUNCTION_OVERLOADS(onemedian_exhaustive_overloads, onemedian_exhaustive, 1, 2);
+BOOST_PYTHON_FUNCTION_OVERLOADS(onemedian_sampling_overloads, onemedian_sampling, 3, 4);
+
+Clustering::Clustering_Result onemedian_exhaustive(const curve_size_t ell,  Curves &in, const bool with_assignment = false) {
+
+    auto result = Clustering::one_median_exhaustive(ell, in, with_assignment);
+    
+    return result;
+}
+
+BOOST_PYTHON_FUNCTION_OVERLOADS(onemedian_exhaustive_overloads, onemedian_exhaustive, 2, 3);
 
 Clustering::Clustering_Result klmedian(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, const bool with_assignment = false) {
 

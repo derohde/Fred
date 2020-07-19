@@ -13,7 +13,7 @@ By default, Fred will automatically determine the number of threads to use. If y
 
 ### Curves
 - signature: `fred.Curves()`
-- methods: fred.Curves.add: add curve, fred.Curves[i]: get ith curve, len(fred.Curves): number curves
+- methods: `fred.Curves.add`: add curve, `fred.Curves[i]`: get ith curve, `len(fred.Curves)`: number curves
 
 #### continous Fréchet distance
 - signature: `fred.continuous_frechet(curve1, curve2)`
@@ -40,8 +40,12 @@ By default, Fred will automatically determine the number of threads to use. If y
 - returns: `fred.Clustering_Result` with mebers `value`: objective value, `time`: running-time, `assignment`: empty if with_assignment=false
 
 #### discrete one-median clustering (continuous Fréchet) via sampling 
-- [Section 3 in **Random Projections and Sampling Algorithms for Clustering of High Dimensional Polygonal Curves**](https://papers.nips.cc/paper/9443-random-projections-and-sampling-algorithms-for-clustering-of-high-dimensional-polygonal-curves)
-- signature: `fred.discrete_onemedian_sampling(curves, epsilon_sampling, with_assignment)` with parameters `epsilon_sampling`: (1+epsilon) approximation parameter, `with_assignment`: defaults to false; assigns curves to nearest centers if true
+- [Section 3 in **Random Projections and Sampling Algorithms for Clustering of High Dimensional Polygonal Curves**](https://papers.nips.cc/paper/9443-random-projections-and-sampling-algorithms-for-clustering-of-high-dimensional-polygonal-curves) + simplification
+- signature: `fred.discrete_onemedian_sampling(l, curves, epsilon_sampling, with_assignment)` with parameters `epsilon_sampling`: (1+epsilon) approximation parameter, `with_assignment`: defaults to false; assigns curves to nearest centers if true
+- returns: `fred.Clustering_Result` with mebers `value`: objective value, `time`: running-time, `assignment`: empty if with_assignment=false
+
+#### discrete one-median clustering (continuous Fréchet) exhaustive (exact algorithm)
+- signature: `fred.discrete_onemedian_exhaustive(l, curves, with_assignment)` with parameters `with_assignment`: defaults to false; assigns curves to nearest centers if true
 - returns: `fred.Clustering_Result` with mebers `value`: objective value, `time`: running-time, `assignment`: empty if with_assignment=false
 
 #### Clustering Result
@@ -61,6 +65,7 @@ By default, Fred will automatically determine the number of threads to use. If y
 ## Mini Example
 ```python
 import Fred.backend as fred
+import Fred
 import numpy as np
 import pandas as pd
 
@@ -72,6 +77,9 @@ curve2d1 = fred.Curve(np.array([[1., 0.], [2., 0.], [3., 0.]])) # any number of 
 curve2d2 = fred.Curve(np.array([[1., -1.], [2., -1.], [3., -1.]])) 
 
 print(curve2d1)
+
+Fred.plot(curve2d1, curve2d2)
+Fred.plot(fred.weak_minimum_error_simplification(2))
 
 print("distance is {}".format(fred.continuous_frechet(curve2d1, curve2d2).value))
 
@@ -100,17 +108,25 @@ curves.add(ps4)
 curves.add(ps5)
 curves.add(ps6)
 
+Fred.plot(curves)
+
 curves = fred.dimension_reduction(curves, 0.95) # fred is pretty fast but with high dimensional data
                                                 # a dimension reduction massively improves running-time
                                                 # even for smaller values of epsilon
+                                                
+Fred.plot(curves)
                                   
-                                               
-clustering = fred.discrete_klmedian(2,, 100, curves)
+clustering = fred.discrete_klcenter(2,, 100, curves) # fast but coarse
+          
+clustering = fred.discrete_klmedian(2,, 100, curves) # slow but better results
 
 print("clustering cost is {}".format(clustering.value))
 
 for i, center in enumerate(clustering):
     print("center {} is {}".format(i, center))
+    
+    
+Fred.plot(clustering)
 ```
   
 ## Installation

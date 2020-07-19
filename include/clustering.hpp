@@ -66,15 +66,14 @@ struct Clustering_Result {
 };
 
 
-inline void cheap_dist(const curve_number_t i, const curve_number_t j, const Curves &in, std::vector<std::vector<distance_t>> &distances) {
+inline void _cheap_dist(const curve_number_t i, const curve_number_t j, const Curves &in, const Curves &simplified_in, std::vector<std::vector<distance_t>> &distances) {
     if (distances[i][j] < 0) {
-        const auto dist = Frechet::Continuous::distance(in[i], in[j]);
-        distances[j][i] = dist.value;
+        const auto dist = Frechet::Continuous::distance(in[i], simplified_in[j]);
         distances[i][j] = dist.value;
     }
 }
 
-inline curve_number_t nearest_center(const curve_number_t i, const Curves &in, const std::vector<curve_number_t> &centers, std::vector<std::vector<distance_t>> &distances) {
+inline curve_number_t _nearest_center(const curve_number_t i, const Curves &in, const Curves &simplified_in, const std::vector<curve_number_t> &centers, std::vector<std::vector<distance_t>> &distances) {
     const auto infty = std::numeric_limits<distance_t>::infinity();
     // cost for curve is infinity
     auto min_cost_elem = infty;
@@ -82,7 +81,7 @@ inline curve_number_t nearest_center(const curve_number_t i, const Curves &in, c
     
     // except there is a center with smaller cost, then choose the one with smallest cost
     for (curve_number_t j = 0; j < centers.size(); ++j) {
-        cheap_dist(i, centers[j], in, distances);
+        _cheap_dist(i, j, in, simplified_in, distances);
         if (distances[i][centers[j]] < min_cost_elem) {
             min_cost_elem = distances[i][centers[j]];
             nearest = j;
@@ -91,34 +90,35 @@ inline curve_number_t nearest_center(const curve_number_t i, const Curves &in, c
     return nearest;
 }
 
-inline auto curve_cost(const curve_number_t i, const Curves &in, const std::vector<curve_number_t> &centers, std::vector<std::vector<distance_t>> &distances) {
+inline distance_t _curve_cost(const curve_number_t i, const Curves &in, const Curves &simplified_in, const std::vector<curve_number_t> &centers, std::vector<std::vector<distance_t>> &distances) {
     const auto infty = std::numeric_limits<distance_t>::infinity();
     // cost for curve is infinity
     auto min_cost_elem = infty;
+    curve_number_t nearest = 0;
     
     // except there is a center with smaller cost, then choose the one with smallest cost
     for (curve_number_t j = 0; j < centers.size(); ++j) {
-        cheap_dist(i, centers[j], in, distances);
+        _cheap_dist(i, j, in, simplified_in, distances);
         if (distances[i][centers[j]] < min_cost_elem) {
             min_cost_elem = distances[i][centers[j]];
+            nearest = j;
         }
     }
-    
     return min_cost_elem;
 }
 
-inline auto center_cost_sum(const Curves &in, const std::vector<curve_number_t> &centers, std::vector<std::vector<distance_t>> &distances) {
+inline distance_t _center_cost_sum(const Curves &in, const Curves &simplified_in, const std::vector<curve_number_t> &centers, std::vector<std::vector<distance_t>> &distances) {
     distance_t cost = 0.0;
     
     // for all curves
     for (curve_number_t i = 0; i < in.size(); ++i) {
-        const auto min_cost_elem = curve_cost(i, in, centers, distances);
+        const auto min_cost_elem = _curve_cost(i, in, simplified_in, centers, distances);
         cost += min_cost_elem;
     }
     return cost;
 }
 
-inline Cluster_Assignment cluster_assignment(const Curves &in, const std::vector<curve_number_t> &centers, std::vector<std::vector<distance_t>> &distances) {
+inline Cluster_Assignment _cluster_assignment(const Curves &in, const Curves &simplified_in, const std::vector<curve_number_t> &centers, std::vector<std::vector<distance_t>> &distances) {
     Cluster_Assignment result;
     const auto k = centers.size();
     
@@ -126,7 +126,7 @@ inline Cluster_Assignment cluster_assignment(const Curves &in, const std::vector
     
     for (curve_number_t i = 0; i < k; ++i) result.emplace(i, std::vector<curve_number_t>());
     
-    for (curve_number_t i = 0; i < in.size(); ++i) result[nearest_center(i, in, centers, distances)].push_back(i);
+    for (curve_number_t i = 0; i < in.size(); ++i) result[_nearest_center(i, in, simplified_in, centers, distances)].push_back(i);
     
     return result;  
 }
@@ -138,6 +138,14 @@ Clustering_Result gonzalez(const curve_number_t num_centers, const curve_size_t 
     if (in.empty()) return result;
         
     std::vector<curve_number_t> centers;
+    Curves simplified_in(in.number(), ell);
+    
+    for (curve_number_t i = 0; i < in.size(); ++i) {
+        Subcurve_Graph graph(const_cast<Curve&>(in[i]));
+        auto simplified_curve = graph.weak_minimum_error_simplification(ell);
+        simplified_curve.set_name("Simplification of " + in[i].get_name());
+        simplified_in[i] = simplified_curve;
+    }
     
     const auto n = in.size();
     
@@ -145,11 +153,9 @@ Clustering_Result gonzalez(const curve_number_t num_centers, const curve_size_t 
     
     distance_t curr_maxdist = 0;
     curve_number_t curr_maxcurve = 0;
+    distance_t curr_curve_cost;
     
     std::vector<std::vector<distance_t>> distances(in.size(), std::vector<distance_t>(in.size(), -1.0));
-    
-    // no cost for distances from curves to themselves
-    for (curve_number_t i = 0; i < in.size(); ++i) distances[i][i] = 0;
     
     {
         // remaining centers
@@ -162,7 +168,7 @@ Clustering_Result gonzalez(const curve_number_t num_centers, const curve_size_t 
                 // all curves
                 for (curve_number_t j = 0; j < in.size(); ++j) {
                     
-                    auto curr_curve_cost = curve_cost(j, in, centers, distances);
+                    curr_curve_cost = _curve_cost(j, in, simplified_in, centers, distances);
                     
                     if (curr_curve_cost > curr_maxdist) {
                         curr_maxdist = curr_curve_cost;
@@ -181,7 +187,7 @@ Clustering_Result gonzalez(const curve_number_t num_centers, const curve_size_t 
     
     if (arya) {
         
-        auto cost = center_cost_sum(in, centers, distances);
+        auto cost = _center_cost_sum(in, simplified_in, centers, distances);
         auto approxcost = cost;
         auto gamma = 1/(3 * num_centers * in.size());
         auto found = false;
@@ -202,7 +208,7 @@ Clustering_Result gonzalez(const curve_number_t num_centers, const curve_size_t 
                     // swap
                     curr_centers[i] = j;
                     // new cost
-                    auto curr_cost = center_cost_sum(in, curr_centers, distances);
+                    auto curr_cost = _center_cost_sum(in, simplified_in, curr_centers, distances);
                     // check if improvement is done
                     if (cost - gamma * approxcost > curr_cost) {
                         cost = curr_cost;
@@ -217,16 +223,11 @@ Clustering_Result gonzalez(const curve_number_t num_centers, const curve_size_t 
     }
     
     if (with_assignment) {
-        result.assignment = cluster_assignment(in, centers, distances);
+        result.assignment = _cluster_assignment(in, simplified_in, centers, distances);
     }
     
     Curves simpl_centers;
-    for (const auto center: centers) {
-        Subcurve_Graph graph(const_cast<Curve&>(in[center]));
-        auto simple_center = graph.weak_minimum_error_simplification(ell);
-        simple_center.set_name("Simplification of " + in[center].get_name());
-        simpl_centers.push_back(simple_center);
-    }
+    for (const auto center: centers) simpl_centers.push_back(simplified_in[center]);
     
     auto end = boost::chrono::process_real_cpu_clock::now();
     result.centers = simpl_centers;
@@ -239,10 +240,18 @@ Clustering_Result arya(const curve_number_t num_centers, const curve_size_t ell,
     return gonzalez(num_centers, ell, in, true, with_assignment);
 }
 
-Clustering_Result one_median_sampling(const double epsilon, const Curves &in, const bool with_assignment = false) {
+Clustering_Result one_median_sampling(const curve_size_t ell, const Curves &in, const double epsilon, const bool with_assignment = false) {
     const auto start = boost::chrono::process_real_cpu_clock::now();
     Clustering_Result result;
     std::vector<curve_number_t> centers;
+    Curves simplified_in(in.number(), ell);
+    
+    for (curve_number_t i = 0; i < in.size(); ++i) {
+        Subcurve_Graph graph(const_cast<Curve&>(in[i]));
+        auto simplified_curve = graph.weak_minimum_error_simplification(ell);
+        simplified_curve.set_name("Simplification of " + in[i].get_name());
+        simplified_in[i] = simplified_curve;
+    }
     
     const auto n = in.size();
     
@@ -268,8 +277,8 @@ Clustering_Result one_median_sampling(const double epsilon, const Curves &in, co
         for (curve_number_t j = 0; j < witnesses.size(); ++j) {
             const curve_number_t witness = std::floor(witnesses[j] * n);
             
-            cheap_dist(candidate, witness, in, distances);
-            objective += distances[candidate][witness];
+            _cheap_dist(witness, candidate, in, simplified_in, distances);
+            objective += distances[witness][candidate];
         }
         
         if (objective < best_objective_value) {
@@ -280,20 +289,28 @@ Clustering_Result one_median_sampling(const double epsilon, const Curves &in, co
     centers.push_back(best_candidate);
     
     if (with_assignment) {
-        result.assignment = cluster_assignment(in, centers, distances);
+        result.assignment = _cluster_assignment(in, simplified_in, centers, distances);
     }
     
     auto end = boost::chrono::process_real_cpu_clock::now();
-    result.centers.push_back(in[centers[0]]);
-    result.value = center_cost_sum(in, centers, distances);
+    result.centers.push_back(simplified_in[centers[0]]);
+    result.value = _center_cost_sum(in, simplified_in, centers, distances);
     result.running_time = (end-start).count() / 1000000000.0;
     return result;
 }
 
-Clustering_Result one_median_exhaustive(const Curves &in, const bool with_assignment = false) {
+Clustering_Result one_median_exhaustive(const curve_size_t ell, const Curves &in, const bool with_assignment = false) {
     const auto start = boost::chrono::process_real_cpu_clock::now();
     Clustering_Result result;
     std::vector<curve_number_t> centers;
+    Curves simplified_in(in.number(), ell);
+    
+    for (curve_number_t i = 0; i < in.size(); ++i) {
+        Subcurve_Graph graph(const_cast<Curve&>(in[i]));
+        auto simplified_curve = graph.weak_minimum_error_simplification(ell);
+        simplified_curve.set_name("Simplification of " + in[i].get_name());
+        simplified_in[i] = simplified_curve;
+    }
     
     const auto n = in.size();
         
@@ -303,28 +320,28 @@ Clustering_Result one_median_exhaustive(const Curves &in, const bool with_assign
     curve_number_t best_candidate = 0;
     distance_t best_objective_value = std::numeric_limits<distance_t>::infinity();
     
-    for (curve_number_t i = 0; i < in.size(); ++i) {
+    for (curve_number_t j = 0; j < in.size(); ++j) {
         
         distance_t objective = 0;
         
-        for (curve_number_t j = 0; j < in.size(); ++j) {
-            cheap_dist(i, j, in, distances);
+        for (curve_number_t i = 0; i < in.size(); ++i) {
+            _cheap_dist(i, j, in, simplified_in, distances);
             objective += distances[i][j];
         }
         
         if (objective < best_objective_value) {
-            best_candidate = i;
+            best_candidate = j;
             best_objective_value = objective;
         }
     }
     centers.push_back(best_candidate);
     
     if (with_assignment) {
-        result.assignment = cluster_assignment(in, centers, distances);
+        result.assignment = _cluster_assignment(in, simplified_in, centers, distances);
     }
     
     auto end = boost::chrono::process_real_cpu_clock::now();
-    result.centers.push_back(in[centers[0]]);
+    result.centers.push_back(simplified_in[centers[0]]);
     result.value = best_objective_value;
     result.running_time = (end-start).count() / 1000000000.0;
     return result;
