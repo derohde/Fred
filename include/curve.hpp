@@ -128,6 +128,8 @@ public:
         return size();
     }
     
+    Curves simplify(const curve_size_t);
+    
     std::string str() const;
     
     std::string repr() const;

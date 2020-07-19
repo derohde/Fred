@@ -9,6 +9,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 #include "curve.hpp"
+#include "graph.hpp"
 
 Curve::Curve(const Points &points, const std::string &name) : Points(points), vend{points.size() - 1}, name{name} {
     if (points.empty()) { 
@@ -75,6 +76,17 @@ Curve::Curve(const np::ndarray &in, const std::string &name) : Points(in.shape(0
         std::cerr << "WARNING: constructed empty curve" << std::endl;
     return; 
     }
+}
+
+Curves Curves::simplify(const curve_size_t l) {
+    Curves result(size(), l);
+    for (curve_number_t i = 0; i < size(); ++i) {
+        Subcurve_Graph graph(std::vector<Curve>::operator[](i));
+        auto simplified_curve = graph.weak_minimum_error_simplification(l);
+        simplified_curve.set_name("Simplification of " + std::vector<Curve>::operator[](i).get_name());
+        result[i] = simplified_curve;
+    }
+    return result;
 }
 
 std::string Curve::repr() const {

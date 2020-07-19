@@ -13,7 +13,7 @@ By default, Fred will automatically determine the number of threads to use. If y
 
 ### Curves
 - signature: `fred.Curves()`
-- methods: `fred.Curves.add`: add curve, `fred.Curves[i]`: get ith curve, `len(fred.Curves)`: number curves
+- methods: `fred.Curves.add(curve)`: add curve, `fred.Curves[i]`: get ith curve, `len(fred.Curves)`: number curves, `fred.Curves.simplify(l)`: return set of simplified curves
 
 #### continous Fréchet distance
 - signature: `fred.continuous_frechet(curve1, curve2)`
@@ -31,21 +31,21 @@ By default, Fred will automatically determine the number of threads to use. If y
 
 #### discrete (k,l)-center clustering (continuous Fréchet)
 - from [**Approximating (k,l)-center clustering for curves**](https://dl.acm.org/doi/10.5555/3310435.3310616)
-- signature: `fred.discrete_klcenter(k, l, curves, with_assignment)`, `with_assignment`: defaults to false; assigns curves to nearest centers if true
+- signature: `fred.discrete_klcenter(k, l, curves, with_assignment)`, `with_assignment`: defaults to false; assigns curves to nearest centers if true, `center_domain`: possible centers, defaults to empty `fred.Curves()`, in this case the input is simplified and used as center domain
 - returns: `fred.Clustering_Result` with mebers `value`: objective value, `time`: running-time, `assignment`: empty if with_assignment=false
 
 #### discrete (k,l)-median clustering (continuous Fréchet)
 - Algorithm 6 in [**Coresets for (k,l)-Clustering under the Fréchet distance**](https://arxiv.org/pdf/1901.01870.pdf) + simplification
-- signature: `fred.discrete_klmedian(k, l, curves, with_assignment)` with parameter `with_assignment`: defaults to false; assigns curves to nearest centers if true
+- signature: `fred.discrete_klmedian(k, l, curves, with_assignment)` with parameter `with_assignment`: defaults to false; assigns curves to nearest centers if true, `center_domain`: possible centers, defaults to empty `fred.Curves()`, in this case the input is simplified and used as center domain
 - returns: `fred.Clustering_Result` with mebers `value`: objective value, `time`: running-time, `assignment`: empty if with_assignment=false
 
 #### discrete one-median clustering (continuous Fréchet) via sampling 
 - [Section 3 in **Random Projections and Sampling Algorithms for Clustering of High Dimensional Polygonal Curves**](https://papers.nips.cc/paper/9443-random-projections-and-sampling-algorithms-for-clustering-of-high-dimensional-polygonal-curves) + simplification
-- signature: `fred.discrete_onemedian_sampling(l, curves, epsilon_sampling, with_assignment)` with parameters `epsilon_sampling`: (1+epsilon) approximation parameter, `with_assignment`: defaults to false; assigns curves to nearest centers if true
+- signature: `fred.discrete_onemedian_sampling(l, curves, epsilon_sampling, with_assignment)` with parameters `epsilon_sampling`: (1+epsilon) approximation parameter, `with_assignment`: defaults to false; assigns curves to nearest centers if true, `center_domain`: possible centers, defaults to empty `fred.Curves()`, in this case the input is simplified and used as center domain
 - returns: `fred.Clustering_Result` with mebers `value`: objective value, `time`: running-time, `assignment`: empty if with_assignment=false
 
 #### discrete one-median clustering (continuous Fréchet) exhaustive (exact algorithm)
-- signature: `fred.discrete_onemedian_exhaustive(l, curves, with_assignment)` with parameters `with_assignment`: defaults to false; assigns curves to nearest centers if true
+- signature: `fred.discrete_onemedian_exhaustive(l, curves, with_assignment)` with parameters `with_assignment`: defaults to false; assigns curves to nearest centers if true, `center_domain`: possible centers, defaults to empty `fred.Curves()`, in this case the input is simplified and used as center domain
 - returns: `fred.Clustering_Result` with mebers `value`: objective value, `time`: running-time, `assignment`: empty if with_assignment=false
 
 #### Clustering Result

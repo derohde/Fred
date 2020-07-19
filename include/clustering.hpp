@@ -131,20 +131,25 @@ inline Cluster_Assignment _cluster_assignment(const Curves &in, const Curves &si
     return result;  
 }
 
-Clustering_Result gonzalez(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, const bool arya = false, const bool with_assignment = false) {
+Clustering_Result gonzalez(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, const bool arya = false, const bool with_assignment = false, const Curves &center_domain = Curves()) {
     const auto start = boost::chrono::process_real_cpu_clock::now();
     Clustering_Result result;
     
     if (in.empty()) return result;
         
     std::vector<curve_number_t> centers;
-    Curves simplified_in(in.number(), ell);
+    const Curves &simplified_in = center_domain;
     
-    for (curve_number_t i = 0; i < in.size(); ++i) {
-        Subcurve_Graph graph(const_cast<Curve&>(in[i]));
-        auto simplified_curve = graph.weak_minimum_error_simplification(ell);
-        simplified_curve.set_name("Simplification of " + in[i].get_name());
-        simplified_in[i] = simplified_curve;
+    if (center_domain.empty()) {
+        Curves simplified_in_self(in.number(), ell);
+        
+        for (curve_number_t i = 0; i < in.size(); ++i) {
+            Subcurve_Graph graph(const_cast<Curve&>(in[i]));
+            auto simplified_curve = graph.weak_minimum_error_simplification(ell);
+            simplified_curve.set_name("Simplification of " + in[i].get_name());
+            simplified_in_self[i] = simplified_curve;
+        }
+        const_cast<Curves&>(simplified_in) = simplified_in_self;
     }
     
     const auto n = in.size();
@@ -236,21 +241,26 @@ Clustering_Result gonzalez(const curve_number_t num_centers, const curve_size_t 
     return result;
 }
 
-Clustering_Result arya(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, const bool with_assignment = false) {
-    return gonzalez(num_centers, ell, in, true, with_assignment);
+Clustering_Result arya(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, const bool with_assignment = false, const Curves &center_domain = Curves()) {
+    return gonzalez(num_centers, ell, in, true, with_assignment, center_domain);
 }
 
-Clustering_Result one_median_sampling(const curve_size_t ell, const Curves &in, const double epsilon, const bool with_assignment = false) {
+Clustering_Result one_median_sampling(const curve_size_t ell, const Curves &in, const double epsilon, const bool with_assignment = false, const Curves &center_domain = Curves()) {
     const auto start = boost::chrono::process_real_cpu_clock::now();
     Clustering_Result result;
     std::vector<curve_number_t> centers;
-    Curves simplified_in(in.number(), ell);
+    const Curves &simplified_in = center_domain;
     
-    for (curve_number_t i = 0; i < in.size(); ++i) {
-        Subcurve_Graph graph(const_cast<Curve&>(in[i]));
-        auto simplified_curve = graph.weak_minimum_error_simplification(ell);
-        simplified_curve.set_name("Simplification of " + in[i].get_name());
-        simplified_in[i] = simplified_curve;
+    if (center_domain.empty()) {
+        Curves simplified_in_self(in.number(), ell);
+        
+        for (curve_number_t i = 0; i < in.size(); ++i) {
+            Subcurve_Graph graph(const_cast<Curve&>(in[i]));
+            auto simplified_curve = graph.weak_minimum_error_simplification(ell);
+            simplified_curve.set_name("Simplification of " + in[i].get_name());
+            simplified_in_self[i] = simplified_curve;
+        }
+        const_cast<Curves&>(simplified_in) = simplified_in_self;
     }
     
     const auto n = in.size();
@@ -299,17 +309,22 @@ Clustering_Result one_median_sampling(const curve_size_t ell, const Curves &in, 
     return result;
 }
 
-Clustering_Result one_median_exhaustive(const curve_size_t ell, const Curves &in, const bool with_assignment = false) {
+Clustering_Result one_median_exhaustive(const curve_size_t ell, const Curves &in, const bool with_assignment = false, const Curves &center_domain = Curves()) {
     const auto start = boost::chrono::process_real_cpu_clock::now();
     Clustering_Result result;
     std::vector<curve_number_t> centers;
-    Curves simplified_in(in.number(), ell);
+    const Curves &simplified_in = center_domain;
     
-    for (curve_number_t i = 0; i < in.size(); ++i) {
-        Subcurve_Graph graph(const_cast<Curve&>(in[i]));
-        auto simplified_curve = graph.weak_minimum_error_simplification(ell);
-        simplified_curve.set_name("Simplification of " + in[i].get_name());
-        simplified_in[i] = simplified_curve;
+    if (center_domain.empty()) {
+        Curves simplified_in_self(in.number(), ell);
+        
+        for (curve_number_t i = 0; i < in.size(); ++i) {
+            Subcurve_Graph graph(const_cast<Curve&>(in[i]));
+            auto simplified_curve = graph.weak_minimum_error_simplification(ell);
+            simplified_curve.set_name("Simplification of " + in[i].get_name());
+            simplified_in_self[i] = simplified_curve;
+        }
+        const_cast<Curves&>(simplified_in) = simplified_in_self;
     }
     
     const auto n = in.size();

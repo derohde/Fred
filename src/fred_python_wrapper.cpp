@@ -59,40 +59,40 @@ bool get_frechet_rounding() {
     return fc::round;
 }
 
-Clustering::Clustering_Result klcenter(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, const bool with_assignment = false) {
+Clustering::Clustering_Result klcenter(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, const bool with_assignment = false, const Curves &center_domain = Curves()) {
     auto result = Clustering::gonzalez(num_centers, ell, in, false, with_assignment);
     
     return result;
 }
 
-BOOST_PYTHON_FUNCTION_OVERLOADS(klcenter_overloads, klcenter, 3, 4);
+BOOST_PYTHON_FUNCTION_OVERLOADS(klcenter_overloads, klcenter, 3, 5);
 
-Clustering::Clustering_Result onemedian_sampling(const curve_size_t ell,  Curves &in, const double epsilon, const bool with_assignment = false) {
+Clustering::Clustering_Result onemedian_sampling(const curve_size_t ell,  Curves &in, const double epsilon, const bool with_assignment = false, const Curves &center_domain = Curves()) {
     
     auto result = Clustering::one_median_sampling(ell, in, epsilon, with_assignment);
     
     return result;
 }
 
-BOOST_PYTHON_FUNCTION_OVERLOADS(onemedian_sampling_overloads, onemedian_sampling, 3, 4);
+BOOST_PYTHON_FUNCTION_OVERLOADS(onemedian_sampling_overloads, onemedian_sampling, 3, 5);
 
-Clustering::Clustering_Result onemedian_exhaustive(const curve_size_t ell,  Curves &in, const bool with_assignment = false) {
+Clustering::Clustering_Result onemedian_exhaustive(const curve_size_t ell,  Curves &in, const bool with_assignment = false, const Curves &center_domain = Curves()) {
 
     auto result = Clustering::one_median_exhaustive(ell, in, with_assignment);
     
     return result;
 }
 
-BOOST_PYTHON_FUNCTION_OVERLOADS(onemedian_exhaustive_overloads, onemedian_exhaustive, 2, 3);
+BOOST_PYTHON_FUNCTION_OVERLOADS(onemedian_exhaustive_overloads, onemedian_exhaustive, 2, 4);
 
-Clustering::Clustering_Result klmedian(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, const bool with_assignment = false) {
+Clustering::Clustering_Result klmedian(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, const bool with_assignment = false, const Curves &center_domain = Curves()) {
 
     auto result = Clustering::arya(num_centers, ell, in, with_assignment);
     
     return result;
 }
 
-BOOST_PYTHON_FUNCTION_OVERLOADS(klmedian_overloads, klmedian, 3, 4);
+BOOST_PYTHON_FUNCTION_OVERLOADS(klmedian_overloads, klmedian, 3, 5);
 
 Coreset::Onemedian_Coreset onemedian_coreset(const Curves &in, const curve_size_t ell, const double epsilon, const double constant = 1) {
     return Coreset::Onemedian_Coreset(ell, in, epsilon, constant);
@@ -141,6 +141,7 @@ BOOST_PYTHON_MODULE(backend)
     class_<Curves>("Curves", init<>())
         .add_property("m", &Curves::get_m)
         .def("add", &Curves::add)
+        .def("simplify", &Curves::simplify)
         .def("__getitem__", &Curves::get)
         .def("__len__", &Curves::number)
         .def("__str__", &Curves::str)
