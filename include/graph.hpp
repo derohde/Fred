@@ -32,15 +32,21 @@ public:
         const auto complexity = curve.complexity();
         
         for (curve_size_t i = 0; i < complexity - 1; ++i) {
+            
             for (curve_size_t j = i + 1; j < complexity; ++j) {
+                
                 curve.set_subcurve(i, j);
+                
                 Curve segment;
                 segment.push_back(curve.front());
                 segment.push_back(curve.back());
+                
                 auto distance = Frechet::Continuous::distance(curve, segment);
                 edges[i][j] = distance.value;
+                
                 curve.reset_subcurve();
             }
+            
         }
     }
     
@@ -59,7 +65,10 @@ public:
         
         std::vector<std::vector<distance_t>> distances(curve.complexity(), std::vector<distance_t>(l, std::numeric_limits<distance_t>::infinity()));
         std::vector<std::vector<curve_size_t>> predecessors(curve.complexity(), std::vector<curve_size_t>(l));
-                
+        
+        std::vector<distance_t> others;
+        curve_size_t best = 0;
+        
         for (curve_size_t i = 0; i < l; ++i) {
             
             if (i == 0) {
@@ -73,9 +82,9 @@ public:
                 
             } else {
                 
-                for (curve_size_t j = 1 + i; j < curve.complexity(); ++j) {
+                for (curve_size_t j = i + 1; j < curve.complexity(); ++j) {
                     
-                    std::vector<distance_t> others(j - i + 1);
+                    others.resize(j - i);
                     
                     for (curve_size_t k = i; k < j; ++k) {
                         
@@ -83,7 +92,7 @@ public:
                         
                     }
                     
-                    const auto best = std::distance(others.begin(), std::min_element(others.begin(), others.end())) + i;
+                    best = std::distance(others.begin(), std::min_element(others.begin(), others.end())) + i;
                     
                     distances[j][i] = others[best];
                     predecessors[j][i] = best;
@@ -91,15 +100,16 @@ public:
             }
         }
         
-        auto ell = l;
+        curve_size_t ell = l;
+        
         result.push_back(curve.back());
-        auto predecessor = predecessors[curve.complexity() - 1][ell - 1];
+        auto predecessor = predecessors[curve.complexity() - 1][--ell];
         
-        while(ell > 0) {
+        for (curve_size_t i = 0; i  < l; ++i) {
             result.push_back(curve[predecessor]);
-            predecessor = predecessors[predecessor][--ell - 1];
+            predecessor = predecessors[predecessor][--ell];
         }
-        
+                
         std::reverse(result.begin(), result.end());
         return result;
     }
