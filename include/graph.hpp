@@ -14,7 +14,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <iostream>
 #include <string>
 #include <sstream>
-#include <map>
 #include <algorithm>
 #include <cmath>
 
@@ -25,11 +24,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 class Subcurve_Graph {
 
     Curve& curve;
-    std::map<std::pair<curve_size_t, curve_size_t>, distance_t> edges;
+    std::vector<std::vector<distance_t>> edges;
     
 public:
     
-    Subcurve_Graph(Curve &curve) : curve{curve} {
+    Subcurve_Graph(Curve &curve) : curve{curve}, edges{std::vector<std::vector<distance_t>>(curve.complexity(), std::vector<distance_t>(curve.complexity(), std::numeric_limits<distance_t>::infinity()))} {
         const auto complexity = curve.complexity();
         
         for (curve_size_t i = 0; i < complexity - 1; ++i) {
@@ -39,7 +38,7 @@ public:
                 segment.push_back(curve.front());
                 segment.push_back(curve.back());
                 auto distance = Frechet::Continuous::distance(curve, segment);
-                edges.emplace(std::make_pair(i, j) , distance.value);
+                edges[i][j] = distance.value;
                 curve.reset_subcurve();
             }
         }
@@ -67,7 +66,7 @@ public:
                 
                 for (curve_size_t j = 1; j < curve.complexity(); ++j) {
                     
-                    distances[j][0] = edges.find(std::make_pair(0, j))->second;
+                    distances[j][0] = edges[0][j];
                     predecessors[j][0] = 0;
                     
                 }
@@ -80,7 +79,7 @@ public:
                     
                     for (curve_size_t k = 0; k < j; ++k) {
                         
-                        others[k] = std::max(edges.find(std::make_pair(k, j))->second, distances[k][i - 1]);
+                        others[k] = std::max(edges[k][j], distances[k][i - 1]);
                         
                     }
                     
