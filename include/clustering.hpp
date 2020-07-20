@@ -81,7 +81,7 @@ inline curve_number_t _nearest_center(const curve_number_t i, const Curves &in, 
     
     // except there is a center with smaller cost, then choose the one with smallest cost
     for (curve_number_t j = 0; j < centers.size(); ++j) {
-        _cheap_dist(i, j, in, simplified_in, distances);
+        _cheap_dist(i, centers[j], in, simplified_in, distances);
         if (distances[i][centers[j]] < min_cost_elem) {
             min_cost_elem = distances[i][centers[j]];
             nearest = j;
@@ -98,7 +98,7 @@ inline distance_t _curve_cost(const curve_number_t i, const Curves &in, const Cu
     
     // except there is a center with smaller cost, then choose the one with smallest cost
     for (curve_number_t j = 0; j < centers.size(); ++j) {
-        _cheap_dist(i, j, in, simplified_in, distances);
+        _cheap_dist(i, centers[j], in, simplified_in, distances);
         if (distances[i][centers[j]] < min_cost_elem) {
             min_cost_elem = distances[i][centers[j]];
             nearest = j;
