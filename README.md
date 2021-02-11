@@ -38,12 +38,12 @@ A `fred.Distance_Matrix()` can be used to speed up consecutive calls of `fred.di
 
 #### discrete (k,l)-center clustering (continuous Fréchet) -- multiple calls
 - from [**Approximating (k,l)-center clustering for curves**](https://dl.acm.org/doi/10.5555/3310435.3310616)
-- signature: `fred.discrete_klcenter_multi(k, l, curves, distances, with_assignment, center_domain)`with parameters `distances`: `fred,Distance_Matrix`, `with_assignment`: defaults to false; assigns curves to nearest centers if true, `center_domain`: possible centers, defaults to empty `fred.Curves()`, in this case the input is simplified and used as center domain
+- signature: `fred.discrete_klcenter_multi(k, l, curves, distances, with_assignment, center_domain)`with parameters `distances`: `fred.Distance_Matrix`, `with_assignment`: defaults to false; assigns curves to nearest centers if true, `center_domain`: possible centers, defaults to empty `fred.Curves()`, in this case the input is simplified and used as center domain
 - returns: `fred.Clustering_Result` with mebers `value`: objective value, `time`: running-time, `assignment`: empty if with_assignment=false
 
 #### discrete (k,l)-median clustering (continuous Fréchet) -- multiple calls
 - Algorithm 6 in [**Coresets for (k,l)-Clustering under the Fréchet distance**](https://arxiv.org/pdf/1901.01870.pdf) + simplification
-- signature: `fred.discrete_klmedian_multi(k, l, curves, distances, with_assignment, center_domain)` with parameters `distances`: `fred,Distance_Matrix`, `with_assignment`: defaults to false; assigns curves to nearest centers if true, `center_domain`: possible centers, defaults to empty `fred.Curves()`, in this case the input is simplified and used as center domain
+- signature: `fred.discrete_klmedian_multi(k, l, curves, distances, with_assignment, center_domain)` with parameters `distances`: `fred.Distance_Matrix`, `with_assignment`: defaults to false; assigns curves to nearest centers if true, `center_domain`: possible centers, defaults to empty `fred.Curves()`, in this case the input is simplified and used as center domain
 - returns: `fred.Clustering_Result` with mebers `value`: objective value, `time`: running-time, `assignment`: empty if with_assignment=false
 
 
@@ -148,6 +148,8 @@ curves = fred.dimension_reduction(curves, 0.95) # fred is pretty fast but with h
                                                 
 Fred.plot_curve(curves)
                                   
+# Oneshot clustering - if you already know the value of k
+                                  
 clustering = fred.discrete_klcenter(2, 100, curves) # fast but coarse
           
 clustering = fred.discrete_klmedian(2, 100, curves) # slow but better results
@@ -159,4 +161,18 @@ for i, center in enumerate(clustering):
     
     
 Fred.plot_curve(clustering)
+
+# Multiple clustering calls - if you need to find a suitable value for k
+
+dm = fred.Distance_Matrix() # computing the Fréchet distance is costly,
+                            # therefore we buffer each distance already computed to
+                            # speed up consecutive clustering calls
+                            
+for k in range(2, 6):
+    
+    clustering = fred.discrete_klcenter_multi(k, 100, curves, dm)
+    print("clustering cost is {}".format(clustering.value))
+            
+    clustering = fred.discrete_klmedian_multi(k, 100, curves, dm)
+    print("clustering cost is {}".format(clustering.value))
 ```
