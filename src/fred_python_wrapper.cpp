@@ -18,11 +18,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include "coreset.hpp"
 #include "grid.hpp"
 #include "simplification.hpp"
+#include "dynamic_time_warping.hpp"
 
 using namespace boost::python;
 namespace np = boost::python::numpy;
 namespace fc = Frechet::Continuous;
 namespace fd = Frechet::Discrete;
+namespace ddtw = Dynamic_Time_Warping::Discrete;
 
 const distance_t default_epsilon = 0.001;
 
@@ -32,6 +34,10 @@ fc::Distance continuous_frechet(const Curve &curve1, const Curve &curve2) {
 
 fd::Distance discrete_frechet(const Curve &curve1, const Curve &curve2) {
     return fd::distance(curve1, curve2);
+}
+
+ddtw::Distance discrete_dynamic_time_warping(const Curve &curve1, const Curve &curve2) {
+    return ddtw::distance(curve1, curve2);
 }
 
 Curves jl_transform(const Curves &in, const double epsilon, const bool empirical_constant = true) {
@@ -197,6 +203,12 @@ BOOST_PYTHON_MODULE(backend)
         .def("__repr__", &fd::Distance::repr)
     ;
     
+    class_<ddtw::Distance>("Discrete_Dynamic_Time_Warping_Distance", init<>())
+        .add_property("time", &ddtw::Distance::time)
+        .add_property("value", &ddtw::Distance::value)
+        .def("__repr__", &ddtw::Distance::repr)
+    ;
+    
     class_<Clustering::Distance_Matrix>("Distance_Matrix", init<>());
     
     class_<Clustering::Clustering_Result>("Clustering_Result", init<>())
@@ -228,6 +240,7 @@ BOOST_PYTHON_MODULE(backend)
     
     def("continuous_frechet", continuous_frechet);
     def("discrete_frechet", discrete_frechet);
+    def("discrete_dynamic_time_warping", discrete_dynamic_time_warping);
     
     def("weak_minimum_error_simplification", weak_minimum_error_simplification);
     def("approximate_weak_minimum_link_simplification", approximate_weak_minimum_link_simplification);

@@ -48,4 +48,5 @@ PYTHON_ADD_MODULE(backend
             src/frechet.cpp
             src/jl_transform.cpp
             src/simplification.cpp
+            src/dynamic_time_warping.cpp
 )
