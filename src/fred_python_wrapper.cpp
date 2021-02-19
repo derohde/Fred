@@ -156,7 +156,7 @@ BOOST_PYTHON_MODULE(backend)
     
     scope().attr("default_epsilon_continuous_frechet") = default_epsilon;
     
-    class_<Point>("Point", init<>())
+    class_<Point>("Point", init<dimensions_t>())
         .def("__len__", &Point::dimensions)
         .def("__getitem__", &Point::get)
         .def("__str__", &Point::str)
@@ -165,12 +165,23 @@ BOOST_PYTHON_MODULE(backend)
         .add_property("values", &Point::as_ndarray)
     ;
     
+    class_<Points>("Points", init<dimensions_t>())
+        .def("__len__", &Points::number)
+        .def("__getitem__", &Points::get)
+        .def("__str__", &Points::str)
+        .def("__iter__", iterator<Points>())
+        .def("__repr__", &Points::repr)
+        .add_property("values", &Points::as_ndarray)
+        .add_property("centroid", &Points::centroid)
+    ;
+    
     class_<Curve>("Curve", init<np::ndarray>())
         .def(init<np::ndarray, std::string>())
         .add_property("dimensions", &Curve::dimensions)
         .add_property("complexity", &Curve::complexity)
         .add_property("name", &Curve::get_name)
         .add_property("values", &Curve::as_ndarray)
+        .add_property("centroid", &Curve::centroid)
         .def("__getitem__", &Curve::get)
         .def("__len__", &Curve::complexity)
         .def("__str__", &Curve::str)

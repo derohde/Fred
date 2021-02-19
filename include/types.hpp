@@ -23,7 +23,6 @@ class Interval;
 
 using Vector = Point;
 
-using Points = std::vector<Point>;
 using Intervals = std::vector<Interval>;
 using Coordinates = std::vector<coordinate_t>;
 

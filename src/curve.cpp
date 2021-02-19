@@ -21,7 +21,7 @@ Curve::Curve(const Points &points, const std::string &name) : Points(points), vs
     #endif
 }
 
-Curve::Curve(const np::ndarray &in, const std::string &name) : Points(in.shape(0)), name{name}, vstart{0}, vend{Points::size() - 1} {
+Curve::Curve(const np::ndarray &in, const std::string &name) : Points(in.shape(0), in.get_nd() > 1 ? in.shape(1) : 1), name{name}, vstart{0}, vend{Points::size() - 1} {
     const auto n_dimensions = in.get_nd();
     if (n_dimensions > 2){
         std::cerr << "A Curve requires a 1- or 2-dimensional numpy array of type double."<< std::endl;
@@ -43,30 +43,24 @@ Curve::Curve(const np::ndarray &in, const std::string &name) : Points(in.shape(0
     const auto data = reinterpret_cast<const coordinate_t*>(in.get_data());
     
     if (n_dimensions == 2) {
+        const auto point_size = in.shape(1);
+        const auto strides1 = in.strides(1) / sizeof(coordinate_t);
         
         #if DEBUG
         std::cout << "constructing curve of size " << number_points << " and " << point_size << " dimensions" << std::endl;
         #endif
-        
-        const auto point_size = in.shape(1);
-        const auto strides1 = in.strides(1) / sizeof(coordinate_t);
                 
         #pragma omp parallel for simd
-        for (curve_size_t i = 0; i < number_points; ++i) {
-            Points::operator[](i) = Point(point_size);
-            
+        for (curve_size_t i = 0; i < number_points; ++i) {            
             auto coord_data = data + i * strides0;
             
             for(curve_size_t j = 0; j < point_size; ++j, coord_data += strides1){
               Points::operator[](i)[j] = *coord_data;
             }
         }
-    } else {        
-                
+    } else {                
         #pragma omp parallel for simd
         for (curve_size_t i = 0; i < number_points; ++i) {
-            Points::operator[](i) = Point(1);
-            
             Points::operator[](i)[0] = *(data + i * strides0);
         }
     }

@@ -27,7 +27,6 @@ namespace p = boost::python;
 
 class Point : public Coordinates {    
 public:    
-    inline Point() {}
     inline Point(const dimensions_t d) : Coordinates(d) {}
     
     inline dimensions_t dimensions() const {
@@ -179,4 +178,58 @@ public:
     std::string repr() const;
 };
 
+class Points : public std::vector<Point> {
+    dimensions_t dim;
+    
+public:
+    inline Points(const dimensions_t dim) : dim{dim} {}
+    inline Points(const curve_size_t m, const dimensions_t dim) : std::vector<Point>(m, Point(dim)), dim{dim} {}
+    inline Points(const curve_size_t m, const Point& p) : std::vector<Point>(m, p), dim{p.dimensions()} {}
+    
+    inline Point centroid() const {
+        if (empty()) return Point(0);
+        
+        Point mean = operator[](0);
+        for (curve_size_t i = 1; i < size(); ++i) {
+            mean += operator[](i);
+        }
+        mean /= size();
+        return mean;
+    }
+    
+    inline void add(Point &point) {
+        if (point.dimensions() != dim) {
+            std::cerr << "Wrong number of dimensions; expected " << dim << " dimensions and got " << point.dimensions() << " dimensions." << std::endl;
+            return;
+        }
+        push_back(point);
+    }
+    
+    inline Point get(const curve_size_t i) const { 
+        return Points::operator[](i); 
+    }
+    
+    inline curve_size_t number() const {
+        return size();
+    }
+    
+    inline dimensions_t dimensions() const {
+        return dim;
+    }
+    
+    inline auto as_ndarray() const {
+        p::list l;
+        for (const auto &elem : *this) {
+            l.append(elem.as_ndarray());
+        }
+        auto result = np::array(l);
+        return result;
+    }
+    
+    std::string str() const;
+    
+    std::string repr() const;
+};
+
 std::ostream& operator<<(std::ostream&, const Point&);
+std::ostream& operator<<(std::ostream&, const Points&);

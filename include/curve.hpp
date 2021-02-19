@@ -32,7 +32,7 @@ class Curve : private Points {
 public:
     typedef typename Points::iterator iterator;
     
-    inline Curve(const std::string &name = "unnamed curve") : vstart{0}, vend{0}, name{name} {}
+    inline Curve(const dimensions_t dim, const std::string &name = "unnamed curve") : Points(dim), vstart{0}, vend{0}, name{name} {}
     inline Curve(const curve_size_t m, const dimensions_t dimensions, const std::string &name = "unnamed curve") : Points(m, Point(dimensions)), vstart{0}, vend{m-1} {}
     Curve(const Points &points, const std::string &name = "unnamed curve");
     Curve(const np::ndarray &in, const std::string &name = "unnamed curve");
@@ -85,13 +85,6 @@ public:
         return Points::empty();
     }
     
-    inline void resize(const curve_size_t n) {
-        const auto oldsize = size(), difference = n - oldsize;
-        Points::resize(n);
-        vend += difference;
-        if (vend < vstart) vstart = vend;
-    }
-    
     inline curve_size_t complexity() const {
         return empty() ? 0 : vend - vstart + 1; 
     }
@@ -101,7 +94,7 @@ public:
     }
     
     inline dimensions_t dimensions() const { 
-        return empty() ? 0 : Points::operator[](0).dimensions();
+        return empty() ? 0 : Points::dimensions();
     }
     
     inline void set_subcurve(const curve_size_t start, const curve_size_t end) {
@@ -122,6 +115,10 @@ public:
     inline void push_back(Point &&point) {
         Points::push_back(point);
         vend = Points::size() - 1;
+    }
+    
+    inline Point centroid() const {
+        return Points::centroid();
     }
     
     inline auto as_ndarray() const {
@@ -149,7 +146,7 @@ class Curves : public std::vector<Curve> {
     
 public:
     Curves() {}
-    Curves(const curve_number_t n, const curve_size_t m) : std::vector<Curve>(n), m{m} {}
+    Curves(const curve_number_t n, const curve_size_t m) : std::vector<Curve>(n, Curve(0)), m{m} {}
     
     inline void add(Curve &curve) {
         push_back(curve);

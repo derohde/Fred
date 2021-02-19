@@ -16,7 +16,7 @@ Curve Simplification::approximate_weak_minimum_link_simplification(const Curve &
     
     curve_size_t i = 0, j = 0;
     
-    Curve simplification, segment(2, curve.front().dimensions());
+    Curve simplification(curve.dimensions()), segment(2, curve.dimensions());
     simplification.push_back(curve.front());
     
     distance_t distance = 0;
@@ -64,7 +64,7 @@ Curve Simplification::approximate_weak_minimum_link_simplification(const Curve &
 }
 
 Curve Simplification::approximate_weak_minimum_error_simplification(const Curve &curve, const curve_size_t ell) {
-    Curve simplification, segment(2, curve.front().dimensions());
+    Curve simplification(curve.dimensions()), segment(2, curve.dimensions());
     
     segment[0] = curve.front();
     segment[1] = curve.back();

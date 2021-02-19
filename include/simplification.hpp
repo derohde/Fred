@@ -58,7 +58,7 @@ public:
         
         auto l = ll - 1;
         
-        Curve result;
+        Curve result(curve.dimensions());
         
         if (ll <= 2) {
             result.push_back(curve.front());

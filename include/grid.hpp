@@ -40,7 +40,7 @@ public:
             coord1d[half_number_points_per_dimension + i] = i * width; 
         }
         
-        Points P(number_points);
+        Points P(number_points, dimensions);
         auto counter = std::vector<curve_size_t>(dimensions, 0);
         
         for (curve_number_t i = 0; i < number_points; ++i) {

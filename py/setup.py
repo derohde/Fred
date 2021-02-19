@@ -84,7 +84,7 @@ setup(
     packages=setuptools.find_packages(),
     ext_package="Fred",
     ext_modules=[CMakeExtension('backend')],
-    install_requires=['cvxopt'],
+    install_requires=['cvxopt', 'matplotlib'],
     cmdclass=dict(build_ext=CMakeBuild),
     zip_safe=False,
 )
