@@ -73,7 +73,7 @@ Curve::Curve(const np::ndarray &in, const std::string &name) : Points(in.shape(0
 
 Curves Curves::simplify(const curve_size_t l) {
     const bool approx = true;
-    Curves result(size(), l);
+    Curves result(size(), l, Curves::dimensions());
     for (curve_number_t i = 0; i < size(); ++i) {
         if (approx) {
             auto simplified_curve = Simplification::approximate_weak_minimum_error_simplification(std::vector<Curve>::operator[](i), l);

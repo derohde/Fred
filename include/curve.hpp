@@ -143,12 +143,21 @@ public:
 
 class Curves : public std::vector<Curve> {
     curve_size_t m;
+    dimensions_t dim;
     
 public:
-    Curves() {}
-    Curves(const curve_number_t n, const curve_size_t m) : std::vector<Curve>(n, Curve(0)), m{m} {}
+    Curves(const dimensions_t dim = 0) : dim{dim} {}
+    Curves(const curve_number_t n, const curve_size_t m, const dimensions_t dim) : std::vector<Curve>(n, Curve(dim)), m{m}, dim{dim} {}
     
     inline void add(Curve &curve) {
+        if (curve.dimensions() != dim) {
+            if (dim == 0) {
+                dim = curve.dimensions();
+            } else {
+                std::cerr << "Wrong number of dimensions; expected " << dim << " dimensions and got " << curve.dimensions() << " dimensions." << std::endl;
+                return;
+            }
+        }
         push_back(curve);
         if (curve.complexity() > m) m = curve.complexity();
     }
@@ -163,6 +172,10 @@ public:
     
     inline curve_number_t number() const {
         return size();
+    }
+    
+    inline dimensions_t dimensions() const {
+        return dim;
     }
     
     Curves simplify(const curve_size_t);

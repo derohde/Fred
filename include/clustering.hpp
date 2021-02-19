@@ -158,7 +158,7 @@ Clustering_Result gonzalez(const curve_number_t num_centers, const curve_size_t 
     const Curves &simplified_in = center_domain;
     
     if (center_domain.empty()) {
-        Curves simplified_in_self(in.number(), ell);
+        Curves simplified_in_self(in.number(), ell, in.dimensions());
         
         for (curve_number_t i = 0; i < in.size(); ++i) {
             Simplification::Subcurve_Shortcut_Graph graph(const_cast<Curve&>(in[i]));
@@ -276,7 +276,7 @@ Clustering_Result one_median_sampling(const curve_size_t ell, const Curves &in, 
     const Curves &simplified_in = center_domain;
     
     if (center_domain.empty()) {
-        Curves simplified_in_self(in.number(), ell);
+        Curves simplified_in_self(in.number(), ell, in.dimensions());
         
         for (curve_number_t i = 0; i < in.size(); ++i) {
             Simplification::Subcurve_Shortcut_Graph graph(const_cast<Curve&>(in[i]));
@@ -339,7 +339,7 @@ Clustering_Result one_median_exhaustive(const curve_size_t ell, const Curves &in
     const Curves &simplified_in = center_domain;
     
     if (center_domain.empty()) {
-        Curves simplified_in_self(in.number(), ell);
+        Curves simplified_in_self(in.number(), ell, in.dimensions());
         
         for (curve_number_t i = 0; i < in.size(); ++i) {
             Simplification::Subcurve_Shortcut_Graph graph(const_cast<Curve&>(in[i]));
@@ -380,6 +380,88 @@ Clustering_Result one_median_exhaustive(const curve_size_t ell, const Curves &in
     auto end = boost::chrono::process_real_cpu_clock::now();
     result.centers.push_back(simplified_in[centers[0]]);
     result.value = best_objective_value;
+    result.running_time = (end-start).count() / 1000000000.0;
+    return result;
+}
+
+Clustering_Result dtw_one_median(const Curves &in, const bool with_assignment = false) {
+    const auto start = boost::chrono::process_real_cpu_clock::now();
+    Clustering_Result result;
+    
+    const auto n = in.size();
+    curve_size_t nn = 0;
+    
+    std::vector<std::vector<bool>> markings = std::vector<std::vector<bool>>(n, std::vector<bool>(in.get_m(), false));
+    std::vector<curve_size_t> svert = std::vector<curve_size_t>(n, 0), evert = std::vector<curve_size_t>(n, 0);
+    
+    Points S1(in.dimensions()), S2(in.dimensions());
+    Point mu1(in.dimensions()), mu2(in.dimensions());
+    
+    for (curve_number_t i = 0; i < n; ++i) {
+        nn += in[i].size();
+        S1.push_back(in[i][svert[i]]);
+        markings[i][svert[i]] = true;
+        ++svert[i];
+        evert[i] = in[i].size()-1;
+        S2.push_back(in[i][evert[i]]);
+        markings[i][evert[i]] = true;
+        --evert[i];
+        nn -= 2;
+    }
+    
+    mu1 = S1.centroid();
+    mu2 = S2.centroid();
+    
+    const auto infty = std::numeric_limits<distance_t>::infinity();
+    
+    while (nn > 0) {
+        distance_t d1 = infty, d2 = infty;
+        curve_number_t c1 = 0, c2 = 0;
+        
+        for (curve_size_t i = 0; i < in.size(); ++i) {
+            if (not svert[i]) {
+                const auto dist = in[i][svert[i]].dist_sqr(mu1);
+                if (dist < d1) {
+                    d1 = dist;
+                    c1 = i;
+                }
+            }
+            if (not evert[i]) {
+                const auto dist = in[i][evert[i]].dist_sqr(mu2);
+                if (dist < d2) {
+                    d2 = dist;
+                    c2 = i;
+                }
+            }
+        }
+        
+        S1.push_back(in[c1][svert[c1]]);
+        S2.push_back(in[c2][svert[c2]]);
+        
+        nn -= 2;
+        
+        markings[c1][svert[c1]] = true;
+        markings[c2][svert[c2]] = true;
+        
+        ++svert[c1];
+        --evert[c2];
+        
+        mu1 = S1.centroid();
+        mu2 = S2.centroid();
+    }
+    
+    Curve center_curve(mu1.dimensions());
+    center_curve.push_back(mu1);
+    center_curve.push_back(mu2);
+    
+    result.centers.push_back(center_curve);
+    //if (with_assignment) {
+    //    result.assignment = _cluster_assignment(in, center_curves, centers, distances);
+    //}
+    
+    auto end = boost::chrono::process_real_cpu_clock::now();
+    //result.centers.push_back(simplified_in[centers[0]]);
+    //result.value = best_objective_value;
     result.running_time = (end-start).count() / 1000000000.0;
     return result;
 }

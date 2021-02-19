@@ -65,6 +65,11 @@ bool get_frechet_rounding() {
     return fc::round;
 }
 
+Clustering::Clustering_Result dtw_one_median(const Curves &in) {
+    auto result = Clustering::dtw_one_median(in);
+    return result;
+}
+
 Clustering::Clustering_Result klcenter_multi(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, Clustering::Distance_Matrix &distances,
                                        bool with_assignment = false, const Curves &center_domain = Curves()) {
     auto result = Clustering::gonzalez(num_centers, ell, in, distances, false, with_assignment, center_domain);
@@ -264,9 +269,12 @@ BOOST_PYTHON_MODULE(backend)
     def("discrete_klcenter_multi", klcenter_multi, klcenter_multi_overloads());
     def("discrete_klmedian_multi", klmedian_multi, klmedian_multi_overloads());
     
-    //def("discrete_onemedian_sampling", onemedian_sampling, onemedian_sampling_overloads());
-    //def("discrete_onemedian_exhaustive", onemedian_exhaustive, onemedian_exhaustive_overloads());
-    //def("onemedian_coreset", onemedian_coreset, onemedian_coreset_overloads());
+    // these are experimental
+    def("dtw_one_median", dtw_one_median);
+    def("discrete_onemedian_sampling", onemedian_sampling, onemedian_sampling_overloads());
+    def("discrete_onemedian_exhaustive", onemedian_exhaustive, onemedian_exhaustive_overloads());
+    def("onemedian_coreset", onemedian_coreset, onemedian_coreset_overloads());
+    
     
     def("set_maximum_number_threads", set_number_threads);
 }

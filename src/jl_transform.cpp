@@ -34,7 +34,7 @@ Curves transform_naive(const Curves &in, const distance_t epsilon, const bool em
     
     for (auto &elem: mat) elem = rg.get(in[0].dimensions());
                 
-    Curves result(in.size(), in.get_m());
+    Curves result(in.size(), in.get_m(), new_number_dimensions);
     
     auto sqrtk = std::sqrt(new_number_dimensions);
     
@@ -58,7 +58,7 @@ Curves transform_naive(const Curves &in, const distance_t epsilon, const bool em
         }
         
         #if DEBUG
-        std::cout << "projected curve no. " << l << " from " << in[l].dimensions() << " to " << new_number_dimensions << " dimensions" << std::endl;
+        std::cout << "projected curve no. " << l << " from " << in.dimensions() << " to " << new_number_dimensions << " dimensions" << std::endl;
         #endif
         
     }
