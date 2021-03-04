@@ -8,21 +8,27 @@ def plot_curve(*curves, save=None):
     for curve in curves:
         if isinstance(curve, backend.Curve):
             if curve.dimensions >= 2:
-                plt.plot(curve.values[:, 0], curve.values[:, 1], label = curve.name)
+                p = plt.plot(curve.values[:, 0], curve.values[:, 1], '--o', label = curve.name, markersize = 7, markevery = curve.complexity)
+                plt.plot(curve.values[1:, 0], curve.values[1:, 1], 'x', label = None, color = p[0].get_color(), markersize = 7)
             else:
-                plt.plot(curve.values, label = curve.name)
+                p = plt.plot(curve.values, '--o', label = curve.name, markersize = 7, markevery = curve.complexity)
+                plt.plot(curve.values[1:], 'x', label = None, color = p[0].get_color(), markersize = 7)
         elif isinstance(curve, backend.Curves):
             for curv in curve:
                 if curv.dimensions >= 2:
-                    plt.plot(curv.values[:, 0], curv.values[:, 1], label = curv.name)
+                    p = plt.plot(curv.values[:, 0], curv.values[:, 1], '--o', label = curv.name, markersize = 7, markevery = curv.complexity)
+                    plt.plot(curv.values[1:, 0], curv.values[1:, 1], 'x', label = None, color = p[0].get_color(), markersize = 7)
                 else:
-                    plt.plot(curv.values, label = curv.name)
+                    p = plt.plot(curv.values, '--o', label = curv.name, markersize = 7, markevery = curv.complexity)
+                    plt.plot(curv.values[1:], 'x', label = None, color = p[0].get_color(), markersize = 7)
         elif isinstance(curve, backend.Clustering_Result):
-            for center in curve:
-                if center.dimensions >= 2:
-                    plt.plot(center.values[:, 0], center.values[:, 1], label = center.name)
+            for curv in curve:
+                if curv.dimensions >= 2:
+                    p = plt.plot(curv.values[:, 0], curv.values[:, 1], '-o', label = curv.name, markersize = 7, markevery = curv.complexity)
+                    plt.plot(curv.values[1:, 0], curv.values[1:, 1], 'x', label = None, color = p[0].get_color(), markersize = 7)
                 else:
-                    plt.plot(center.values, label = center.name)
+                    p = plt.plot(curv.values, '-o', label = curv.name, markersize = 7, markevery = curv.complexity)
+                    plt.plot(curv.values[1:], 'x', label = None, color = p[0].get_color(), markersize = 7)
                 
     plt.legend(title='Curve names:')
     plt.title('Fred Curves')
