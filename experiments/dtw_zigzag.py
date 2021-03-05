@@ -26,6 +26,7 @@ for i in range(nzigzags):
 curves.add(fred.Curve(p1, "Input Curve {}".format(1)))
 curves.add(fred.Curve(p2, "Input Curve {}".format(2)))
 
-clustering = fred.dtw_one_median(curves)
-Fred.plot_curve(curves, clustering)
-    
+clustering = fred.two_two_dtw_one_two_median(curves)
+clustering_e = fred.two_two_dtw_one_two_median_exact(curves)
+
+Fred.plot_curve(curves, clustering, clustering_e)

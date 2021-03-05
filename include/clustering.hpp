@@ -17,6 +17,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include "random.hpp"
 #include "curve.hpp"
 #include "frechet.hpp"
+#include "dynamic_time_warping.hpp"
 #include "simplification.hpp"
 
 namespace Clustering {
@@ -384,12 +385,11 @@ Clustering_Result one_median_exhaustive(const curve_size_t ell, const Curves &in
     return result;
 }
 
-Clustering_Result dtw_one_median(const Curves &in, const bool with_assignment = false) {
+Clustering_Result two_two_dtw_one_two_median(const Curves &in, const bool with_assignment = false) {
     const auto start = boost::chrono::process_real_cpu_clock::now();
     Clustering_Result result;
     
     const auto n = in.size();
-    curve_size_t nn = 0;
     
     std::vector<std::vector<bool>> markings = std::vector<std::vector<bool>>(n, std::vector<bool>(in.get_m(), false));
     std::vector<curve_size_t> svert = std::vector<curve_size_t>(n, 0), evert = std::vector<curve_size_t>(n, 0);
@@ -398,36 +398,38 @@ Clustering_Result dtw_one_median(const Curves &in, const bool with_assignment = 
     Point mu1(in.dimensions()), mu2(in.dimensions());
     
     for (curve_number_t i = 0; i < n; ++i) {
-        nn += in[i].size();
         S1.push_back(in[i][svert[i]]);
         markings[i][svert[i]] = true;
         ++svert[i];
-        evert[i] = in[i].size()-1;
+        evert[i] = in[i].size() - 1;
         S2.push_back(in[i][evert[i]]);
         markings[i][evert[i]] = true;
         --evert[i];
-        nn -= 2;
     }
     
     mu1 = S1.centroid();
     mu2 = S2.centroid();
-    
+        
     const auto infty = std::numeric_limits<distance_t>::infinity();
     
-    while (nn > 0) {
-        distance_t d1 = infty, d2 = infty;
-        curve_number_t c1 = 0, c2 = 0;
+    bool done = false;
+    distance_t d1 = infty, d2 = infty, dist = infty;
+    curve_number_t c1 = 0, c2 = 0;
+    
+    while (not done) {
+        d1 = infty;
+        d2 = infty;
         
         for (curve_size_t i = 0; i < in.size(); ++i) {
-            if (not svert[i]) {
-                const auto dist = in[i][svert[i]].dist_sqr(mu1);
+            if (not markings[i][svert[i]]) {
+                dist = in[i][svert[i]].dist_sqr(mu1);
                 if (dist < d1) {
                     d1 = dist;
                     c1 = i;
                 }
             }
-            if (not evert[i]) {
-                const auto dist = in[i][evert[i]].dist_sqr(mu2);
+            if (not markings[i][evert[i]]) {
+                dist = in[i][evert[i]].dist_sqr(mu2);
                 if (dist < d2) {
                     d2 = dist;
                     c2 = i;
@@ -435,22 +437,26 @@ Clustering_Result dtw_one_median(const Curves &in, const bool with_assignment = 
             }
         }
         
-        S1.push_back(in[c1][svert[c1]]);
-        S2.push_back(in[c2][svert[c2]]);
+        if (d1 < d2) {
+            //std::cout << "S1 add " << c1 << "." << svert[c1] << std::endl;
+            S1.push_back(in[c1][svert[c1]]);
+            markings[c1][svert[c1]] = true;
+            ++svert[c1];
+            mu1 = S1.centroid();
+            done = false;
+        }
+        else if (d2 < infty) {
+            //std::cout << "S2 add " << c2 << "." << evert[c2] << std::endl;
+            S2.push_back(in[c2][evert[c2]]);
+            markings[c2][evert[c2]] = true;
+            --evert[c2];
+            mu2 = S2.centroid();
+            done = false;
+        } else done = true;
         
-        nn -= 2;
-        
-        markings[c1][svert[c1]] = true;
-        markings[c2][svert[c2]] = true;
-        
-        ++svert[c1];
-        --evert[c2];
-        
-        mu1 = S1.centroid();
-        mu2 = S2.centroid();
     }
     
-    Curve center_curve(mu1.dimensions());
+    Curve center_curve(mu1.dimensions(), "center curve");
     center_curve.push_back(mu1);
     center_curve.push_back(mu2);
     
@@ -465,5 +471,86 @@ Clustering_Result dtw_one_median(const Curves &in, const bool with_assignment = 
     result.running_time = (end-start).count() / 1000000000.0;
     return result;
 }
+
+Clustering_Result two_two_dtw_one_two_median_exact(const Curves &in, const bool with_assignment = false) {
+    const auto start = boost::chrono::process_real_cpu_clock::now();
+    Clustering_Result result;
+    Curve best_center(in.dimensions());
+    const auto infty = std::numeric_limits<distance_t>::infinity();
+    
+    curve_size_t n = 1;
+    std::vector<curve_size_t> pointers = std::vector<curve_size_t>(in.size(), 0), 
+                                divisors = std::vector<curve_size_t>(in.size(), 0);
+    distance_t best = infty;
+    Points S1(in.dimensions()), S2(in.dimensions());
+    
+    for (curve_number_t i = 0; i < in.size(); ++i) {
+        n *= in[i].complexity() - 1;
+        if (i == 0) divisors[i] = in[0].complexity() - 1;
+        else if (i == 1) divisors[i] = in[0].complexity() - 1;
+        else divisors[i] = divisors[i-1] * (in[i].complexity() - 1);
+    }
+    
+    const auto onepercent = n / 100;
+    
+    int currperc = 0;
+    
+    for (curve_size_t i = 0; i < n; ++i) {
+        
+        if (i / onepercent > currperc) {
+            currperc = i / onepercent;
+            std::cout << currperc << "% done" << std::endl;
+        }
+        
+        pointers[0] = i % divisors[0];
+        for (curve_number_t j = 1; j < in.size(); ++j) {
+            pointers[j] = (i / divisors[j]) % (in[j].complexity() - 1);
+        }
+        
+        S1.clear();
+        S2.clear();
+        
+        for (curve_number_t j = 0; j < in.size(); ++j) {
+            for (curve_size_t k = 0; k < in[j].complexity(); ++ k) {
+                if (k <= pointers[j]) {
+                    S1.push_back(in[j][k]);
+                    if (k == in[j].complexity() - 1) std::cerr << "error!!" << std::endl;
+                }
+                else S2.push_back(in[j][k]);
+            }
+        }
+        
+        auto mu1 = S1.centroid();
+        auto mu2 = S2.centroid();
+        
+        Curve center_curve(mu1.dimensions(), "optimal center curve");
+        center_curve.push_back(mu1);
+        center_curve.push_back(mu2);
+        
+        distance_t cost = 0;
+        
+        for (curve_number_t j = 0; j < in.size(); ++j) {
+            const auto dist = Dynamic_Time_Warping::Discrete::distance(center_curve, in[j]);
+            cost += dist.value;
+        }
+        
+        if (cost < best) {
+            best = cost;
+            best_center = center_curve;
+        }
+    }
+    
+    result.centers.push_back(best_center);
+    //if (with_assignment) {
+    //    result.assignment = _cluster_assignment(in, center_curves, centers, distances);
+    //}
+    
+    auto end = boost::chrono::process_real_cpu_clock::now();
+    //result.centers.push_back(simplified_in[centers[0]]);
+    //result.value = best_objective_value;
+    result.running_time = (end-start).count() / 1000000000.0;
+    return result;
+}
+
 
 }

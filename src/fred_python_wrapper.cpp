@@ -66,7 +66,12 @@ bool get_frechet_rounding() {
 }
 
 Clustering::Clustering_Result dtw_one_median(const Curves &in) {
-    auto result = Clustering::dtw_one_median(in);
+    auto result = Clustering::two_two_dtw_one_two_median(in);
+    return result;
+}
+
+Clustering::Clustering_Result dtw_one_median_exact(const Curves &in) {
+    auto result = Clustering::two_two_dtw_one_two_median_exact(in);
     return result;
 }
 
@@ -270,7 +275,8 @@ BOOST_PYTHON_MODULE(backend)
     def("discrete_klmedian_multi", klmedian_multi, klmedian_multi_overloads());
     
     // these are experimental
-    def("dtw_one_median", dtw_one_median);
+    def("two_two_dtw_one_two_median", dtw_one_median);
+    def("two_two_dtw_one_two_median_exact", dtw_one_median_exact);
     def("discrete_onemedian_sampling", onemedian_sampling, onemedian_sampling_overloads());
     def("discrete_onemedian_exhaustive", onemedian_exhaustive, onemedian_exhaustive_overloads());
     def("onemedian_coreset", onemedian_coreset, onemedian_coreset_overloads());

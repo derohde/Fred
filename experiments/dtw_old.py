@@ -11,7 +11,7 @@ curves.add(c1)
 curves.add(c2)
 
 
-clustering = fred.dtw_one_median(curves)
+clustering = fred.two_two_dtw_one_two_median(curves)
+clustering_e = fred.two_two_dtw_one_two_median_exact(curves)
 
-
-Fred.plot_curve(curves, clustering) 
+Fred.plot_curve(curves, clustering, clustering_e)

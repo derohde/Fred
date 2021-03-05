@@ -7,7 +7,7 @@ seperation = 100
 ninb = 20
 clusterradius = 5
 clusternumber = 20
-outlierradius = 20
+outlierradius = 200
 clusteroutliers = 2
 ncurves = 3
 
@@ -50,6 +50,8 @@ for i in range(ncurves):
         
     curves.add(fred.Curve(np.concatenate([c1, inb, c2]), "Input Curve {}".format(i+1)))
 
-clustering = fred.dtw_one_median(curves)
-Fred.plot_curve(curves, clustering)
+clustering = fred.two_two_dtw_one_two_median(curves)
+clustering_e = fred.two_two_dtw_one_two_median_exact(curves)
+
+Fred.plot_curve(curves, clustering, clustering_e)
     
