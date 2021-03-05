@@ -85,7 +85,7 @@ Curves Curves::simplify(const curve_size_t l) {
             simplified_curve.set_name("Simplification of " + std::vector<Curve>::operator[](i).get_name());
             result[i] = simplified_curve;
         }
-        std::cout << "Simplified curve " << i + 1 << "/" << size() << "." << std::endl;
+        //std::cout << "Simplified curve " << i + 1 << "/" << size() << "." << std::endl;
     }
     return result;
 }
