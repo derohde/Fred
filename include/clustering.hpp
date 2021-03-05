@@ -497,9 +497,11 @@ Clustering_Result two_two_dtw_one_two_median_exact(const Curves &in, const bool 
     
     for (curve_size_t i = 0; i < n; ++i) {
         
-        if (i / onepercent > currperc) {
-            currperc = i / onepercent;
-            std::cout << currperc << "% done" << std::endl;
+        if (onepercent > 0) {
+            if (i / onepercent > currperc) {
+                currperc = i / onepercent;
+                std::cout << currperc << "% done" << std::endl;
+            }
         }
         
         pointers[0] = i % divisors[0];
