@@ -239,6 +239,7 @@ BOOST_PYTHON_MODULE(backend)
         .def("__getitem__", &Clustering::Clustering_Result::get)
         .def("__len__", &Clustering::Clustering_Result::size)
         .def("__iter__", range(&Clustering::Clustering_Result::cbegin, &Clustering::Clustering_Result::cend))
+        .def("compute_assignment", &Clustering::Clustering_Result::compute_assignment)
     ;
     
     class_<Clustering::Cluster_Assignment>("Cluster_Assignment", init<>())

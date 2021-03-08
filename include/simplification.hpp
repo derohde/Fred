@@ -23,7 +23,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace Simplification {
 
- class Subcurve_Shortcut_Graph {
+class Subcurve_Shortcut_Graph {
 
     Curve& curve;
     std::vector<std::vector<distance_t>> edges;

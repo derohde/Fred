@@ -37,7 +37,6 @@ struct Distance_Matrix : public std::vector<std::vector<distance_t>> {
     }
 };
 
-
 class Cluster_Assignment : public std::unordered_map<curve_number_t, std::vector<curve_number_t>> {
 public:
     
@@ -58,29 +57,6 @@ public:
     }
     
 };
-
-struct Clustering_Result {
-    Curves centers;
-    distance_t value;
-    double running_time;
-    Cluster_Assignment assignment;
-    
-    inline Curve get(const curve_number_t i) const {
-        return centers[i];
-    }
-    inline curve_number_t size() const {
-        return centers.size();
-    }
-    
-    inline Curves::const_iterator cbegin() const {
-        return centers.cbegin();
-    }
-    
-    inline Curves::const_iterator cend() const {
-        return centers.cend();
-    }
-};
-
 
 inline void _cheap_dist(const curve_number_t i, const curve_number_t j, const Curves &in, const Curves &simplified_in, Distance_Matrix &distances) {
     if (distances[i][j] < 0) {
@@ -146,6 +122,36 @@ inline Cluster_Assignment _cluster_assignment(const Curves &in, const Curves &si
     
     return result;  
 }
+
+struct Clustering_Result {
+    Curves centers;
+    distance_t value;
+    double running_time;
+    Cluster_Assignment assignment;
+    
+    inline Curve get(const curve_number_t i) const {
+        return centers[i];
+    }
+    inline curve_number_t size() const {
+        return centers.size();
+    }
+    
+    inline Curves::const_iterator cbegin() const {
+        return centers.cbegin();
+    }
+    
+    inline Curves::const_iterator cend() const {
+        return centers.cend();
+    }
+    
+    inline void compute_assignment(const Curves &in) {
+        Distance_Matrix distances(in.size(), centers.size());
+        std::vector<curve_number_t> indices = std::vector<curve_number_t>(centers.size(), 0);
+        for (curve_size_t i = 1; i < centers.size(); ++i) indices[i] = i;
+        assignment = _cluster_assignment(in, centers, indices, distances);
+    }
+};
+
 
 Clustering_Result gonzalez(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, Distance_Matrix &distances, const bool arya = false, const bool with_assignment = false, 
                            const Curves &center_domain = Curves(), const bool random_start_center = true) {
