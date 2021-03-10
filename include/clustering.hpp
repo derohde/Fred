@@ -466,14 +466,18 @@ Clustering_Result two_two_dtw_one_two_median(const Curves &in, const bool with_a
     center_curve.push_back(mu1);
     center_curve.push_back(mu2);
     
-    result.centers.push_back(center_curve);
+    distance_t cost = 0;
+    
+    for (const auto &p : S1) cost += p.dist(mu1);
+    for (const auto &p : S2) cost += p.dist(mu2);
+    
     //if (with_assignment) {
     //    result.assignment = _cluster_assignment(in, center_curves, centers, distances);
     //}
     
     auto end = boost::chrono::process_real_cpu_clock::now();
-    //result.centers.push_back(simplified_in[centers[0]]);
-    //result.value = best_objective_value;
+    result.centers.push_back(center_curve);
+    result.value = cost;
     result.running_time = (end-start).count() / 1000000000.0;
     return result;
 }
@@ -487,7 +491,7 @@ Clustering_Result two_two_dtw_one_two_median_exact(const Curves &in, const bool 
     curve_size_t n = 1;
     std::vector<curve_size_t> pointers = std::vector<curve_size_t>(in.size(), 0), 
                                 divisors = std::vector<curve_size_t>(in.size(), 0);
-    distance_t best = infty;
+    distance_t best = infty, cost = 0;
     Points S1(in.dimensions()), S2(in.dimensions());
     
     for (curve_number_t i = 0; i < in.size(); ++i) {
@@ -535,7 +539,7 @@ Clustering_Result two_two_dtw_one_two_median_exact(const Curves &in, const bool 
         center_curve.push_back(mu1);
         center_curve.push_back(mu2);
         
-        distance_t cost = 0;
+        cost = 0;
         
         for (curve_number_t j = 0; j < in.size(); ++j) {
             const auto dist = Dynamic_Time_Warping::Discrete::distance(center_curve, in[j]);
@@ -548,14 +552,13 @@ Clustering_Result two_two_dtw_one_two_median_exact(const Curves &in, const bool 
         }
     }
     
-    result.centers.push_back(best_center);
     //if (with_assignment) {
     //    result.assignment = _cluster_assignment(in, center_curves, centers, distances);
     //}
     
     auto end = boost::chrono::process_real_cpu_clock::now();
-    //result.centers.push_back(simplified_in[centers[0]]);
-    //result.value = best_objective_value;
+    result.centers.push_back(best_center);
+    result.value = best;
     result.running_time = (end-start).count() / 1000000000.0;
     return result;
 }
