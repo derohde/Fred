@@ -33,7 +33,7 @@ public:
     typedef typename Points::iterator iterator;
     
     inline Curve(const dimensions_t dim, const std::string &name = "unnamed curve") : Points(dim), vstart{0}, vend{0}, name{name} {}
-    inline Curve(const curve_size_t m, const dimensions_t dimensions, const std::string &name = "unnamed curve") : Points(m, Point(dimensions)), vstart{0}, vend{m-1} {}
+    inline Curve(const curve_size_t m, const dimensions_t dimensions, const std::string &name = "unnamed curve") : Points(m, Point(dimensions)), vstart{0}, vend{m-1}, name{name} {}
     Curve(const Points &points, const std::string &name = "unnamed curve");
     Curve(const np::ndarray &in, const std::string &name = "unnamed curve");
     

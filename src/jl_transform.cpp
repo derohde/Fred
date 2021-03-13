@@ -40,7 +40,7 @@ Curves transform_naive(const Curves &in, const distance_t epsilon, const bool em
     
     #pragma omp parallel for
     for (curve_number_t l = 0; l < in.size(); ++l) {
-        result[l] = Curve(in[l].complexity(), new_number_dimensions);
+        result[l] = Curve(in[l].complexity(), new_number_dimensions, in[l].get_name());
         
         for (curve_size_t i = 0; i < in[l].complexity(); ++i) {
             
