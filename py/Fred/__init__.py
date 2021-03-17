@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot_curve(*curves, save=None):
+def plot_curve(*curves, savename=None, saveextension=None):
     for curve in curves:
         if isinstance(curve, backend.Curve):
             if curve.dimensions >= 2:
@@ -32,7 +32,8 @@ def plot_curve(*curves, save=None):
                 
     plt.legend(title='Curve names:')
     plt.title('Fred Curves')
-    if save is None:
+    if savename is None:
         plt.show()
     else:
-        plt.savefig("{}.svg".format(save), dpi=150)
+        plt.savefig("{}.{}".format(savename, saveextension), dpi=150)
+    plt.close()
