@@ -205,7 +205,7 @@ public:
         push_back(point);
     }
     
-    inline Point get(const curve_size_t i) const { 
+    inline Point& get(const curve_size_t i) { 
         return Points::operator[](i); 
     }
     

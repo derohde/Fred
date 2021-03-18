@@ -37,7 +37,7 @@ public:
     Curve(const Points &points, const std::string &name = "unnamed curve");
     Curve(const np::ndarray &in, const std::string &name = "unnamed curve");
     
-    inline Point get(const curve_size_t i) const {
+    inline Point& get(const curve_size_t i) {
         return Points::operator[](vstart + i);
     }
     
@@ -162,7 +162,7 @@ public:
         if (curve.complexity() > m) m = curve.complexity();
     }
     
-    inline Curve get(const curve_number_t i) const {
+    inline Curve& get(const curve_number_t i) {
         return std::vector<Curve>::operator[](i);
     }
     
