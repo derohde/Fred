@@ -129,7 +129,7 @@ struct Clustering_Result {
     double running_time;
     Cluster_Assignment assignment;
     
-    inline Curve get(const curve_number_t i) const {
+    inline Curve& get(const curve_number_t i) {
         return centers[i];
     }
     inline curve_number_t size() const {
