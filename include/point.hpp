@@ -146,6 +146,11 @@ public:
     inline Interval intersection_interval(const distance_t distance_sqr, const Point &line_start, const Point &line_end) const {
         const Vector u = line_end-line_start, v = *this - line_start;
         const distance_t ulen_sqr = u.length_sqr(), vlen_sqr = v.length_sqr();
+        
+        if (ulen_sqr == 0) {
+            if (vlen_sqr <= distance_sqr) return Interval(0, 1);
+            else return Interval();
+        }
                 
         const distance_t p =  -2. / ulen_sqr * (u * v), q = (vlen_sqr - distance_sqr) / ulen_sqr;
         
