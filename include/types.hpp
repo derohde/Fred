@@ -12,6 +12,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 typedef double distance_t;
 typedef double coordinate_t;
+typedef double parameter_t;
 
 typedef unsigned long dimensions_t;
 typedef unsigned long curve_size_t;

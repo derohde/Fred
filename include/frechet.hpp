@@ -37,7 +37,7 @@ namespace Continuous {
     Distance _distance(const Curve&, const Curve&, distance_t, distance_t);
             
     bool _less_than_or_equal(const distance_t, const Curve&, const Curve&, 
-            std::vector<std::vector<distance_t>>&, std::vector<std::vector<distance_t>>&, 
+            std::vector<std::vector<parameter_t>>&, std::vector<std::vector<parameter_t>>&, 
             std::vector<std::vector<Interval>>&, std::vector<std::vector<Interval>>&);
             
     distance_t _greedy_upper_bound(const Curve&, const Curve&);

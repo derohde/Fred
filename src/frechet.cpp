@@ -66,9 +66,9 @@ Distance _distance(const Curve &curve1, const Curve &curve2, distance_t ub, dist
     std::size_t number_searches = 0;
     
     if (ub - lb > epsilon) {
-        auto infty = std::numeric_limits<distance_t>::infinity();
-        std::vector<std::vector<distance_t>> reachable1(curve1.complexity()-1, std::vector<distance_t>(curve2.complexity(), infty));
-        std::vector<std::vector<distance_t>> reachable2(curve1.complexity(), std::vector<distance_t>(curve2.complexity()-1, infty));
+        auto infty = std::numeric_limits<parameter_t>::infinity();
+        std::vector<std::vector<parameter_t>> reachable1(curve1.complexity()-1, std::vector<parameter_t>(curve2.complexity(), infty));
+        std::vector<std::vector<parameter_t>> reachable2(curve1.complexity(), std::vector<parameter_t>(curve2.complexity()-1, infty));
         
         std::vector<std::vector<Interval>> free_intervals1(curve2.complexity(), std::vector<Interval>(curve1.complexity(), Interval()));
         std::vector<std::vector<Interval>> free_intervals2(curve1.complexity(), std::vector<Interval>(curve2.complexity(), Interval()));
@@ -104,15 +104,11 @@ Distance _distance(const Curve &curve1, const Curve &curve2, distance_t ub, dist
 }
 
 bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve const& curve2, 
-        std::vector<std::vector<distance_t>> &reachable1, std::vector<std::vector<distance_t>> &reachable2,
+        std::vector<std::vector<parameter_t>> &reachable1, std::vector<std::vector<parameter_t>> &reachable2,
         std::vector<std::vector<Interval>> &free_intervals1, std::vector<std::vector<Interval>> &free_intervals2) {
-    assert(curve1.complexity() >= 2);
-    assert(curve2.complexity() >= 2);
     
-    distance_t dist_sqr = distance * distance;
-    auto infty = std::numeric_limits<distance_t>::infinity();
-
-    if (curve1[0].dist_sqr(curve2[0]) > dist_sqr or curve1.back().dist_sqr(curve2.back()) > dist_sqr) return false;
+    const distance_t dist_sqr = distance * distance;
+    auto infty = std::numeric_limits<parameter_t>::infinity();
 
     for (auto &elem: reachable1) {
         #pragma omp parallel for
@@ -131,24 +127,24 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
     for (auto &elem: free_intervals1) {
         #pragma omp parallel for
         for (curve_size_t i = 0; i < elem.size(); ++i) {
-            elem[i] = Interval();
+            elem[i].reset();
         }
     }
     
     for (auto &elem: free_intervals2) {
         #pragma omp parallel for
         for (curve_size_t i = 0; i < elem.size(); ++i) {
-            elem[i] = Interval();
+            elem[i].reset();
         }
     }
     
     for (curve_size_t i = 0; i < curve1.complexity() - 1; ++i) {
-        reachable1[i][0] = 0.;
+        reachable1[i][0] = 0;
         if (curve2[0].dist_sqr(curve1[i+1]) > dist_sqr) break;
     }
     
     for (curve_size_t j = 0; j < curve2.complexity() - 1; ++j) {
-        reachable2[0][j] = 0.;
+        reachable2[0][j] = 0;
         if (curve1[0].dist_sqr(curve2[j+1]) > dist_sqr) break;
     }
     
@@ -188,8 +184,6 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
             }
         }
     }
-
-    assert((reachable1.back().back() < infty) == (reachable2.back().back() < infty));
 
     return reachable1.back().back() < infty;
 }

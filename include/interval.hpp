@@ -12,16 +12,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <vector>
 #include <iostream>
+#include <limits>
 
 #include "types.hpp"
 
 class Interval {
-    coordinate_t beg, en;
+    parameter_t beg, en;
     
 public:
     Interval() : beg{1}, en{0} {}
 
-    Interval(const coordinate_t begin, const coordinate_t end) : beg{begin}, en{end} {}
+    Interval(const parameter_t begin, const parameter_t end) : beg{begin}, en{end} {}
 
     inline bool operator<(const Interval &other) const {
         return (beg < other.begin()) or ((beg == other.begin()) and (en < other.end()));
@@ -39,12 +40,17 @@ public:
             ((other.beg <= beg) and (other.en >= en));
     }
     
-    inline const coordinate_t begin() const {
+    inline parameter_t begin() const {
          return beg; 
     }
     
-    inline const coordinate_t end() const { 
+    inline parameter_t end() const { 
         return en; 
+    }
+    
+    inline void reset() {
+        beg = 1;
+        en = 0;
     }
 };
 
