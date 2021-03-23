@@ -199,7 +199,7 @@ Clustering_Result gonzalez(const curve_number_t num_centers, const curve_size_t 
         
         auto cost = _center_cost_sum(in, simplified_in, centers, distances);
         auto approxcost = cost;
-        auto gamma = 1/(3 * num_centers * in.size());
+        auto gamma = 1/std::sqrt(in.size());
         auto found = true;
         
         // try to improve current solution
