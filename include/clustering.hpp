@@ -22,7 +22,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace Clustering {
     
-    
 struct Distance_Matrix : public std::vector<std::vector<distance_t>> {
     Distance_Matrix() {}
     Distance_Matrix(const curve_number_t n, const curve_number_t m) : std::vector<std::vector<distance_t>>(n, std::vector<distance_t>(m, -1.0)) {}
@@ -199,7 +198,7 @@ Clustering_Result gonzalez(const curve_number_t num_centers, const curve_size_t 
         
         auto cost = _center_cost_sum(in, simplified_in, centers, distances);
         auto approxcost = cost;
-        auto gamma = 1/std::sqrt(in.size());
+        auto gamma = 1/(std::log(in.size()) * num_centers);
         auto found = true;
         
         // try to improve current solution
