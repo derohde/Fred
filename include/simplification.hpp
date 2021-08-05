@@ -31,7 +31,7 @@ class Subcurve_Shortcut_Graph {
 public:
     
     Subcurve_Shortcut_Graph(Curve &curve) : curve{curve}, edges{std::vector<std::vector<distance_t>>(curve.complexity(), std::vector<distance_t>(curve.complexity(), std::numeric_limits<distance_t>::infinity()))} {
-        const auto complexity = curve.complexity();
+        const curve_size_t complexity = curve.complexity();
         Curve segment(2, curve.front().dimensions());
         auto distance = Frechet::Continuous::Distance();
         
@@ -56,7 +56,7 @@ public:
     Curve weak_minimum_error_simplification(const curve_size_t ll) const {
         if (ll >= curve.complexity()) return curve;
         
-        auto l = ll - 1;
+        curve_size_t l = ll - 1;
         
         Curve result(curve.dimensions());
         
@@ -106,7 +106,7 @@ public:
         curve_size_t ell = l;
         
         result.push_back(curve.back());
-        auto predecessor = predecessors[curve.complexity() - 1][--ell];
+        curve_size_t predecessor = predecessors[curve.complexity() - 1][--ell];
         
         for (curve_size_t i = 0; i  < l; ++i) {
             result.push_back(curve[predecessor]);

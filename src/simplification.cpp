@@ -12,7 +12,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
  
 Curve Simplification::approximate_weak_minimum_link_simplification(const Curve &pcurve, const distance_t epsilon) {
     Curve &curve = const_cast<Curve&>(pcurve);
-    const auto complexity = curve.complexity();
+    const curve_size_t complexity = curve.complexity();
     
     curve_size_t i = 0, j = 0;
     
@@ -92,7 +92,7 @@ Curve Simplification::approximate_weak_minimum_error_simplification(const Curve 
         }
     }
     
-    auto diff = ell - simplification.complexity();
+    curve_size_t diff = ell - simplification.complexity();
     while (diff > 0) {
         simplification.push_back(simplification.back());
         --diff;

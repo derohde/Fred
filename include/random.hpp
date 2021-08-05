@@ -75,11 +75,11 @@ public:
     }
     
     inline T get() {
-        const auto n = cumulative_probabilities.size();
-        const auto r = uform_gen.get();
+        const std::size_t n = cumulative_probabilities.size();
+        const T r = uform_gen.get();
         const auto upper = std::upper_bound(cumulative_probabilities.cbegin(), cumulative_probabilities.cend(), r);
         assert(upper != cumulative_probabilities.cend());
-        const auto result = std::distance(cumulative_probabilities.cbegin(), upper);
+        const std::size_t result = std::distance(cumulative_probabilities.cbegin(), upper);
         return result;
     }
     

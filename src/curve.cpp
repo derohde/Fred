@@ -24,7 +24,7 @@ Curve::Curve(const Points &points, const std::string &name) : Points(points), vs
 }
 
 Curve::Curve(const np::ndarray &in, const std::string &name) : Points(in.shape(0), in.get_nd() > 1 ? in.shape(1) : 1), name{name}, vstart{0}, vend{Points::size() - 1} {
-    const auto n_dimensions = in.get_nd();
+    const dimensions_t n_dimensions = in.get_nd();
     if (n_dimensions > 2){
         std::cerr << "A Curve requires a 1- or 2-dimensional numpy array of type " << typeid(coordinate_t).name() << "." << std::endl;
         std::cerr << "Current dimensions: " << n_dimensions << std::endl;
@@ -39,11 +39,11 @@ Curve::Curve(const np::ndarray &in, const std::string &name) : Points(in.shape(0
         std::cerr << "WARNING: constructed empty curve" << std::endl;
         return;
     }
-    const auto number_points = in.shape(0);
-    const auto strides = in.get_strides();
+    const curve_size_t number_points = in.shape(0);
+    const Py_intptr_t* strides = in.get_strides();
         
     if (n_dimensions == 2) {
-        const auto point_size = in.shape(1);
+        const dimensions_t point_size = in.shape(1);
         
         #if DEBUG
         std::cout << "constructing curve of size " << number_points << " and " << point_size << " dimensions" << std::endl;
@@ -73,12 +73,12 @@ Curves Curves::simplify(const curve_size_t l) {
     Curves result(size(), l, Curves::dimensions());
     for (curve_number_t i = 0; i < size(); ++i) {
         if (approx) {
-            auto simplified_curve = Simplification::approximate_weak_minimum_error_simplification(std::vector<Curve>::operator[](i), l);
+            Curve simplified_curve = Simplification::approximate_weak_minimum_error_simplification(std::vector<Curve>::operator[](i), l);
             simplified_curve.set_name("Simplification of " + std::vector<Curve>::operator[](i).get_name());
             result[i] = simplified_curve;
         } else {
             Simplification::Subcurve_Shortcut_Graph graph(std::vector<Curve>::operator[](i));
-            auto simplified_curve = graph.weak_minimum_error_simplification(l);
+            Curve simplified_curve = graph.weak_minimum_error_simplification(l);
             simplified_curve.set_name("Simplification of " + std::vector<Curve>::operator[](i).get_name());
             result[i] = simplified_curve;
         }

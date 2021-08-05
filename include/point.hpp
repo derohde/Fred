@@ -72,7 +72,7 @@ public:
     }
     
     inline Point operator+(const Point &point) const {
-        auto result = *this;
+        Point result = *this;
         #pragma omp simd
         for (dimensions_t i = 0; i < dimensions(); ++i){
             result.operator[](i) += point[i];
@@ -81,7 +81,7 @@ public:
     }
     
     inline Point operator-(const Point &point) const {
-        auto result = *this;
+        Point result = *this;
         #pragma omp simd
         for (dimensions_t i = 0; i < dimensions(); ++i){
             result.operator[](i) -= point[i];
@@ -145,32 +145,32 @@ public:
     
     inline Interval intersection_interval(const distance_t distance_sqr, const Point &line_start, const Point &line_end) const {
         const Vector u = line_end-line_start, v = *this - line_start;
-        const distance_t ulen_sqr = u.length_sqr(), vlen_sqr = v.length_sqr();
+        const parameter_t ulen_sqr = u.length_sqr(), vlen_sqr = v.length_sqr();
         
         if (ulen_sqr == 0) {
             if (vlen_sqr <= distance_sqr) return Interval(0, 1);
             else return Interval();
         }
                 
-        const distance_t p =  -2. / ulen_sqr * (u * v), q = (vlen_sqr - distance_sqr) / ulen_sqr;
+        const parameter_t p =  -2. * ((u * v) / ulen_sqr), q = vlen_sqr / ulen_sqr - distance_sqr / ulen_sqr;
         
-        const distance_t phalf_sqr = p * p / 4., discriminant = phalf_sqr - q;
+        const parameter_t phalf_sqr = p * p / 4., discriminant = phalf_sqr - q;
         
         if (discriminant < 0) return Interval();
         
-        const distance_t discriminant_sqrt = std::sqrt(discriminant);
+        const parameter_t discriminant_sqrt = std::sqrt(discriminant);
         
-        const distance_t minus_p_h = - p / 2., r1 = minus_p_h + discriminant_sqrt, r2 = minus_p_h - discriminant_sqrt;
-        const distance_t lambda1 = std::min(r1, r2), lambda2 = std::max(r1, r2);
+        const parameter_t minus_p_h = - p / 2., r1 = minus_p_h + discriminant_sqrt, r2 = minus_p_h - discriminant_sqrt;
+        const parameter_t lambda1 = std::min(r1, r2), lambda2 = std::max(r1, r2);
                 
-        return Interval(std::max(0., lambda1), std::min(1., lambda2));
+        return Interval(std::max(0.L, lambda1), std::min(1.L, lambda2));
     }
     
     inline auto as_ndarray() const {
         np::dtype dt = np::dtype::get_builtin<coordinate_t>();
         p::list l;
         np::ndarray result = np::array(l, dt);
-        for (const auto &elem : *this) {
+        for (const coordinate_t &elem : *this) {
             l.append(elem);
         }
         result = np::array(l, dt);
@@ -223,7 +223,7 @@ public:
     
     inline auto as_ndarray() const {
         p::list l;
-        for (const auto &elem : *this) {
+        for (const Point &elem : *this) {
             l.append(elem.as_ndarray());
         }
         auto result = np::array(l);

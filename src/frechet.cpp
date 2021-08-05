@@ -43,8 +43,8 @@ Distance distance(const Curve &curve1, const Curve &curve2) {
     }
     
     auto start = boost::chrono::process_real_cpu_clock::now();
-    const auto lb = std::sqrt(std::max(curve1[0].dist_sqr(curve2[0]), curve1[curve1.complexity()-1].dist_sqr(curve2[curve2.complexity()-1])));
-    const auto ub = _greedy_upper_bound(curve1, curve2);
+    const distance_t lb = std::sqrt(std::max(curve1[0].dist_sqr(curve2[0]), curve1[curve1.complexity()-1].dist_sqr(curve2[curve2.complexity()-1])));
+    const distance_t ub = _greedy_upper_bound(curve1, curve2);
     auto end = boost::chrono::process_real_cpu_clock::now();
 
     #if DEBUG

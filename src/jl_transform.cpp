@@ -19,24 +19,24 @@ Curves transform_naive(const Curves &in, const distance_t epsilon, const bool em
     auto rg = Random::Gauss_Random_Generator<coordinate_t>(0, 1);
     
     curve_number_t number_points = 0;
-    for (const auto &elem: in) number_points += elem.complexity();
+    for (const Curve &elem : in) number_points += elem.complexity();
     
     const distance_t epsilonsq = epsilon * epsilon;       
     const distance_t epsiloncu = epsilonsq * epsilon;
     const dimensions_t new_number_dimensions = empirical_k ? std::ceil(2 * std::log(number_points) * 1/epsilonsq):
         std::ceil(4 * std::log(number_points) * 1 /((epsilonsq/2) - (epsiloncu/3)));
                                                 
-    std::vector<std::vector<coordinate_t>> mat (new_number_dimensions);
+    std::vector<Coordinates> mat (new_number_dimensions);
     
     #if DEBUG
     std::cout << "populating " << new_number_dimensions << "x" << in[0].dimensions() << " matrix" << std::endl;
     #endif
     
-    for (auto &elem: mat) elem = rg.get(in[0].dimensions());
+    for (Coordinates &elem : mat) elem = rg.get(in[0].dimensions());
                 
     Curves result(in.size(), in.get_m(), new_number_dimensions);
     
-    auto sqrtk = std::sqrt(new_number_dimensions);
+    coordinate_t sqrtk = std::sqrt(new_number_dimensions);
     
     #pragma omp parallel for
     for (curve_number_t l = 0; l < in.size(); ++l) {

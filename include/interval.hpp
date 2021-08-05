@@ -20,7 +20,7 @@ class Interval {
     parameter_t beg, en;
     
 public:
-    Interval() : beg{1}, en{0} {}
+    Interval() : beg{1.L}, en{0.L} {}
 
     Interval(const parameter_t begin, const parameter_t end) : beg{begin}, en{end} {}
 
@@ -29,7 +29,8 @@ public:
     }
 
     inline bool is_empty() const { 
-        return beg > en; 
+        if (en - beg >= std::numeric_limits<parameter_t>::epsilon()) return beg > en;
+        else return true;
     }
     
     inline bool intersects(const Interval &other) const {
@@ -49,8 +50,8 @@ public:
     }
     
     inline void reset() {
-        beg = 1;
-        en = 0;
+        beg = 1.L;
+        en = 0.L;
     }
 };
 

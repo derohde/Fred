@@ -29,12 +29,28 @@ By default, Fred will automatically determine the number of threads to use. If y
 - signature: `fred.discrete_frechet(curve1, curve2)`
 - returns: `fred.Discrete_Frechet_Result` with members `value` and `time`
 
+### Curve Simplification
+
+#### weak minimum error simplification
+- graph approach from [**Polygonal Approximations of a Curve — Formulations and Algorithms**](https://www.sciencedirect.com/science/article/pii/B9780444704672500114)
+- signature: `fred.weak_minimum_error_simplification(fred.Curve, int complexity)`
+- returns: `fred.Curve`that uses input curves vertices, with `complexity` number of vertices and that has minimum distance to input curve
+
+#### approximate weak minimum link simplification
+- algorithm "FS" from [**Near-Linear Time Approximation Algorithms for Curve Simplification**](https://link.springer.com/article/10.1007/s00453-005-1165-y)
+- signature: `fred.approximate_weak_minimum_error_simplification(fred.Curve, double error)`
+- returns: `fred.Curve` that uses input curves vertices, is of small complexity and with distance to input curve at most `error`
+
+#### approximate weak minimum error simplification
+- binary search on `fred.approximate_weak_minimum_link_simplification`
+- signature: `fred.approximate_weak_minimum_error_simplification(fred.Curve, int complexity)`
+- returns: `fred.Curve`that uses input curves vertices, with `complexity` number of vertices and that has small distance to input curve
+
 ### Clustering
 
 ##### Distance_Matrix
 
 A `fred.Distance_Matrix()` can be used to speed up consecutive calls of `fred.discrete_klcenter` and `fred.discrete_klmedian`. As the name suggests, it stores the distances already computed.
-
 
 #### discrete (k,l)-center clustering (continuous Fréchet) -- multiple calls
 - from [**Approximating (k,l)-center clustering for curves**](https://dl.acm.org/doi/10.5555/3310435.3310616)

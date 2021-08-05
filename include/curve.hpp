@@ -125,7 +125,7 @@ public:
         np::dtype dt = np::dtype::get_builtin<coordinate_t>();
         p::list l;
         np::ndarray result = np::array(l, dt);
-        for (const auto &elem : *this) {
+        for (const Point &elem : *this) {
             l.append(elem.as_ndarray());
         }
         result = np::array(l, dt);
