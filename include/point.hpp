@@ -16,14 +16,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <string>
 #include <sstream>
 
-#include <boost/python.hpp>
-#include <boost/python/numpy.hpp>
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
 
 #include "types.hpp"
 #include "interval.hpp"
 
-namespace np = boost::python::numpy;
-namespace p = boost::python;
+namespace py = pybind11;
 
 class Point : public Coordinates {    
 public:    
@@ -166,14 +165,12 @@ public:
         return Interval(std::max(0.L, lambda1), std::min(1.L, lambda2));
     }
     
-    inline auto as_ndarray() const {
-        np::dtype dt = np::dtype::get_builtin<coordinate_t>();
-        p::list l;
-        np::ndarray result = np::array(l, dt);
+     inline auto as_ndarray() const {
+        py::list l;
         for (const coordinate_t &elem : *this) {
             l.append(elem);
         }
-        result = np::array(l, dt);
+        auto result = py::array_t<coordinate_t>(l);
         return result;
     }
     
@@ -222,11 +219,11 @@ public:
     }
     
     inline auto as_ndarray() const {
-        p::list l;
+        py::list l;
         for (const Point &elem : *this) {
             l.append(elem.as_ndarray());
         }
-        auto result = np::array(l);
+        auto result = py::array_t<coordinate_t>(l);
         return result;
     }
     

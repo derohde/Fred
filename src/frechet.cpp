@@ -10,8 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <vector>
 #include <limits>
-
-#include <boost/chrono/include.hpp>
+#include <chrono>
 
 #include "frechet.hpp"
 
@@ -42,17 +41,17 @@ Distance distance(const Curve &curve1, const Curve &curve2) {
         return result;
     }
     
-    auto start = boost::chrono::process_real_cpu_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
     const distance_t lb = std::sqrt(std::max(curve1[0].dist_sqr(curve2[0]), curve1[curve1.complexity()-1].dist_sqr(curve2[curve2.complexity()-1])));
     const distance_t ub = _greedy_upper_bound(curve1, curve2);
-    auto end = boost::chrono::process_real_cpu_clock::now();
+    auto end = std::chrono::high_resolution_clock::now();
 
     #if DEBUG
     std::cout << "narrowed to [" << lb << ", " << ub.value << "]" << std::endl;
     #endif
 
     auto dist = _distance(curve1, curve2, ub, lb);
-    dist.time_bounds = (end-start).count() / 1000000000.0;
+    dist.time_bounds = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
     if (round) dist.value =  std::round(dist.value * 1e3) / 1e3;
 
     return dist;
@@ -60,7 +59,7 @@ Distance distance(const Curve &curve1, const Curve &curve2) {
 
 Distance _distance(const Curve &curve1, const Curve &curve2, distance_t ub, distance_t lb) {
     Distance result;
-    auto start = boost::chrono::process_real_cpu_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
     
     distance_t split = (ub + lb)/2;
     std::size_t number_searches = 0;
@@ -96,9 +95,9 @@ Distance _distance(const Curve &curve1, const Curve &curve2, distance_t ub, dist
     }
     
     distance_t value = (ub + lb)/2.;
-    auto end = boost::chrono::process_real_cpu_clock::now();
+    auto end = std::chrono::high_resolution_clock::now();
     result.value = value;
-    result.time_searches = (end-start).count() / 1000000000.0;
+    result.time_searches = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
     result.number_searches = number_searches;
     return result;
 }
@@ -230,11 +229,11 @@ std::string Distance::repr() const {
     
 Distance distance(const Curve &curve1, const Curve &curve2) {
     Distance result;
-    auto start = boost::chrono::process_real_cpu_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
     std::vector<std::vector<distance_t>> a(curve1.complexity(), std::vector<distance_t>(curve2.complexity(), -1));
     auto value = std::sqrt(_dp(a, curve1.complexity() - 1, curve2.complexity() - 1, curve1, curve2));
-    auto end = boost::chrono::process_real_cpu_clock::now();
-    result.time = (end-start).count() / 1000000000.0;
+    auto end = std::chrono::high_resolution_clock::now();
+    result.time = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
     result.value = value;
     return result;
     

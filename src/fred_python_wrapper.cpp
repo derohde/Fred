@@ -8,7 +8,8 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <boost/python.hpp>
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
 
 #include "curve.hpp"
 #include "point.hpp"
@@ -20,8 +21,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include "simplification.hpp"
 #include "dynamic_time_warping.hpp"
 
-using namespace boost::python;
-namespace np = boost::python::numpy;
+namespace py = pybind11;
+
 namespace fc = Frechet::Continuous;
 namespace fd = Frechet::Discrete;
 namespace ddtw = Dynamic_Time_Warping::Discrete;
@@ -46,8 +47,6 @@ Curves jl_transform(const Curves &in, const double epsilon, const bool empirical
     
     return curvesrp;
 }
-
-BOOST_PYTHON_FUNCTION_OVERLOADS(jl_transform_overloads, jl_transform, 2, 3);
 
 void set_frechet_epsilon(const double eps) {
     fc::epsilon = eps;
@@ -75,39 +74,17 @@ Clustering::Clustering_Result dtw_one_median_exact(const Curves &in) {
     return result;
 }
 
-Clustering::Clustering_Result klcenter_multi(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, Clustering::Distance_Matrix &distances, const Curves &center_domain = Curves(), const bool random_start_center = true) {
+Clustering::Clustering_Result klcenter(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, Clustering::Distance_Matrix &distances, const Curves &center_domain = Curves(), const bool random_start_center = true) {
     auto result = Clustering::gonzalez(num_centers, ell, in, distances, false, center_domain, random_start_center);
     return result;
 }
 
-BOOST_PYTHON_FUNCTION_OVERLOADS(klcenter_multi_overloads, klcenter_multi, 4, 6);
-
-Clustering::Clustering_Result klcenter(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, const Curves &center_domain = Curves(), const bool random_start_center = true) {
-    Clustering::Distance_Matrix distances;
-    auto result = Clustering::gonzalez(num_centers, ell, in, distances, false, center_domain, random_start_center);
-    return result;
-}
-
-BOOST_PYTHON_FUNCTION_OVERLOADS(klcenter_overloads, klcenter, 3, 5);
-
-Clustering::Clustering_Result klmedian_multi(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, Clustering::Distance_Matrix distances, const Curves &center_domain = Curves()) {
+Clustering::Clustering_Result klmedian(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, Clustering::Distance_Matrix distances, const Curves &center_domain = Curves()) {
 
     auto result = Clustering::arya(num_centers, ell, in, distances, center_domain);
     
     return result;
 }
-
-BOOST_PYTHON_FUNCTION_OVERLOADS(klmedian_multi_overloads, klmedian_multi, 4, 5);
-
-Clustering::Clustering_Result klmedian(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, const Curves &center_domain = Curves()) {
-
-    auto distances = Clustering::Distance_Matrix();
-    auto result = Clustering::arya(num_centers, ell, in, distances, center_domain);
-    
-    return result;
-}
-
-BOOST_PYTHON_FUNCTION_OVERLOADS(klmedian_overloads, klmedian, 3, 4);
 
 // Clustering::Clustering_Result onemedian_sampling(const curve_size_t ell,  Curves &in, const double epsilon, const bool with_assignment = false, const Curves &center_domain = Curves()) {
 //     
@@ -116,8 +93,6 @@ BOOST_PYTHON_FUNCTION_OVERLOADS(klmedian_overloads, klmedian, 3, 4);
 //     return result;
 // }
 // 
-// BOOST_PYTHON_FUNCTION_OVERLOADS(onemedian_sampling_overloads, onemedian_sampling, 3, 5);
-// 
 // Clustering::Clustering_Result onemedian_exhaustive(const curve_size_t ell,  Curves &in, const bool with_assignment = false, const Curves &center_domain = Curves()) {
 // 
 //     auto result = Clustering::one_median_exhaustive(ell, in, with_assignment);
@@ -125,14 +100,11 @@ BOOST_PYTHON_FUNCTION_OVERLOADS(klmedian_overloads, klmedian, 3, 4);
 //     return result;
 // }
 // 
-// BOOST_PYTHON_FUNCTION_OVERLOADS(onemedian_exhaustive_overloads, onemedian_exhaustive, 2, 4);
-// 
 // 
 // Coreset::Onemedian_Coreset onemedian_coreset(const Curves &in, const curve_size_t ell, const double epsilon, const double constant = 1) {
 //     return Coreset::Onemedian_Coreset(ell, in, epsilon, constant);
 // }
 // 
-// BOOST_PYTHON_FUNCTION_OVERLOADS(onemedian_coreset_overloads, onemedian_coreset, 3, 4);
 
 Curve weak_minimum_error_simplification(const Curve &curve, const curve_size_t l) {
     Simplification::Subcurve_Shortcut_Graph graph(const_cast<Curve&>(curve));
@@ -157,130 +129,135 @@ void set_number_threads(std::uint64_t number) {
     omp_set_dynamic(0);
     omp_set_num_threads(number);
 }
-
-BOOST_PYTHON_MODULE(backend)
-{
-    Py_Initialize();
-    np::initialize();
+PYBIND11_MODULE(backend, m) {
     
-    scope().attr("default_epsilon_continuous_frechet") = default_epsilon;
+    m.attr("default_epsilon_continuous_frechet") = default_epsilon;
     
-    class_<Point>("Point", init<dimensions_t>())
+    py::class_<Point>(m, "Point")
+        .def(py::init<dimensions_t>())
         .def("__len__", &Point::dimensions)
         .def("__getitem__", &Point::get)
         .def("__str__", &Point::str)
-        .def("__iter__", iterator<Point>())
+        .def("__iter__", [](Point &v) { return py::make_iterator(v.begin(), v.end()); }, py::keep_alive<0, 1>())
         .def("__repr__", &Point::repr)
-        .add_property("values", &Point::as_ndarray)
+        //.def_property_readonly("values", &Point::as_ndarray)
     ;
     
-    class_<Points>("Points", init<dimensions_t>())
+    py::class_<Points>(m, "Points")
+        .def(py::init<dimensions_t>())
         .def("__len__", &Points::number)
-        .def("__getitem__", &Points::get, return_value_policy<reference_existing_object>())
+        .def("__getitem__", &Points::get, py::return_value_policy::reference)
         .def("__str__", &Points::str)
-        .def("__iter__", iterator<Points>())
+        .def("__iter__", [](Points &v) { return py::make_iterator(v.begin(), v.end()); }, py::keep_alive<0, 1>())
         .def("__repr__", &Points::repr)
-        .add_property("values", &Points::as_ndarray)
-        .add_property("centroid", &Points::centroid)
+        .def_property_readonly("values", &Points::as_ndarray)
+        .def_property_readonly("centroid", &Points::centroid)
     ;
     
-    class_<Curve>("Curve", init<np::ndarray>())
-        .def(init<np::ndarray, std::string>())
-        .add_property("dimensions", &Curve::dimensions)
-        .add_property("complexity", &Curve::complexity)
-        .add_property("name", &Curve::get_name, &Curve::set_name)
-        .add_property("values", &Curve::as_ndarray)
-        .add_property("centroid", &Curve::centroid)
-        .def("__getitem__", &Curve::get, return_value_policy<reference_existing_object>())
+    py::class_<Curve>(m, "Curve")
+        .def(py::init<py::array_t<coordinate_t>>())
+        .def(py::init<py::array_t<coordinate_t>, std::string>())
+        .def_property_readonly("dimensions", &Curve::dimensions)
+        .def_property_readonly("complexity", &Curve::complexity)
+        .def_property("name", &Curve::get_name, &Curve::set_name)
+        .def_property_readonly("values", &Curve::as_ndarray)
+        .def_property_readonly("centroid", &Curve::centroid)
+        .def("__getitem__", &Curve::get, py::return_value_policy::reference)
         .def("__len__", &Curve::complexity)
         .def("__str__", &Curve::str)
-        .def("__iter__", iterator<Curve>())
+        .def("__iter__", [](Curve &v) { return py::make_iterator(v.begin(), v.end()); }, py::keep_alive<0, 1>())
         .def("__repr__", &Curve::repr)
     ;
         
-    class_<Curves>("Curves", init<>())
-        .add_property("m", &Curves::get_m)
+    py::class_<Curves>(m, "Curves")
+        .def(py::init<>())
+        .def_property_readonly("m", &Curves::get_m)
         .def("add", &Curves::add)
         .def("simplify", &Curves::simplify)
-        .def("__getitem__", &Curves::get, return_value_policy<reference_existing_object>())
+        .def("__getitem__", &Curves::get, py::return_value_policy::reference)
         .def("__len__", &Curves::number)
         .def("__str__", &Curves::str)
-        .def("__iter__", iterator<Curves>())
+        .def("__iter__", [](Curves &v) { return py::make_iterator(v.begin(), v.end()); }, py::keep_alive<0, 1>())
         .def("__repr__", &Curves::repr)
     ;
     
-    class_<fc::Distance>("Continuous_Frechet_Distance", init<>())
-        .add_property("time_searches", &fc::Distance::time_searches)
-        .add_property("time_bounds", &fc::Distance::time_bounds)
-        .add_property("number_searches", &fc::Distance::number_searches)
-        .add_property("value", &fc::Distance::value)
+    py::class_<fc::Distance>(m, "Continuous_Frechet_Distance")
+        .def(py::init<>())
+        .def_readwrite("time_searches", &fc::Distance::time_searches)
+        .def_readwrite("time_bounds", &fc::Distance::time_bounds)
+        .def_readwrite("number_searches", &fc::Distance::number_searches)
+        .def_readwrite("value", &fc::Distance::value)
         .def("__repr__", &fc::Distance::repr)
     ;
     
-    class_<fd::Distance>("Discrete_Frechet_Distance", init<>())
-        .add_property("time", &fd::Distance::time)
-        .add_property("value", &fd::Distance::value)
+    py::class_<fd::Distance>(m, "Discrete_Frechet_Distance")
+        .def(py::init<>())
+        .def_readwrite("time", &fd::Distance::time)
+        .def_readwrite("value", &fd::Distance::value)
         .def("__repr__", &fd::Distance::repr)
     ;
     
-    class_<ddtw::Distance>("Discrete_Dynamic_Time_Warping_Distance", init<>())
-        .add_property("time", &ddtw::Distance::time)
-        .add_property("value", &ddtw::Distance::value)
+    py::class_<ddtw::Distance>(m, "Discrete_Dynamic_Time_Warping_Distance")
+        .def(py::init<>())
+        .def_readwrite("time", &ddtw::Distance::time)
+        .def_readwrite("value", &ddtw::Distance::value)
         .def("__repr__", &ddtw::Distance::repr)
     ;
     
-    class_<Clustering::Distance_Matrix>("Distance_Matrix", init<>());
+    py::class_<Clustering::Distance_Matrix>(m, "Distance_Matrix")
+        .def(py::init<>())
+    ;
     
-    class_<Clustering::Clustering_Result>("Clustering_Result", init<>())
-        .add_property("value", &Clustering::Clustering_Result::value)
-        .add_property("time", &Clustering::Clustering_Result::running_time)
-        .add_property("assignment", &Clustering::Clustering_Result::assignment)
-        .def("__getitem__", &Clustering::Clustering_Result::get, return_value_policy<reference_existing_object>())
+    py::class_<Clustering::Clustering_Result>(m, "Clustering_Result")
+        .def(py::init<>())
+        .def_readwrite("value", &Clustering::Clustering_Result::value)
+        .def_readwrite("time", &Clustering::Clustering_Result::running_time)
+        .def_readwrite("assignment", &Clustering::Clustering_Result::assignment)
+        .def("__getitem__", &Clustering::Clustering_Result::get, py::return_value_policy::reference)
         .def("__len__", &Clustering::Clustering_Result::size)
-        .def("__iter__", range(&Clustering::Clustering_Result::cbegin, &Clustering::Clustering_Result::cend))
+        .def("__iter__", [](Clustering::Clustering_Result &v) { return py::make_iterator(v.cbegin(), v.cend()); }, py::keep_alive<0, 1>())
         .def("compute_assignment", &Clustering::Clustering_Result::compute_assignment)
     ;
     
-    class_<Clustering::Cluster_Assignment>("Cluster_Assignment", init<>())
+    py::class_<Clustering::Cluster_Assignment>(m, "Cluster_Assignment")
+        .def(py::init<>())
         .def("__len__", &Clustering::Cluster_Assignment::size)
         .def("count", &Clustering::Cluster_Assignment::count)
         .def("get", &Clustering::Cluster_Assignment::get)
     ;
     
-    /*class_<Coreset::Onemedian_Coreset>("Onemedian_coreset")
-        .add_property("lambd", &Coreset::Onemedian_Coreset::get_lambda)
-        .add_property("Lambd", &Coreset::Onemedian_Coreset::get_Lambda)
-        .add_property("cost", &Coreset::Onemedian_Coreset::get_cost)
+    /*py::class_<Coreset::Onemedian_Coreset>("Onemedian_coreset")
+        .def_property("lambd", &Coreset::Onemedian_Coreset::get_lambda)
+        .def_property("Lambd", &Coreset::Onemedian_Coreset::get_Lambda)
+        .def_property("cost", &Coreset::Onemedian_Coreset::get_cost)
         .def("curves", &Coreset::Onemedian_Coreset::get_curves)
     ;*/
     
-    def("set_continuous_frechet_epsilon", set_frechet_epsilon);
-    def("set_continuous_frechet_rounding", set_frechet_rounding);
-    def("get_continuous_frechet_epsilon", get_frechet_epsilon);
-    def("get_continuous_frechet_rounding", get_frechet_rounding);
+    m.def("set_continuous_frechet_epsilon", &set_frechet_epsilon);
+    m.def("set_continuous_frechet_rounding", &set_frechet_rounding);
+    m.def("get_continuous_frechet_epsilon", &get_frechet_epsilon);
+    m.def("get_continuous_frechet_rounding", &get_frechet_rounding);
     
-    def("continuous_frechet", continuous_frechet);
-    def("discrete_frechet", discrete_frechet);
-    def("discrete_dynamic_time_warping", discrete_dynamic_time_warping);
+    m.def("continuous_frechet", &continuous_frechet);
+    m.def("discrete_frechet", &discrete_frechet);
+    m.def("discrete_dynamic_time_warping", &discrete_dynamic_time_warping);
     
-    def("weak_minimum_error_simplification", weak_minimum_error_simplification);
-    def("approximate_weak_minimum_link_simplification", approximate_weak_minimum_link_simplification);
-    def("approximate_weak_minimum_error_simplification", approximate_weak_minimum_error_simplification);
+    m.def("weak_minimum_error_simplification", &weak_minimum_error_simplification);
+    m.def("approximate_weak_minimum_link_simplification", &approximate_weak_minimum_link_simplification);
+    m.def("approximate_weak_minimum_error_simplification", &approximate_weak_minimum_error_simplification);
     
-    def("dimension_reduction", jl_transform, jl_transform_overloads());
+    m.def("dimension_reduction", &jl_transform, py::arg("in") = Curves(), py::arg("epsilon")= 0.5, py::arg("empirical_constant") = true);
 
-    def("discrete_klcenter", klcenter, klcenter_overloads());
-    def("discrete_klmedian", klmedian, klmedian_overloads());
-    def("discrete_klcenter_multi", klcenter_multi, klcenter_multi_overloads());
-    def("discrete_klmedian_multi", klmedian_multi, klmedian_multi_overloads());
+    m.def("discrete_klcenter", &klcenter, py::arg("num_centers") = 1, py::arg("ell") = 2, py::arg("in") = Curves(), py::arg("distances") = Clustering::Distance_Matrix(), py::arg("center_domain") = Curves(), py::arg("random_start_center") = true);
+    m.def("discrete_klmedian", &klmedian, py::arg("num_centers") = 1, py::arg("ell") = 2, py::arg("in") = Curves(), py::arg("distances") = Clustering::Distance_Matrix(), py::arg("center_domain") = Curves());
     
     // these are experimental
-    def("two_two_dtw_one_two_median", dtw_one_median);
-    def("two_two_dtw_one_two_median_exact", dtw_one_median_exact);
+    //m.def("two_two_dtw_one_two_median", dtw_one_median);
+    //m.def("two_two_dtw_one_two_median_exact", dtw_one_median_exact);
     //def("discrete_onemedian_sampling", onemedian_sampling, onemedian_sampling_overloads());
     //def("discrete_onemedian_exhaustive", onemedian_exhaustive, onemedian_exhaustive_overloads());
     //def("onemedian_coreset", onemedian_coreset, onemedian_coreset_overloads());
     
     
-    def("set_maximum_number_threads", set_number_threads);
+    m.def("set_maximum_number_threads", set_number_threads);
 }

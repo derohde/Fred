@@ -23,27 +23,24 @@ Curve::Curve(const Points &points, const std::string &name) : Points(points), vs
     #endif
 }
 
-Curve::Curve(const np::ndarray &in, const std::string &name) : Points(in.shape(0), in.get_nd() > 1 ? in.shape(1) : 1), name{name}, vstart{0}, vend{Points::size() - 1} {
-    const dimensions_t n_dimensions = in.get_nd();
-    if (n_dimensions > 2){
-        std::cerr << "A Curve requires a 1- or 2-dimensional numpy array of type " << typeid(coordinate_t).name() << "." << std::endl;
-        std::cerr << "Current dimensions: " << n_dimensions << std::endl;
-        std::cerr << "Current type: " << p::extract<const char *>(p::str(in.get_dtype())) << std::endl;
-        std::cerr << "WARNING: constructed empty curve" << std::endl;
-        return;
-    }
-    if (in.get_dtype() != np::dtype::get_builtin<coordinate_t>()) {
-        std::cerr << "A Curve requires a 1- or 2-dimensional numpy array of type " << typeid(coordinate_t).name() << "." << std::endl;
-        std::cerr << "Current dimensions: " << n_dimensions << std::endl;
-        std::cerr << "Current type: " << p::extract<const char *>(p::str(in.get_dtype())) << std::endl;
-        std::cerr << "WARNING: constructed empty curve" << std::endl;
-        return;
-    }
-    const curve_size_t number_points = in.shape(0);
-    const Py_intptr_t* strides = in.get_strides();
+Curve::Curve(const py::array_t<coordinate_t> &in, const std::string &name) : Points(in.request().shape[0], in.request().ndim > 1 ? in.request().shape[1] : 1), name{name}, vstart{0}, vend{Points::size() - 1} {
+    auto buffer = in.request();
+    
+    const dimensions_t n_dimensions = buffer.ndim;
+    
+     if (n_dimensions > 2){
+         std::cerr << "A Curve requires a 1- or 2-dimensional numpy array of type " << typeid(coordinate_t).name() << "." << std::endl;
+         std::cerr << "Current dimensions: " << n_dimensions << std::endl;
+         std::cerr << "WARNING: constructed empty curve" << std::endl;
+         return;
+     }
+     
+    const curve_size_t number_points = buffer.shape[0];
         
     if (n_dimensions == 2) {
-        const dimensions_t point_size = in.shape(1);
+        const dimensions_t point_size = buffer.shape[1];
+        
+        auto accessor = in.unchecked<2>();
         
         #if DEBUG
         std::cout << "constructing curve of size " << number_points << " and " << point_size << " dimensions" << std::endl;
@@ -52,13 +49,15 @@ Curve::Curve(const np::ndarray &in, const std::string &name) : Points(in.shape(0
         #pragma omp parallel for simd
         for (curve_size_t i = 0; i < number_points; ++i) {                        
             for(curve_size_t j = 0; j < point_size; ++j){
-              Points::operator[](i)[j] = *reinterpret_cast<const coordinate_t *>(in.get_data() + i * strides[0] + j * strides[1]);
+              Points::operator[](i)[j] = accessor(i, j);
             }
         }
-    } else {                
+    } else {
+        auto accessor = in.unchecked<1>();
+        
         #pragma omp parallel for simd
         for (curve_size_t i = 0; i < number_points; ++i) {
-            Points::operator[](i)[0] = *reinterpret_cast<const coordinate_t *>(in.get_data() + i * strides[0]);
+            Points::operator[](i)[0] = accessor(i);
         }
     }
     

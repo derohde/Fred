@@ -16,11 +16,10 @@ class CMakeExtension(Extension):
         Extension.__init__(self, name, sources=[])
         self.sourcedir = os.path.abspath(sourcedir)
 
-
 class CMakeBuild(build_ext):
     def run(self):
         try:
-            out = subprocess.check_output(['cmake', '..', '--version'])
+            out = subprocess.check_output(['cmake', '.', '--version'])
         except OSError:
             raise RuntimeError(
                 "CMake must be installed to build the following extensions: " +
@@ -39,15 +38,7 @@ class CMakeBuild(build_ext):
         extdir = os.path.abspath(
             os.path.dirname(self.get_ext_fullpath(ext.name)))
             
-        import sys
-        bpy = "python{}{}".format(sys.version_info[0], sys.version_info[1])
-        bnpy = "numpy{}{}".format(sys.version_info[0], sys.version_info[1])
-            
-        cmake_args = ['-DBPY=' + bpy, '-DBNPY=' + bnpy,
-                      '-DBOOST_ROOT=~/boost',
-                      '-DBOOST_LIBRARYDIR=~/boost/lib',
-                      '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
-                      '-DPYTHON_EXECUTABLE=' + sys.executable,]
+        cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir]
 
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
@@ -61,7 +52,7 @@ class CMakeBuild(build_ext):
             build_args += ['--', '/m']
         else:
             cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
-            build_args += ['--', '-j5']
+            build_args += ['--', '-j']
 
         env = os.environ.copy()
         env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(
@@ -69,18 +60,19 @@ class CMakeBuild(build_ext):
             self.distribution.get_version())
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
-        subprocess.check_call(['cmake', "{}/..".format(ext.sourcedir)] + cmake_args,
+        subprocess.check_call(['cmake', "{}".format(ext.sourcedir)] + cmake_args,
                               cwd=self.build_temp, env=env)
         subprocess.check_call(['cmake', '--build', '.'] + build_args,
                               cwd=self.build_temp)
 
 setup(
-    name='Fred',
-    version='1.0',
+    name='Fred-Frechet',
+    version='1.6',
     author='Dennis Rohde',
     author_email='dennis.rohde@tu-dortmund.de',
     description='Frechet Distance and Clustering Library',
-    long_description='',
+    long_description='A fast, scalable and light-weight C++ Fréchet distance library, exposed to python and focused on (k,l)-clustering of polygonal curves.',
+    url="http://fred.dennisrohde.work",
     packages=setuptools.find_packages(),
     ext_package="Fred",
     ext_modules=[CMakeExtension('backend')],

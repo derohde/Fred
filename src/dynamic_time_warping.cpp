@@ -10,8 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <vector>
 #include <limits>
-
-#include <boost/chrono/include.hpp>
+#include <chrono>
 
 #include "dynamic_time_warping.hpp"
 
@@ -27,7 +26,7 @@ std::string Distance::repr() const {
     
 Distance distance(const Curve &curve1, const Curve &curve2) {
     Distance result;
-    auto start = boost::chrono::process_real_cpu_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
     std::vector<std::vector<distance_t>> a(curve1.complexity() + 1, std::vector<distance_t>(curve2.complexity() + 1, std::numeric_limits<distance_t>::infinity()));
     a[0][0] = 0;
     for (curve_size_t i = 1; i <= curve1.complexity(); ++i) {
@@ -37,8 +36,8 @@ Distance distance(const Curve &curve1, const Curve &curve2) {
         }
     }
     auto value = a[curve1.complexity()][curve2.complexity()];
-    auto end = boost::chrono::process_real_cpu_clock::now();
-    result.time = (end-start).count() / 1000000000.0;
+    auto end = std::chrono::high_resolution_clock::now();
+    result.time = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
     result.value = value;
     return result;
     

@@ -10,6 +10,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #pragma once
 
+#include <vector>
+
 typedef double distance_t;
 typedef double coordinate_t;
 typedef long double parameter_t;

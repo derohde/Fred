@@ -11,8 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #pragma once
 
 #include <unordered_map>
-
-#include <boost/chrono/include.hpp>
+#include <chrono>
 
 #include "random.hpp"
 #include "curve.hpp"
@@ -132,7 +131,7 @@ struct Clustering_Result {
 
 Clustering_Result gonzalez(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, Distance_Matrix &distances, const bool arya = false, const Curves &center_domain = Curves(), const bool random_start_center = true) {
     
-    const auto start = boost::chrono::process_real_cpu_clock::now();
+    const auto start = std::chrono::high_resolution_clock::now();
     Clustering_Result result;
     
     if (in.empty()) return result;
@@ -233,10 +232,10 @@ Clustering_Result gonzalez(const curve_number_t num_centers, const curve_size_t 
     Curves simpl_centers;
     for (const auto center: centers) simpl_centers.push_back(simplified_in[center]);
     
-    auto end = boost::chrono::process_real_cpu_clock::now();
+    auto end = std::chrono::high_resolution_clock::now();
     result.centers = simpl_centers;
     result.value = curr_maxdist;
-    result.running_time = (end-start).count() / 1000000000.0;
+    result.running_time = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
     return result;
 }
 
@@ -245,7 +244,7 @@ Clustering_Result arya(const curve_number_t num_centers, const curve_size_t ell,
 }
 
 Clustering_Result one_median_sampling(const curve_size_t ell, const Curves &in, const double epsilon, const Curves &center_domain = Curves()) {
-    const auto start = boost::chrono::process_real_cpu_clock::now();
+    const auto start = std::chrono::high_resolution_clock::now();
     Clustering_Result result;
     std::vector<curve_number_t> centers;
     const Curves &simplified_in = center_domain;
@@ -296,15 +295,15 @@ Clustering_Result one_median_sampling(const curve_size_t ell, const Curves &in, 
     }
     centers.push_back(best_candidate);
     
-    auto end = boost::chrono::process_real_cpu_clock::now();
+    auto end = std::chrono::high_resolution_clock::now();
     result.centers.push_back(simplified_in[centers[0]]);
     result.value = _center_cost_sum(in, simplified_in, centers, distances);
-    result.running_time = (end-start).count() / 1000000000.0;
+    result.running_time = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
     return result;
 }
 
 Clustering_Result one_median_exhaustive(const curve_size_t ell, const Curves &in, const Curves &center_domain = Curves()) {
-    const auto start = boost::chrono::process_real_cpu_clock::now();
+    const auto start = std::chrono::high_resolution_clock::now();
     Clustering_Result result;
     std::vector<curve_number_t> centers;
     const Curves &simplified_in = center_domain;
@@ -344,15 +343,15 @@ Clustering_Result one_median_exhaustive(const curve_size_t ell, const Curves &in
     }
     centers.push_back(best_candidate);
     
-    auto end = boost::chrono::process_real_cpu_clock::now();
+    auto end = std::chrono::high_resolution_clock::now();
     result.centers.push_back(simplified_in[centers[0]]);
     result.value = best_objective_value;
-    result.running_time = (end-start).count() / 1000000000.0;
+    result.running_time = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
     return result;
 }
 
 Clustering_Result two_two_dtw_one_two_median(const Curves &in, const bool with_assignment = false) {
-    const auto start = boost::chrono::process_real_cpu_clock::now();
+    const auto start = std::chrono::high_resolution_clock::now();
     Clustering_Result result;
     
     const auto n = in.size();
@@ -431,15 +430,15 @@ Clustering_Result two_two_dtw_one_two_median(const Curves &in, const bool with_a
     for (const auto &p : S1) cost += p.dist(mu1);
     for (const auto &p : S2) cost += p.dist(mu2);
     
-    auto end = boost::chrono::process_real_cpu_clock::now();
+    auto end = std::chrono::high_resolution_clock::now();
     result.centers.push_back(center_curve);
     result.value = cost;
-    result.running_time = (end-start).count() / 1000000000.0;
+    result.running_time = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
     return result;
 }
 
 Clustering_Result two_two_dtw_one_two_median_exact(const Curves &in, const bool with_assignment = false) {
-    const auto start = boost::chrono::process_real_cpu_clock::now();
+    const auto start = std::chrono::high_resolution_clock::now();
     Clustering_Result result;
     Curve best_center(in.dimensions());
     const auto infty = std::numeric_limits<distance_t>::infinity();
@@ -508,10 +507,10 @@ Clustering_Result two_two_dtw_one_two_median_exact(const Curves &in, const bool 
         }
     }
     
-    auto end = boost::chrono::process_real_cpu_clock::now();
+    auto end = std::chrono::high_resolution_clock::now();
     result.centers.push_back(best_center);
     result.value = best;
-    result.running_time = (end-start).count() / 1000000000.0;
+    result.running_time = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
     return result;
 }
 

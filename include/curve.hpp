@@ -14,15 +14,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <string>
 #include <sstream>
 
-#include <boost/python.hpp>
-#include <boost/python/numpy.hpp>
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
 
 #include "types.hpp"
 #include "point.hpp"
 #include "interval.hpp"
 
-namespace np = boost::python::numpy;
-namespace p = boost::python;
+namespace py = pybind11;
 
 class Curve : private Points {
     
@@ -35,7 +34,7 @@ public:
     inline Curve(const dimensions_t dim, const std::string &name = "unnamed curve") : Points(dim), vstart{0}, vend{0}, name{name} {}
     inline Curve(const curve_size_t m, const dimensions_t dimensions, const std::string &name = "unnamed curve") : Points(m, Point(dimensions)), vstart{0}, vend{m-1}, name{name} {}
     Curve(const Points &points, const std::string &name = "unnamed curve");
-    Curve(const np::ndarray &in, const std::string &name = "unnamed curve");
+    Curve(const py::array_t<coordinate_t> &in, const std::string &name = "unnamed curve");
     
     inline Point& get(const curve_size_t i) {
         return Points::operator[](vstart + i);
@@ -122,13 +121,11 @@ public:
     }
     
     inline auto as_ndarray() const {
-        np::dtype dt = np::dtype::get_builtin<coordinate_t>();
-        p::list l;
-        np::ndarray result = np::array(l, dt);
+        py::list l;
         for (const Point &elem : *this) {
             l.append(elem.as_ndarray());
         }
-        result = np::array(l, dt);
+        auto result = py::array_t<coordinate_t>(l);
         return result;
     }
     

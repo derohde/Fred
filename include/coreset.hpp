@@ -9,15 +9,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 #pragma once
 
-#include <boost/python.hpp>
-#include <boost/python/numpy.hpp>
-
 #include "types.hpp"
 #include "clustering.hpp"
 #include "frechet.hpp"
-
-namespace np = boost::python::numpy;
-namespace p = boost::python;
 
 namespace Coreset {
     
@@ -62,31 +56,31 @@ public:
         }
     }
     
-    inline np::ndarray get_lambda() const {
-        np::dtype dt = np::dtype::get_builtin<distance_t>();
-        p::list l;
-        np::ndarray result = np::array(l, dt);
-        for (const auto &elem: lambda) {
-            l.append(elem);
-        }
-        result = np::array(l, dt);
-        return result;
-    }
+//     inline np::ndarray get_lambda() const {
+//         np::dtype dt = np::dtype::get_builtin<distance_t>();
+//         p::list l;
+//         np::ndarray result = np::array(l, dt);
+//         for (const auto &elem: lambda) {
+//             l.append(elem);
+//         }
+//         result = np::array(l, dt);
+//         return result;
+//     }
     
     inline distance_t get_Lambda() const {
         return Lambda;
     }
     
-    inline np::ndarray get_curves() const {
-        np::dtype dt = np::dtype::get_builtin<curve_number_t>();
-        p::list l;
-        np::ndarray result = np::array(l, dt);
-        for (const auto &elem: coreset) {
-            l.append(elem);
-        }
-        result = np::array(l, dt);
-        return result;
-    }
+//     inline np::ndarray get_curves() const {
+//         np::dtype dt = np::dtype::get_builtin<curve_number_t>();
+//         p::list l;
+//         np::ndarray result = np::array(l, dt);
+//         for (const auto &elem: coreset) {
+//             l.append(elem);
+//         }
+//         result = np::array(l, dt);
+//         return result;
+//     }
     
     inline distance_t get_cost() const {
         return cost;

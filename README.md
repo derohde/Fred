@@ -1,6 +1,8 @@
 # Fred ![alt text](https://raw.githubusercontent.com/derohde/Fred/master/logo/logo.png "Fred logo")
 A fast, scalable and light-weight C++ Fréchet distance library, exposed to python and focused on (k,l)-clustering of polygonal curves.
 
+### NOW USING PYBIND11 INSTEAD OF BOOST!
+
 ## Ingredients C++ Backend
 `import Fred.backend as fred`
 
@@ -52,12 +54,12 @@ By default, Fred will automatically determine the number of threads to use. If y
 
 A `fred.Distance_Matrix()` can be used to speed up consecutive calls of `fred.discrete_klcenter` and `fred.discrete_klmedian`. As the name suggests, it stores the distances already computed.
 
-#### discrete (k,l)-center clustering (continuous Fréchet) -- multiple calls
+#### discrete (k,l)-center clustering (continuous Fréchet)
 - from [**Approximating (k,l)-center clustering for curves**](https://dl.acm.org/doi/10.5555/3310435.3310616)
 - signature: `fred.discrete_klcenter_multi(k, l, curves, distances, center_domain, random_first_center)` with parameters 
     - `k`: number of centers
     - `l`: maximum complexity of the centers, only used when center_domain is default value
-    - `distances`: `fred.Distance_Matrix`
+    - `distances`: `fred.Distance_Matrix`, defaults to empty `fred.Distance_Matrix`
     - `center_domain`: possible centers, defaults to empty `fred.Curves()`, in this case the input is simplified and used as center domain
     - `random_first_center`: determines if first center is chosen uniformly at random or first curve is used as first center, optional, defaults to true
 - returns: `fred.Clustering_Result` with mebers 
@@ -65,41 +67,17 @@ A `fred.Distance_Matrix()` can be used to speed up consecutive calls of `fred.di
     - `time`: running-time 
     - `assignment`: empty if compute_assignment has not been called
 
-#### discrete (k,l)-median clustering (continuous Fréchet) -- multiple calls
+#### discrete (k,l)-median clustering (continuous Fréchet)
 - Algorithm 6 in [**Coresets for (k,l)-Clustering under the Fréchet distance**](https://arxiv.org/pdf/1901.01870.pdf) + simplification
 - signature: `fred.discrete_klmedian_multi(k, l, curves, distances, center_domain)` with parameters 
     - `k`: number of centers
     - `l`: maximum complexity of the centers, only used when center_domain is default value
-    - `distances`: `fred.Distance_Matrix`
+    - `distances`: `fred.Distance_Matrix`, defaults to empty `fred.Distance_Matrix`
     - `center_domain`: possible centers, optional parameter, if not given the input is simplified and used as center domain
 - returns: `fred.Clustering_Result` with mebers 
     - `value`: objective value 
     - `time`: running-time 
     - `assignment`: empty if compute_assignment has not been called
-    
-#### discrete (k,l)-center clustering (continuous Fréchet) -- oneshot
-- from [**Approximating (k,l)-center clustering for curves**](https://dl.acm.org/doi/10.5555/3310435.3310616)
-- signature: `fred.discrete_klcenter(k, l, curves, center_domain, random_first_center)` with parameters 
-    - `k`: number of centers
-    - `l`: maximum complexity of the centers, only used when center_domain is default value
-    - `center_domain`: possible centers, optional parameter, if not given the input is simplified and used as center domain
-    - `random_first_center`: determines if first center is chosen uniformly at random or first curve is used as first center, optional, defaults to true
-- returns: `fred.Clustering_Result` with mebers 
-    - `value`: objective value 
-    - `time`: running-time 
-    - `assignment`: empty if compute_assignment has not been called
-
-#### discrete (k,l)-median clustering (continuous Fréchet) -- oneshot
-- Algorithm 6 in [**Coresets for (k,l)-Clustering under the Fréchet distance**](https://arxiv.org/pdf/1901.01870.pdf) + simplification
-- signature: `fred.discrete_klmedian(k, l, curves, center_domain)` with parameters
-    - `k`: number of centers
-    - `l`: maximum complexity of the centers, only used when center_domain is default value
-    - `center_domain`: possible centers, optional parameter, if not given the input is simplified and used as center domain
-- returns: `fred.Clustering_Result` with mebers 
-    - `value`: objective value 
-    - `time`: running-time 
-    - `assignment`: empty if compute_assignment has not been called
-
 
 #### Clustering Result
 - signature: `fred.Clustering_Result`
@@ -112,27 +90,23 @@ A `fred.Distance_Matrix()` can be used to speed up consecutive calls of `fred.di
 
 ### Dimension Reduction via Gaussian Random Projection 
 - [Section 2 in **Random Projections and Sampling Algorithms for Clustering of High Dimensional Polygonal Curves**](https://papers.nips.cc/paper/9443-random-projections-and-sampling-algorithms-for-clustering-of-high-dimensional-polygonal-curves)
-- signature: `fred.dimension_reduction(curves, epsilon, empirical_constant)` with parameters `epsilon`: (1+epsilon) approximation parameter, `empirical_constant`: use constant of empirical study (faster, but less accurate)
+- signature: `fred.dimension_reduction(curves, epsilon, empirical_constant)` with parameters `epsilon`: (1+epsilon) approximation parameter, `empirical_constant`: use constant of empirical study (faster, but less accurate), defaults to `True`
 - returns: `fred.Curves` collection of curves
   
 ## Installation
-Get requirements under Ubuntu: `make pre`
 
-Python3 installation into userdir: `make install`
+### Requirements
 
-### If something does not work with Boost
+You have to have installed:
+ - git
+ - openmp available (should be a part of your compiler)
+ 
+Thats it!
 
-Manual installation of Boost
+### Installation Procedure
 
-- `mkdir $HOME/boost` (This folder is hardcoded in setup.py, another location won't work.)
-- `cd /tmp`
-- `wget https://dl.bintray.com/boostorg/release/1.73.0/source/boost_1_73_0.tar.gz`
-- `tar -xzf boost_1_73_0.tar.gz`
-- `cd boost_1_73_0`
-- `./bootstrap.sh --with-python=/usr/bin/python3`
-- `./b2 install --prefix=$HOME/boost`
-
-After that, go back to Freds folder and run `make clean` and then `make install`
+ - Variant 1: simply run `pip install git+https://github.com/derohde/Fred`
+ - Variant 2: clone repository and run `make` for installation into userdir
 
 ## Test
 Just run `python py/test.py`.
@@ -213,10 +187,10 @@ dm = fred.Distance_Matrix() # computing the Fréchet distance is costly,
                             
 for k in range(2, 6):
     
-    clustering = fred.discrete_klcenter_multi(k, 10, curves, dm)
+    clustering = fred.discrete_klcenter(k, 10, curves, dm)
     print("clustering cost is {}".format(clustering.value))
             
-    clustering = fred.discrete_klmedian_multi(k, 10, curves, dm)
+    clustering = fred.discrete_klmedian(k, 10, curves, dm)
     print("clustering cost is {}".format(clustering.value))
     
 clustering.compute_assignment(curves)
