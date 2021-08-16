@@ -1,9 +1,3 @@
-all: pre install
-
-pre:
-	git submodule init
-	git submodule update
-
 install:
 	python setup.py install --user
 

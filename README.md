@@ -2,6 +2,7 @@
 A fast, scalable and light-weight C++ Fréchet distance library, exposed to python and focused on (k,l)-clustering of polygonal curves.
 
 ### NOW USING PYBIND11 INSTEAD OF BOOST!
+### NOW AVAILABLE VIA PIP
 
 ## Ingredients C++ Backend
 `import Fred.backend as fred`
@@ -105,7 +106,7 @@ Thats it!
 
 ### Installation Procedure
 
- - Variant 1: simply run `pip install git+https://github.com/derohde/Fred`
+ - Variant 1: simply run `pip install Fred-Frechet`
  - Variant 2: clone repository and run `make` for installation into userdir
 
 ## Test

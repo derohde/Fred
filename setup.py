@@ -5,15 +5,19 @@ import sysconfig
 import platform
 import subprocess
 
+from glob import glob
 from distutils.version import LooseVersion
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 import setuptools
 
+this_dir = os.path.dirname(os.path.abspath(__file__))
 
 class CMakeExtension(Extension):
-    def __init__(self, name, sourcedir=''):
-        Extension.__init__(self, name, sources=[])
+    def __init__(self, name, sourcedir=this_dir):
+        Extension.__init__(self, name, 
+                           include_dirs=[os.path.join(this_dir, 'include'), os.path.join(this_dir, 'pybind11')],
+                           sources=sorted(glob("src/*.cpp")))
         self.sourcedir = os.path.abspath(sourcedir)
 
 class CMakeBuild(build_ext):
@@ -60,6 +64,9 @@ class CMakeBuild(build_ext):
             self.distribution.get_version())
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
+        subprocess.check_call(['git', 'init'])
+        subprocess.check_call(['git', 'submodule', 'add', 'https://github.com/pybind/pybind11.git'])
+        subprocess.check_call(['git', 'submodule', 'update', '--init', '--recursive'])
         subprocess.check_call(['cmake', "{}".format(ext.sourcedir)] + cmake_args,
                               cwd=self.build_temp, env=env)
         subprocess.check_call(['cmake', '--build', '.'] + build_args,
@@ -67,7 +74,7 @@ class CMakeBuild(build_ext):
 
 setup(
     name='Fred-Frechet',
-    version='1.6',
+    version='1.7.2',
     author='Dennis Rohde',
     author_email='dennis.rohde@tu-dortmund.de',
     description='Frechet Distance and Clustering Library',
@@ -78,5 +85,6 @@ setup(
     ext_modules=[CMakeExtension('backend')],
     install_requires=['cvxopt', 'matplotlib'],
     cmdclass=dict(build_ext=CMakeBuild),
+    data_files=[('pybind11', ['.gitmodules'])],
     zip_safe=False,
 )
