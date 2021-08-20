@@ -18,7 +18,7 @@ By default, Fred will automatically determine the number of threads to use. If y
 ### Curves
 - signature: `fred.Curves()`
 - methods: `fred.Curves.add(curve)`: add curve, `fred.Curves[i]`: get ith curve, `len(fred.Curves)`: number curves, `fred.Curves.simplify(l)`: return set of simplified curves
-- properties:  `fred.Curves.m`: maximum complexity of the contained curves
+- properties:  `fred.Curves.m`: maximum complexity of the contained curves, `fred.Curves.values`: curves as `np.ndarray`
 
 #### continous Fréchet distance
 - signature: `fred.continuous_frechet(curve1, curve2)`
@@ -31,6 +31,10 @@ By default, Fred will automatically determine the number of threads to use. If y
 #### discrete Fréchet distance
 - signature: `fred.discrete_frechet(curve1, curve2)`
 - returns: `fred.Discrete_Frechet_Result` with members `value` and `time`
+
+#### discrete dynamic time warping distance
+- signature: `fred.discrete_dynamic_time_warping(curve1, curve2)`
+- returns: `fred.Discrete_Dynamic_Time_Warping_Distance_Result` with members `value` and `time`
 
 ### Curve Simplification
 
@@ -69,7 +73,7 @@ A `fred.Distance_Matrix()` can be used to speed up consecutive calls of `fred.di
     - `assignment`: empty if compute_assignment has not been called
 
 #### discrete (k,l)-median clustering (continuous Fréchet)
-- Algorithm 6 in [**Coresets for (k,l)-Clustering under the Fréchet distance**](https://arxiv.org/pdf/1901.01870.pdf) + simplification
+- Algorithm from section 4.3 in [**Geometric Approximation Algorithms**](http://www.ams.org/books/surv/173/) + simplification
 - signature: `fred.discrete_klmedian_multi(k, l, curves, distances, center_domain)` with parameters 
     - `k`: number of centers
     - `l`: maximum complexity of the centers, only used when center_domain is default value

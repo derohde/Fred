@@ -64,9 +64,9 @@ class CMakeBuild(build_ext):
             self.distribution.get_version())
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
-        subprocess.check_call(['git', 'init'])
-        subprocess.check_call(['git', 'submodule', 'add', 'https://github.com/pybind/pybind11.git'])
-        subprocess.check_call(['git', 'submodule', 'update', '--init', '--recursive'])
+        subprocess.call(['git', 'init'])
+        subprocess.call(['git', 'submodule', 'add', 'https://github.com/pybind/pybind11.git'])
+        subprocess.call(['git', 'submodule', 'update', '--init', '--recursive'])
         subprocess.check_call(['cmake', "{}".format(ext.sourcedir)] + cmake_args,
                               cwd=self.build_temp, env=env)
         subprocess.check_call(['cmake', '--build', '.'] + build_args,
@@ -74,11 +74,12 @@ class CMakeBuild(build_ext):
 
 setup(
     name='Fred-Frechet',
-    version='1.7.2',
+    version='1.7.3',
     author='Dennis Rohde',
     author_email='dennis.rohde@tu-dortmund.de',
-    description='Frechet Distance and Clustering Library',
-    long_description='A fast, scalable and light-weight C++ Fréchet distance library, exposed to python and focused on (k,l)-clustering of polygonal curves.',
+    description='A fast, scalable and light-weight C++ Fréchet distance library, exposed to python and focused on (k,l)-clustering of polygonal curves.',
+    long_description=open('README.md').read(),
+    long_description_content_type='text/markdown',
     url="http://fred.dennisrohde.work",
     packages=setuptools.find_packages(),
     ext_package="Fred",

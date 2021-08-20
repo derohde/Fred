@@ -15,36 +15,37 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace Coreset {
     
-class Onemedian_Coreset {
+class K_Median_Coreset {
 
     std::vector<curve_number_t> coreset;
-    std::vector<distance_t> lambda;
-    const distance_t Lambda = 76;
+    std::vector<parameter_t> lambda;
+    distance_t Lambda;
     distance_t cost;
 
 public:
-    Onemedian_Coreset() {}
+    K_Median_Coreset() {}
     
-    inline Onemedian_Coreset(const curve_size_t ell, const Curves &in, const distance_t epsilon, const double constant = 1) {
-        compute(ell, in, epsilon, constant);
+    inline K_Median_Coreset(const curve_number_t k, curve_size_t ell, const Curves &in, const distance_t epsilon, const double constant = 1) {
+        compute(k, ell, in, epsilon, constant);
     }
     
-    inline void compute(const curve_size_t ell, const Curves &in, const distance_t epsilon, const double eps, const bool round = true, const double constant = 1) {
+    inline void compute(const curve_number_t k, curve_size_t ell, const Curves &in, const distance_t epsilon, const double eps, const bool round = true, const double constant = 1) {
         const auto n = in.size();
         const auto m = in.get_m();
         auto distances = Clustering::Distance_Matrix(in.size(), in.size());
-        const auto c_approx = Clustering::arya(1, ell, in, distances, false);
-        const auto center = c_approx.centers[0];
+        const auto c_approx = Clustering::kl_median(k, ell, in, distances, false);
+        const auto centers = c_approx.centers;
         cost = c_approx.value;
         if (cost == 0) {
             std::cerr << "WARNING: cost is zero, coreset construction not possible - check your input" << std::endl;
             return;
         }
         std::vector<double> probabilities(n);
-        lambda = std::vector<distance_t>(n);
-        
+        lambda = std::vector<parameter_t>(n);
+        Lambda = 2*k + 12*std::sqrt(k) + 18;
+        // to do: remainder
         for (curve_number_t i = 0; i < n; ++i) {
-            lambda[i] = 52.0 / n + 24.0 / cost * Frechet::Continuous::distance(in[i], center).value;
+            lambda[i] = 52.0 / n + 24.0 / cost * Frechet::Continuous::distance(in[i], centers[0]).value;
             probabilities[i] = (lambda[i]) / Lambda;
         }
         
@@ -56,31 +57,25 @@ public:
         }
     }
     
-//     inline np::ndarray get_lambda() const {
-//         np::dtype dt = np::dtype::get_builtin<distance_t>();
-//         p::list l;
-//         np::ndarray result = np::array(l, dt);
-//         for (const auto &elem: lambda) {
-//             l.append(elem);
-//         }
-//         result = np::array(l, dt);
-//         return result;
-//     }
+     inline auto get_lambda() const {
+        py::list l;
+        for (const auto &elem : lambda) {
+            l.append(elem);
+        }
+        return py::array_t<parameter_t>(l);
+    }
     
     inline distance_t get_Lambda() const {
         return Lambda;
     }
     
-//     inline np::ndarray get_curves() const {
-//         np::dtype dt = np::dtype::get_builtin<curve_number_t>();
-//         p::list l;
-//         np::ndarray result = np::array(l, dt);
-//         for (const auto &elem: coreset) {
-//             l.append(elem);
-//         }
-//         result = np::array(l, dt);
-//         return result;
-//     }
+    inline auto get_curves() const {
+        py::list l;
+        for (const auto &elem: coreset) {
+            l.append(elem);
+        }
+        return py::array_t<curve_number_t>(l);
+    }
     
     inline distance_t get_cost() const {
         return cost;

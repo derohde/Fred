@@ -170,8 +170,7 @@ public:
         for (const coordinate_t &elem : *this) {
             l.append(elem);
         }
-        auto result = py::array_t<coordinate_t>(l);
-        return result;
+        return py::array_t<coordinate_t>(l);
     }
     
     std::string str() const;
@@ -223,8 +222,7 @@ public:
         for (const Point &elem : *this) {
             l.append(elem.as_ndarray());
         }
-        auto result = py::array_t<coordinate_t>(l);
-        return result;
+        return py::array_t<coordinate_t>(l);
     }
     
     std::string str() const;

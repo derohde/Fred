@@ -75,13 +75,13 @@ Clustering::Clustering_Result dtw_one_median_exact(const Curves &in) {
 }
 
 Clustering::Clustering_Result klcenter(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, Clustering::Distance_Matrix &distances, const Curves &center_domain = Curves(), const bool random_start_center = true) {
-    auto result = Clustering::gonzalez(num_centers, ell, in, distances, false, center_domain, random_start_center);
+    auto result = Clustering::kl_center(num_centers, ell, in, distances, false, center_domain, random_start_center);
     return result;
 }
 
 Clustering::Clustering_Result klmedian(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, Clustering::Distance_Matrix distances, const Curves &center_domain = Curves()) {
 
-    auto result = Clustering::arya(num_centers, ell, in, distances, center_domain);
+    auto result = Clustering::kl_median(num_centers, ell, in, distances, center_domain);
     
     return result;
 }
@@ -140,7 +140,7 @@ PYBIND11_MODULE(backend, m) {
         .def("__str__", &Point::str)
         .def("__iter__", [](Point &v) { return py::make_iterator(v.begin(), v.end()); }, py::keep_alive<0, 1>())
         .def("__repr__", &Point::repr)
-        //.def_property_readonly("values", &Point::as_ndarray)
+        .def_property_readonly("values", &Point::as_ndarray)
     ;
     
     py::class_<Points>(m, "Points")
@@ -179,6 +179,7 @@ PYBIND11_MODULE(backend, m) {
         .def("__str__", &Curves::str)
         .def("__iter__", [](Curves &v) { return py::make_iterator(v.begin(), v.end()); }, py::keep_alive<0, 1>())
         .def("__repr__", &Curves::repr)
+        .def_property_readonly("values", &Curves::as_ndarray)
     ;
     
     py::class_<fc::Distance>(m, "Continuous_Frechet_Distance")
@@ -197,7 +198,7 @@ PYBIND11_MODULE(backend, m) {
         .def("__repr__", &fd::Distance::repr)
     ;
     
-    py::class_<ddtw::Distance>(m, "Discrete_Dynamic_Time_Warping_Distance")
+    py::class_<ddtw::Distance>(m, "Discrete_Dynamic_Time_Warping_Distance_Result")
         .def(py::init<>())
         .def_readwrite("time", &ddtw::Distance::time)
         .def_readwrite("value", &ddtw::Distance::value)

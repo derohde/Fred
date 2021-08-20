@@ -80,7 +80,7 @@ public:
         return Points::end();
     }
     
-    inline auto empty() const {
+    inline bool empty() const {
         return Points::empty();
     }
     
@@ -125,8 +125,7 @@ public:
         for (const Point &elem : *this) {
             l.append(elem.as_ndarray());
         }
-        auto result = py::array_t<coordinate_t>(l);
-        return result;
+        return py::array_t<coordinate_t>(l);
     }
     
     void set_name(const std::string&);
@@ -173,6 +172,14 @@ public:
     
     inline dimensions_t dimensions() const {
         return dim;
+    }
+    
+    inline auto as_ndarray() const {
+        py::list l;
+        for (const Curve &elem : *this) {
+            l.append(elem.as_ndarray());
+        }
+        return py::array_t<coordinate_t>(l);
     }
     
     Curves simplify(const curve_size_t);
