@@ -34,7 +34,7 @@ By default, Fred will automatically determine the number of threads to use. If y
 
 #### discrete dynamic time warping distance
 - signature: `fred.discrete_dynamic_time_warping(curve1, curve2)`
-- returns: `fred.Discrete_Dynamic_Time_Warping_Distance_Result` with members `value` and `time`
+- returns: `fred.Discrete_Dynamic_Time_Warping_Distance` with members `value` and `time`
 
 ### Curve Simplification
 

@@ -23,41 +23,35 @@ Curve::Curve(const Points &points, const std::string &name) : Points(points), vs
     #endif
 }
 
-Curve::Curve(const py::array_t<coordinate_t> &in, const std::string &name) : Points(in.request().shape[0], in.request().ndim > 1 ? in.request().shape[1] : 1), name{name}, vstart{0}, vend{Points::size() - 1} {
-    auto buffer = in.request();
+Curve::Curve(const py::array_t<coordinate_t> &in, const std::string &name) : Points(in.request().shape[0], in.request().ndim > 1 ? in.request().shape[1] : 1), name{name}, vstart{0}, vend{Points::size() - 1} {    
+    const dimensions_t n_dimensions = in.ndim();
+    auto shape = in.shape();
+    const curve_size_t number_points = shape[0];
     
-    const dimensions_t n_dimensions = buffer.ndim;
-    
-     if (n_dimensions > 2){
-         std::cerr << "A Curve requires a 1- or 2-dimensional numpy array of type " << typeid(coordinate_t).name() << "." << std::endl;
-         std::cerr << "Current dimensions: " << n_dimensions << std::endl;
-         std::cerr << "WARNING: constructed empty curve" << std::endl;
-         return;
-     }
-     
-    const curve_size_t number_points = buffer.shape[0];
-        
+    if (n_dimensions > 2){
+        std::cerr << "A Curve requires a 1- or 2-dimensional numpy array of type " << typeid(coordinate_t).name() << "." << std::endl;
+        std::cerr << "Current dimensions: " << n_dimensions << std::endl;
+        std::cerr << "WARNING: constructed empty curve" << std::endl;
+        return;
+    }
+
     if (n_dimensions == 2) {
-        const dimensions_t point_size = buffer.shape[1];
-        
-        auto accessor = in.unchecked<2>();
+        const dimensions_t point_size = shape[1];
         
         #if DEBUG
         std::cout << "constructing curve of size " << number_points << " and " << point_size << " dimensions" << std::endl;
         #endif
                 
         #pragma omp parallel for simd
-        for (curve_size_t i = 0; i < number_points; ++i) {                        
-            for(curve_size_t j = 0; j < point_size; ++j){
-              Points::operator[](i)[j] = accessor(i, j);
+        for (curve_size_t i = 0; i < number_points; ++i) {
+            for(dimensions_t j = 0; j < point_size; ++j){
+              Points::operator[](i)[j] = *in.data(i, j);
             }
         }
     } else {
-        auto accessor = in.unchecked<1>();
-        
         #pragma omp parallel for simd
         for (curve_size_t i = 0; i < number_points; ++i) {
-            Points::operator[](i)[0] = accessor(i);
+            Points::operator[](i)[0] = *in.data(i);
         }
     }
     

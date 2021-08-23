@@ -162,6 +162,10 @@ public:
         return std::vector<Curve>::operator[](i);
     }
     
+    inline void set(const curve_number_t i, const Curve &val) {
+        std::vector<Curve>::operator[](i) = val;
+    }
+    
     inline curve_size_t get_m() const {
         return m;
     }

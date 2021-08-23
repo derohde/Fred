@@ -29,25 +29,6 @@ namespace ddtw = Dynamic_Time_Warping::Discrete;
 
 const distance_t default_epsilon = 0.001;
 
-fc::Distance continuous_frechet(const Curve &curve1, const Curve &curve2) { 
-    return fc::distance(curve1, curve2);
-}
-
-fd::Distance discrete_frechet(const Curve &curve1, const Curve &curve2) {
-    return fd::distance(curve1, curve2);
-}
-
-ddtw::Distance discrete_dynamic_time_warping(const Curve &curve1, const Curve &curve2) {
-    return ddtw::distance(curve1, curve2);
-}
-
-Curves jl_transform(const Curves &in, const double epsilon, const bool empirical_constant = true) {
-    
-    Curves curvesrp = JLTransform::transform_naive(in, epsilon, empirical_constant);
-    
-    return curvesrp;
-}
-
 void set_frechet_epsilon(const double eps) {
     fc::epsilon = eps;
 }
@@ -62,16 +43,6 @@ distance_t get_frechet_epsilon() {
 
 bool get_frechet_rounding() {
     return fc::round;
-}
-
-Clustering::Clustering_Result dtw_one_median(const Curves &in) {
-    auto result = Clustering::two_two_dtw_one_two_median(in);
-    return result;
-}
-
-Clustering::Clustering_Result dtw_one_median_exact(const Curves &in) {
-    auto result = Clustering::two_two_dtw_one_two_median_exact(in);
-    return result;
 }
 
 Clustering::Clustering_Result klcenter(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, Clustering::Distance_Matrix &distances, const Curves &center_domain = Curves(), const bool random_start_center = true) {
@@ -129,6 +100,7 @@ void set_number_threads(std::uint64_t number) {
     omp_set_dynamic(0);
     omp_set_num_threads(number);
 }
+
 PYBIND11_MODULE(backend, m) {
     
     m.attr("default_epsilon_continuous_frechet") = default_epsilon;
@@ -137,6 +109,7 @@ PYBIND11_MODULE(backend, m) {
         .def(py::init<dimensions_t>())
         .def("__len__", &Point::dimensions)
         .def("__getitem__", &Point::get)
+        .def("__setitem__", &Point::set)
         .def("__str__", &Point::str)
         .def("__iter__", [](Point &v) { return py::make_iterator(v.begin(), v.end()); }, py::keep_alive<0, 1>())
         .def("__repr__", &Point::repr)
@@ -150,6 +123,7 @@ PYBIND11_MODULE(backend, m) {
         .def("__str__", &Points::str)
         .def("__iter__", [](Points &v) { return py::make_iterator(v.begin(), v.end()); }, py::keep_alive<0, 1>())
         .def("__repr__", &Points::repr)
+        .def("add", &Points::add)
         .def_property_readonly("values", &Points::as_ndarray)
         .def_property_readonly("centroid", &Points::centroid)
     ;
@@ -175,6 +149,7 @@ PYBIND11_MODULE(backend, m) {
         .def("add", &Curves::add)
         .def("simplify", &Curves::simplify)
         .def("__getitem__", &Curves::get, py::return_value_policy::reference)
+        .def("__setitem__", &Curves::set)
         .def("__len__", &Curves::number)
         .def("__str__", &Curves::str)
         .def("__iter__", [](Curves &v) { return py::make_iterator(v.begin(), v.end()); }, py::keep_alive<0, 1>())
@@ -198,7 +173,7 @@ PYBIND11_MODULE(backend, m) {
         .def("__repr__", &fd::Distance::repr)
     ;
     
-    py::class_<ddtw::Distance>(m, "Discrete_Dynamic_Time_Warping_Distance_Result")
+    py::class_<ddtw::Distance>(m, "Discrete_Dynamic_Time_Warping_Distance")
         .def(py::init<>())
         .def_readwrite("time", &ddtw::Distance::time)
         .def_readwrite("value", &ddtw::Distance::value)
@@ -239,26 +214,25 @@ PYBIND11_MODULE(backend, m) {
     m.def("get_continuous_frechet_epsilon", &get_frechet_epsilon);
     m.def("get_continuous_frechet_rounding", &get_frechet_rounding);
     
-    m.def("continuous_frechet", &continuous_frechet);
-    m.def("discrete_frechet", &discrete_frechet);
-    m.def("discrete_dynamic_time_warping", &discrete_dynamic_time_warping);
+    m.def("continuous_frechet", &fc::distance);
+    m.def("discrete_frechet", &fd::distance);
+    m.def("discrete_dynamic_time_warping", &ddtw::distance);
     
     m.def("weak_minimum_error_simplification", &weak_minimum_error_simplification);
     m.def("approximate_weak_minimum_link_simplification", &approximate_weak_minimum_link_simplification);
     m.def("approximate_weak_minimum_error_simplification", &approximate_weak_minimum_error_simplification);
     
-    m.def("dimension_reduction", &jl_transform, py::arg("in") = Curves(), py::arg("epsilon")= 0.5, py::arg("empirical_constant") = true);
+    m.def("dimension_reduction", &JLTransform::transform_naive, py::arg("in") = Curves(), py::arg("epsilon") = 0.5, py::arg("empirical_constant") = true);
 
     m.def("discrete_klcenter", &klcenter, py::arg("num_centers") = 1, py::arg("ell") = 2, py::arg("in") = Curves(), py::arg("distances") = Clustering::Distance_Matrix(), py::arg("center_domain") = Curves(), py::arg("random_start_center") = true);
     m.def("discrete_klmedian", &klmedian, py::arg("num_centers") = 1, py::arg("ell") = 2, py::arg("in") = Curves(), py::arg("distances") = Clustering::Distance_Matrix(), py::arg("center_domain") = Curves());
     
     // these are experimental
-    //m.def("two_two_dtw_one_two_median", dtw_one_median);
-    //m.def("two_two_dtw_one_two_median_exact", dtw_one_median_exact);
+    //m.def("two_two_dtw_one_two_median", &Clustering::two_two_dtw_one_two_median);
+    //m.def("two_two_dtw_one_two_median_exact", &Clustering::two_two_dtw_one_two_median_exact);
     //def("discrete_onemedian_sampling", onemedian_sampling, onemedian_sampling_overloads());
     //def("discrete_onemedian_exhaustive", onemedian_exhaustive, onemedian_exhaustive_overloads());
     //def("onemedian_coreset", onemedian_coreset, onemedian_coreset_overloads());
-    
     
     m.def("set_maximum_number_threads", set_number_threads);
 }

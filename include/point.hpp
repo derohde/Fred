@@ -36,6 +36,10 @@ public:
         return Coordinates::operator[](i); 
     }
     
+    inline void set(const dimensions_t i, coordinate_t val) {
+        Coordinates::operator[](i) = val;
+    }
+    
     #pragma omp declare simd
     inline const coordinate_t& operator[](const dimensions_t i) const { 
         return Coordinates::operator[](i); 
