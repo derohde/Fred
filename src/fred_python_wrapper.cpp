@@ -45,38 +45,6 @@ bool get_frechet_rounding() {
     return fc::round;
 }
 
-Clustering::Clustering_Result klcenter(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, Clustering::Distance_Matrix &distances, const Curves &center_domain = Curves(), const bool random_start_center = true) {
-    auto result = Clustering::kl_center(num_centers, ell, in, distances, false, center_domain, random_start_center);
-    return result;
-}
-
-Clustering::Clustering_Result klmedian(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, Clustering::Distance_Matrix distances, const Curves &center_domain = Curves()) {
-
-    auto result = Clustering::kl_median(num_centers, ell, in, distances, center_domain);
-    
-    return result;
-}
-
-// Clustering::Clustering_Result onemedian_sampling(const curve_size_t ell,  Curves &in, const double epsilon, const bool with_assignment = false, const Curves &center_domain = Curves()) {
-//     
-//     auto result = Clustering::one_median_sampling(ell, in, epsilon, with_assignment);
-//     
-//     return result;
-// }
-// 
-// Clustering::Clustering_Result onemedian_exhaustive(const curve_size_t ell,  Curves &in, const bool with_assignment = false, const Curves &center_domain = Curves()) {
-// 
-//     auto result = Clustering::one_median_exhaustive(ell, in, with_assignment);
-//     
-//     return result;
-// }
-// 
-// 
-// Coreset::Onemedian_Coreset onemedian_coreset(const Curves &in, const curve_size_t ell, const double epsilon, const double constant = 1) {
-//     return Coreset::Onemedian_Coreset(ell, in, epsilon, constant);
-// }
-// 
-
 Curve weak_minimum_error_simplification(const Curve &curve, const curve_size_t l) {
     Simplification::Subcurve_Shortcut_Graph graph(const_cast<Curve&>(curve));
     auto scurve = graph.weak_minimum_error_simplification(l);
@@ -224,8 +192,8 @@ PYBIND11_MODULE(backend, m) {
     
     m.def("dimension_reduction", &JLTransform::transform_naive, py::arg("in") = Curves(), py::arg("epsilon") = 0.5, py::arg("empirical_constant") = true);
 
-    m.def("discrete_klcenter", &klcenter, py::arg("num_centers") = 1, py::arg("ell") = 2, py::arg("in") = Curves(), py::arg("distances") = Clustering::Distance_Matrix(), py::arg("center_domain") = Curves(), py::arg("random_start_center") = true);
-    m.def("discrete_klmedian", &klmedian, py::arg("num_centers") = 1, py::arg("ell") = 2, py::arg("in") = Curves(), py::arg("distances") = Clustering::Distance_Matrix(), py::arg("center_domain") = Curves());
+    m.def("discrete_klcenter", &Clustering::kl_center, py::arg("num_centers") = 1, py::arg("ell") = 2, py::arg("in") = Curves(), py::arg("distances") = Clustering::Distance_Matrix(), py::arg("random_start_center") = true, py::arg("fast_simplification") = false);
+    m.def("discrete_klmedian", &Clustering::kl_median, py::arg("num_centers") = 1, py::arg("ell") = 2, py::arg("in") = Curves(), py::arg("distances") = Clustering::Distance_Matrix(), py::arg("fast_simplification") = false);
     
     // these are experimental
     //m.def("two_two_dtw_one_two_median", &Clustering::two_two_dtw_one_two_median);

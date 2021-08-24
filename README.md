@@ -38,6 +38,8 @@ By default, Fred will automatically determine the number of threads to use. If y
 
 ### Curve Simplification
 
+All simplifications are vertex-restricted!
+
 #### weak minimum error simplification
 - graph approach from [**Polygonal Approximations of a Curve — Formulations and Algorithms**](https://www.sciencedirect.com/science/article/pii/B9780444704672500114)
 - signature: `fred.weak_minimum_error_simplification(fred.Curve, int complexity)`
@@ -65,8 +67,8 @@ A `fred.Distance_Matrix()` can be used to speed up consecutive calls of `fred.di
     - `k`: number of centers
     - `l`: maximum complexity of the centers, only used when center_domain is default value
     - `distances`: `fred.Distance_Matrix`, defaults to empty `fred.Distance_Matrix`
-    - `center_domain`: possible centers, defaults to empty `fred.Curves()`, in this case the input is simplified and used as center domain
     - `random_first_center`: determines if first center is chosen uniformly at random or first curve is used as first center, optional, defaults to true
+    - `fast_simplification`: determines whether to use the weak minimum error simplification or the faster approximate weak minimum error simplification, defaults to false
 - returns: `fred.Clustering_Result` with mebers 
     - `value`: objective value 
     - `time`: running-time 
@@ -78,7 +80,7 @@ A `fred.Distance_Matrix()` can be used to speed up consecutive calls of `fred.di
     - `k`: number of centers
     - `l`: maximum complexity of the centers, only used when center_domain is default value
     - `distances`: `fred.Distance_Matrix`, defaults to empty `fred.Distance_Matrix`
-    - `center_domain`: possible centers, optional parameter, if not given the input is simplified and used as center domain
+    - `fast_simplification`: determines whether to use the weak minimum error simplification or the faster approximate weak minimum error simplification, defaults to false
 - returns: `fred.Clustering_Result` with mebers 
     - `value`: objective value 
     - `time`: running-time 
