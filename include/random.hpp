@@ -13,9 +13,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <random>
 #include <algorithm>
 
+#include "types.hpp"
+
 namespace Random {
 
-template <typename T = double>
+template <typename T = parameter_t>
 class Uniform_Random_Generator {
     std::mt19937_64 mersenne_twister;
     std::uniform_real_distribution<T> distribution;
@@ -37,7 +39,7 @@ public:
     }
 };
 
-template <typename T = double>
+template <typename T = parameter_t>
 class Gauss_Random_Generator {
     std::mt19937_64 mersenne_twister;
     std::normal_distribution<T> distribution;
@@ -60,7 +62,7 @@ public:
     }
 };
 
-template <typename T = double>
+template <typename T = parameter_t>
 class Custom_Probability_Generator {
     Uniform_Random_Generator<T> uform_gen;
     std::vector<T> cumulative_probabilities;

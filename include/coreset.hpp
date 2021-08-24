@@ -15,70 +15,71 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace Coreset {
     
-class K_Median_Coreset {
-
+class Median_Coreset {
+    const Curves &in;
+    const curve_number_t k;
+    const curve_size_t ell;
+    const parameter_t epsilon;
+    const distance_t constant;
+    Clustering::Clustering_Result c_approx;
+    std::vector<distance_t> cluster_costs;
+    std::vector<curve_number_t> cluster_sizes;
     std::vector<curve_number_t> coreset;
-    std::vector<parameter_t> lambda;
-    distance_t Lambda;
-    distance_t cost;
+    std::vector<distance_t> lambda;
+    const distance_t Lambda;
+    std::vector<parameter_t> probabilities;
 
-public:
-    K_Median_Coreset() {}
-    
-    inline K_Median_Coreset(const curve_number_t k, curve_size_t ell, const Curves &in, const distance_t epsilon, const double constant = 1) {
-        compute(k, ell, in, epsilon, constant);
+public:    
+    inline Median_Coreset(const curve_number_t k, curve_size_t ell, const Curves &in, const parameter_t epsilon, const distance_t constant = 1) : in{in}, k{k}, ell{ell}, epsilon{epsilon}, constant{constant}, cluster_costs(k, 0), cluster_sizes(k, 0), lambda(in.size()), Lambda{2*k + 12*std::sqrt(k) + 18}, probabilities(in.size()) {
+        Clustering::Distance_Matrix distances;
+        c_approx = Clustering::kl_median(k, ell, in, distances);
+        c_approx.compute_assignment(in);
+        for (curve_number_t i = 0; i < k; ++i) {
+            for (curve_number_t j = 0; j < c_approx.assignment.count(i); ++j) {
+                cluster_costs[i] += Frechet::Continuous::distance(in[c_approx.assignment.get(i, j)], c_approx.centers[i]).value;
+                cluster_sizes[i]++;
+            }
+        }
+        
+        for (curve_number_t i = 0; i < k; ++i) {
+            for (curve_number_t j = 0; j < c_approx.assignment.count(i); ++j) {
+                lambda[c_approx.assignment.get(i, j)] = (1+ std::sqrt(2*k/18)) * (6 * Frechet::Continuous::distance(in[c_approx.assignment.get(i, j)], c_approx.centers[i]).value / c_approx.value + 6 * cluster_costs[i] / (c_approx.value * cluster_sizes[i])) + (1 + std::sqrt(18/(2*k))) * 2 / cluster_sizes[i];
+                probabilities[c_approx.assignment.get(i, j)] = (lambda[c_approx.assignment.get(i, j)]) / Lambda;
+            }
+        }
+        
+        compute();
     }
     
-    inline void compute(const curve_number_t k, curve_size_t ell, const Curves &in, const distance_t epsilon, const double eps, const bool round = true, const double constant = 1) {
+    inline void compute() {
         const auto n = in.size();
         const auto m = in.get_m();
-        auto distances = Clustering::Distance_Matrix(in.size(), in.size());
-        const auto c_approx = Clustering::kl_median(k, ell, in, distances, false);
-        const auto centers = c_approx.centers;
-        cost = c_approx.value;
+        const auto cost = c_approx.value;
+        
         if (cost == 0) {
             std::cerr << "WARNING: cost is zero, coreset construction not possible - check your input" << std::endl;
             return;
         }
-        std::vector<double> probabilities(n);
-        lambda = std::vector<parameter_t>(n);
-        Lambda = 2*k + 12*std::sqrt(k) + 18;
-        // to do: remainder
-        for (curve_number_t i = 0; i < n; ++i) {
-            lambda[i] = 52.0 / n + 24.0 / cost * Frechet::Continuous::distance(in[i], centers[0]).value;
-            probabilities[i] = (lambda[i]) / Lambda;
-        }
         
-        auto prob_gen = Random::Custom_Probability_Generator<double>(probabilities);
-        const std::size_t ssize = std::ceil(constant * 1/epsilon * 1/epsilon * std::log(m));
+        auto prob_gen = Random::Custom_Probability_Generator<parameter_t>(probabilities);
+        const std::size_t ssize = std::ceil(k * k * constant * 1/epsilon * 1/epsilon * std::log(m) * std::log(n));
         const auto coreset_ind = prob_gen.get(ssize);
         for (curve_number_t i = 0; i < ssize; ++i) {
             coreset.push_back(coreset_ind[i]);
         }
     }
     
-     inline auto get_lambda() const {
-        py::list l;
-        for (const auto &elem : lambda) {
-            l.append(elem);
+    inline distance_t cost(const Curves &centers) const {
+        distance_t result = 0;
+        for (curve_size_t i = 0; i < coreset.size(); ++i) {
+            distance_t min = std::numeric_limits<distance_t>::infinity();
+            for (const auto &center : centers) {
+                auto dist = Frechet::Continuous::distance(in[coreset[i]], center).value;
+                if (dist < min) min = dist;
+            }
+            result += Lambda/(coreset.size() * lambda[coreset[i]]) * min;
         }
-        return py::array_t<parameter_t>(l);
-    }
-    
-    inline distance_t get_Lambda() const {
-        return Lambda;
-    }
-    
-    inline auto get_curves() const {
-        py::list l;
-        for (const auto &elem: coreset) {
-            l.append(elem);
-        }
-        return py::array_t<curve_number_t>(l);
-    }
-    
-    inline distance_t get_cost() const {
-        return cost;
+        return result;
     }
 
 };

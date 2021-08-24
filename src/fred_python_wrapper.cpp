@@ -170,12 +170,9 @@ PYBIND11_MODULE(backend, m) {
         .def("get", &Clustering::Cluster_Assignment::get)
     ;
     
-    /*py::class_<Coreset::Onemedian_Coreset>("Onemedian_coreset")
-        .def_property("lambd", &Coreset::Onemedian_Coreset::get_lambda)
-        .def_property("Lambd", &Coreset::Onemedian_Coreset::get_Lambda)
-        .def_property("cost", &Coreset::Onemedian_Coreset::get_cost)
-        .def("curves", &Coreset::Onemedian_Coreset::get_curves)
-    ;*/
+    py::class_<Coreset::Median_Coreset>(m, "Median_Coreset")
+        .def(py::init<curve_number_t, curve_size_t, Curves&, parameter_t>())
+    ;
     
     m.def("set_continuous_frechet_epsilon", &set_frechet_epsilon);
     m.def("set_continuous_frechet_rounding", &set_frechet_rounding);

@@ -13,6 +13,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <unordered_map>
 #include <chrono>
 
+#include "types.hpp"
 #include "random.hpp"
 #include "curve.hpp"
 #include "frechet.hpp"
