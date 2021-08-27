@@ -63,9 +63,9 @@ A `fred.Distance_Matrix()` can be used to speed up consecutive calls of `fred.di
 
 #### discrete (k,l)-center clustering (continuous Fréchet)
 - from [**Approximating (k,l)-center clustering for curves**](https://dl.acm.org/doi/10.5555/3310435.3310616)
-- signature: `fred.discrete_klcenter_multi(k, l, curves, distances, center_domain, random_first_center)` with parameters 
+- signature: `fred.discrete_klcenter(k, l, curves, distances, random_first_center, fast_simplification)` with parameters 
     - `k`: number of centers
-    - `l`: maximum complexity of the centers, only used when center_domain is default value
+    - `l`: maximum complexity of the centers
     - `distances`: `fred.Distance_Matrix`, defaults to empty `fred.Distance_Matrix`
     - `random_first_center`: determines if first center is chosen uniformly at random or first curve is used as first center, optional, defaults to true
     - `fast_simplification`: determines whether to use the weak minimum error simplification or the faster approximate weak minimum error simplification, defaults to false
@@ -76,9 +76,9 @@ A `fred.Distance_Matrix()` can be used to speed up consecutive calls of `fred.di
 
 #### discrete (k,l)-median clustering (continuous Fréchet)
 - Algorithm from section 4.3 in [**Geometric Approximation Algorithms**](http://www.ams.org/books/surv/173/) + simplification
-- signature: `fred.discrete_klmedian_multi(k, l, curves, distances, center_domain)` with parameters 
+- signature: `fred.discrete_klmedian(k, l, curves, distances, fast_simplification)` with parameters 
     - `k`: number of centers
-    - `l`: maximum complexity of the centers, only used when center_domain is default value
+    - `l`: maximum complexity of the centers
     - `distances`: `fred.Distance_Matrix`, defaults to empty `fred.Distance_Matrix`
     - `fast_simplification`: determines whether to use the weak minimum error simplification or the faster approximate weak minimum error simplification, defaults to false
 - returns: `fred.Clustering_Result` with mebers 
@@ -105,6 +105,7 @@ A `fred.Distance_Matrix()` can be used to speed up consecutive calls of `fred.di
 ### Requirements
 
 You have to have installed:
+ - cmake
  - git
  - openmp available (should be a part of your compiler)
  

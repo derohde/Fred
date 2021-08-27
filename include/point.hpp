@@ -1,5 +1,5 @@
 /*
-Copyright 2020 Dennis Rohde
+Copyright 2020-2021 Dennis Rohde
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -24,7 +24,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace py = pybind11;
 
-class Point : public Coordinates {    
+class Point : public Coordinates {
 public:    
     inline Point(const dimensions_t d) : Coordinates(d) {}
     
@@ -78,7 +78,7 @@ public:
         Point result = *this;
         #pragma omp simd
         for (dimensions_t i = 0; i < dimensions(); ++i){
-            result.operator[](i) += point[i];
+            result[i] += point[i];
         }
         return result;
     }
@@ -87,7 +87,7 @@ public:
         Point result = *this;
         #pragma omp simd
         for (dimensions_t i = 0; i < dimensions(); ++i){
-            result.operator[](i) -= point[i];
+            result[i] -= point[i];
         }
         return result;
     }
@@ -96,7 +96,7 @@ public:
         Point result = *this;
         #pragma omp simd
         for (dimensions_t i = 0; i < dimensions(); ++i){
-            result.operator[](i) *= mult;
+            result[i] *= mult;
         }
         return result;
     }
@@ -114,7 +114,7 @@ public:
         Point result = *this;
         #pragma omp simd
         for (dimensions_t i = 0; i < dimensions(); ++i){
-            result.operator[](i) /= dist;
+            result[i] /= dist;
         }
         return result;
     }
@@ -166,7 +166,7 @@ public:
         const parameter_t minus_p_h = - p / 2., r1 = minus_p_h + discriminant_sqrt, r2 = minus_p_h - discriminant_sqrt;
         const parameter_t lambda1 = std::min(r1, r2), lambda2 = std::max(r1, r2);
                 
-        return Interval(std::max(0.L, lambda1), std::min(1.L, lambda2));
+        return Interval(std::max(parameter_t(0), lambda1), std::min(parameter_t(1), lambda2));
     }
     
      inline auto as_ndarray() const {

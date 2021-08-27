@@ -1,5 +1,5 @@
 /*
-Copyright 2020 Dennis Rohde
+Copyright 2020-2021 Dennis Rohde
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -38,10 +38,11 @@ Curves transform_naive(const Curves &in, const distance_t epsilon, const bool em
     
     coordinate_t sqrtk = std::sqrt(new_number_dimensions);
     
-    #pragma omp parallel for
+    
     for (curve_number_t l = 0; l < in.size(); ++l) {
         result[l] = Curve(in[l].complexity(), new_number_dimensions, in[l].get_name());
         
+        #pragma omp parallel for collapse(2)
         for (curve_size_t i = 0; i < in[l].complexity(); ++i) {
             
             for (dimensions_t j = 0; j < new_number_dimensions; ++j) {

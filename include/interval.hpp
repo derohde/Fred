@@ -1,5 +1,5 @@
 /*
-Copyright 2020 Dennis Rohde
+Copyright 2020-2021 Dennis Rohde
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -20,7 +20,7 @@ class Interval {
     parameter_t beg, en;
     
 public:
-    Interval() : beg{1.L}, en{0.L} {}
+    Interval() : beg{parameter_t(1)}, en{parameter_t(0)} {}
 
     Interval(const parameter_t begin, const parameter_t end) : beg{begin}, en{end} {}
 
@@ -28,13 +28,13 @@ public:
         return (beg < other.begin()) or ((beg == other.begin()) and (en < other.end()));
     }
 
-    inline bool is_empty() const { 
+    inline bool empty() const { 
         if (en - beg >= std::numeric_limits<parameter_t>::epsilon()) return beg > en;
         else return true;
     }
     
     inline bool intersects(const Interval &other) const {
-        if (is_empty() or other.is_empty()) return false;
+        if (empty() or other.empty()) return false;
 
         return ((other.beg >= beg) and (other.beg <= en)) or
             ((other.en >= beg) and (other.en <= en)) or
@@ -50,8 +50,8 @@ public:
     }
     
     inline void reset() {
-        beg = 1.L;
-        en = 0.L;
+        beg = parameter_t(1);
+        en = parameter_t(0);
     }
 };
 

@@ -1,5 +1,5 @@
 /*
-Copyright 2020 Dennis Rohde
+Copyright 2020-2021 Dennis Rohde
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -66,8 +66,8 @@ Distance _distance(const Curve &curve1, const Curve &curve2, distance_t ub, dist
     
     if (ub - lb > epsilon) {
         auto infty = std::numeric_limits<parameter_t>::infinity();
-        std::vector<std::vector<parameter_t>> reachable1(curve1.complexity()-1, std::vector<parameter_t>(curve2.complexity(), infty));
-        std::vector<std::vector<parameter_t>> reachable2(curve1.complexity(), std::vector<parameter_t>(curve2.complexity()-1, infty));
+        std::vector<std::vector<parameter_t>> reachable1(curve1.complexity() - 1, std::vector<parameter_t>(curve2.complexity(), infty));
+        std::vector<std::vector<parameter_t>> reachable2(curve1.complexity(), std::vector<parameter_t>(curve2.complexity() - 1, infty));
         
         std::vector<std::vector<Interval>> free_intervals1(curve2.complexity(), std::vector<Interval>(curve1.complexity(), Interval()));
         std::vector<std::vector<Interval>> free_intervals2(curve1.complexity(), std::vector<Interval>(curve2.complexity(), Interval()));
@@ -107,62 +107,47 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
         std::vector<std::vector<Interval>> &free_intervals1, std::vector<std::vector<Interval>> &free_intervals2) {
     
     const distance_t dist_sqr = distance * distance;
-    auto infty = std::numeric_limits<parameter_t>::infinity();
+    const auto infty = std::numeric_limits<parameter_t>::infinity();
+    const curve_size_t n1 = curve1.complexity();
+    const curve_size_t n2 = curve2.complexity();
 
-    for (auto &elem: reachable1) {
-        #pragma omp parallel for
-        for (curve_size_t i = 0; i < elem.size(); ++i) {
-            elem[i] = infty;
+    
+    #pragma omp parallel for collapse(2) if (n1 * n2 > 1000)
+    for (curve_size_t i = 0; i < n1; ++i) {
+        for (curve_size_t j = 0; j < n2; ++j) {
+            if (i < n1 - 1) reachable1[i][j] = infty;
+            if (j < n2 - 1) reachable2[i][j] = infty;
+            free_intervals1[j][i].reset();
+            free_intervals2[i][j].reset();
         }
     }
     
-    for (auto &elem: reachable2) {
-        #pragma omp parallel for
-        for (curve_size_t i = 0; i < elem.size(); ++i) {
-            elem[i] = infty;
-        }
-    }
-    
-    for (auto &elem: free_intervals1) {
-        #pragma omp parallel for
-        for (curve_size_t i = 0; i < elem.size(); ++i) {
-            elem[i].reset();
-        }
-    }
-    
-    for (auto &elem: free_intervals2) {
-        #pragma omp parallel for
-        for (curve_size_t i = 0; i < elem.size(); ++i) {
-            elem[i].reset();
-        }
-    }
-    
-    for (curve_size_t i = 0; i < curve1.complexity() - 1; ++i) {
+    for (curve_size_t i = 0; i < n1 - 1; ++i) {
         reachable1[i][0] = 0;
         if (curve2[0].dist_sqr(curve1[i+1]) > dist_sqr) break;
     }
     
-    for (curve_size_t j = 0; j < curve2.complexity() - 1; ++j) {
+    for (curve_size_t j = 0; j < n2 - 1; ++j) {
         reachable2[0][j] = 0;
         if (curve1[0].dist_sqr(curve2[j+1]) > dist_sqr) break;
     }
     
-    #pragma omp parallel for collapse(2)
-    for (curve_size_t i = 0; i < curve1.complexity(); ++i) {
-        for (curve_size_t j = 0; j < curve2.complexity(); ++j) {
-            if ((i < curve1.complexity() - 1) and (j > 0)) {
+    #pragma omp target teams distribute parallel for collapse(2) if (n1 * n2 > 1000)
+    for (curve_size_t i = 0; i < n1; ++i) {
+        for (curve_size_t j = 0; j < n2; ++j) {
+            if ((i < n1 - 1) and (j > 0)) {
                 free_intervals1[j][i] = curve2[j].intersection_interval(dist_sqr, curve1[i], curve1[i+1]);
             }
-            if ((j < curve2.complexity() - 1) and (i > 0)) {
+            if ((j < n2 - 1) and (i > 0)) {
                 free_intervals2[i][j] = curve1[i].intersection_interval(dist_sqr, curve2[j], curve2[j+1]);
             }
         }
     }
     
-    for (curve_size_t i = 0; i < curve1.complexity(); ++i) {
-        for (curve_size_t j = 0; j < curve2.complexity(); ++j) {
-            if ((i < curve1.complexity() - 1) and (j > 0)) {
-                if (not free_intervals1[j][i].is_empty()) {
+    for (curve_size_t i = 0; i < n1; ++i) {
+        for (curve_size_t j = 0; j < n2; ++j) {
+            if ((i < n1 - 1) and (j > 0)) {
+                if (not free_intervals1[j][i].empty()) {
                     if (reachable2[i][j-1] != infty) {
                         reachable1[i][j] = free_intervals1[j][i].begin();
                     }
@@ -171,8 +156,8 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
                     }
                 }
             }
-            if ((j < curve2.complexity() - 1) and (i > 0)) {
-                if (not free_intervals2[i][j].is_empty()) {
+            if ((j < n2 - 1) and (i > 0)) {
+                if (not free_intervals2[i][j].empty()) {
                     if (reachable1[i-1][j] != infty) {
                         reachable2[i][j] = free_intervals2[i][j].begin();
                     }
@@ -183,7 +168,6 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
             }
         }
     }
-
     return reachable1.back().back() < infty;
 }
 

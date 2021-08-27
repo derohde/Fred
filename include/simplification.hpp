@@ -1,5 +1,5 @@
 /*
-Copyright 2020 Dennis Rohde
+Copyright 2020-2021 Dennis Rohde
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -36,7 +36,6 @@ public:
         auto distance = Frechet::Continuous::Distance();
         
         for (curve_size_t i = 0; i < complexity - 1; ++i) {
-            
             for (curve_size_t j = i + 1; j < complexity; ++j) {
                 
                 curve.set_subcurve(i, j);
@@ -75,24 +74,17 @@ public:
         for (curve_size_t i = 0; i < l; ++i) {
             
             if (i == 0) {
-                
+                #pragma omp parallel for
                 for (curve_size_t j = 1; j < curve.complexity(); ++j) {
-                    
                     distances[j][0] = edges[0][j];
                     predecessors[j][0] = 0;
-                    
                 }
-                
             } else {
-                
                 for (curve_size_t j = 1; j < curve.complexity(); ++j) {
-                    
                     others.resize(j);
-                    
+                    #pragma omp parallel for
                     for (curve_size_t k = 0; k < j; ++k) {
-                        
                         others[k] = std::max(distances[k][i - 1], edges[k][j]);
-                        
                     }
                     
                     best = std::distance(others.begin(), std::min_element(others.begin(), others.end()));
