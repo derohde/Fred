@@ -140,12 +140,12 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
     
     auto simplify = [&](const curve_number_t i) {
         if (fast_simplification) {
-            auto simplified_curve = Simplification::approximate_weak_minimum_error_simplification(const_cast<Curve&>(in[i]), ell);
+            auto simplified_curve = Simplification::approximate_minimum_error_simplification(const_cast<Curve&>(in[i]), ell);
             simplified_curve.set_name("Simplification of " + in[i].get_name());
             return simplified_curve;
         } else {
             Simplification::Subcurve_Shortcut_Graph graph(const_cast<Curve&>(in[i]));
-            auto simplified_curve = graph.weak_minimum_error_simplification(ell);
+            auto simplified_curve = graph.minimum_error_simplification(ell);
             simplified_curve.set_name("Simplification of " + in[i].get_name());
             return simplified_curve;
         }
@@ -268,7 +268,7 @@ Clustering_Result one_median_sampling(const curve_size_t ell, const Curves &in, 
         
         for (curve_number_t i = 0; i < in.size(); ++i) {
             Simplification::Subcurve_Shortcut_Graph graph(const_cast<Curve&>(in[i]));
-            auto simplified_curve = graph.weak_minimum_error_simplification(ell);
+            auto simplified_curve = graph.minimum_error_simplification(ell);
             simplified_curve.set_name("Simplification of " + in[i].get_name());
             simplified_in_self[i] = simplified_curve;
         }
@@ -327,7 +327,7 @@ Clustering_Result one_median_exhaustive(const curve_size_t ell, const Curves &in
         
         for (curve_number_t i = 0; i < in.size(); ++i) {
             Simplification::Subcurve_Shortcut_Graph graph(const_cast<Curve&>(in[i]));
-            auto simplified_curve = graph.weak_minimum_error_simplification(ell);
+            auto simplified_curve = graph.minimum_error_simplification(ell);
             simplified_curve.set_name("Simplification of " + in[i].get_name());
             simplified_in_self[i] = simplified_curve;
         }

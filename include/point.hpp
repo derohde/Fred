@@ -15,6 +15,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <cmath>
 #include <string>
 #include <sstream>
+#include <type_traits>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
@@ -92,7 +93,8 @@ public:
         return result;
     }
     
-    inline Point operator*(const distance_t mult) const {
+    template<typename T>
+    inline Point operator*(const T mult) const {
         Point result = *this;
         #pragma omp simd
         for (dimensions_t i = 0; i < dimensions(); ++i){
@@ -146,7 +148,20 @@ public:
         return std::sqrt(length_sqr());
     }
     
-    inline Interval intersection_interval(const distance_t distance_sqr, const Point &line_start, const Point &line_end) const {
+    inline distance_t line_segment_dist_sqr(const Point &p1, const Point &p2) const {
+        const Vector u = p2 - p1;
+        parameter_t projection_param = (*this - p1) * u / (u * u);
+        if (projection_param < parameter_t(0)) projection_param = parameter_t(0);
+        else if (projection_param > parameter_t(1)) projection_param = parameter_t(1);
+        const Point projection = p1 + u * projection_param;
+        return projection.dist_sqr(*this);
+    }
+    
+    inline distance_t line_segment_dist(const Point &p1, const Point &p2) const {
+        return std::sqrt(line_segment_dist(p1, p2));
+    }
+    
+    inline Interval ball_intersection_interval(const distance_t distance_sqr, const Point &line_start, const Point &line_end) const {
         const Vector u = line_end-line_start, v = *this - line_start;
         const parameter_t ulen_sqr = u.length_sqr(), vlen_sqr = v.length_sqr();
         

@@ -25,8 +25,8 @@ By default, Fred will automatically determine the number of threads to use. If y
 - returns: `fred.Continuous_Frechet_Result` with members `value`, `time_bounds`: running-time for upper and lower bound, `number_searches`: number of free space diagrams built, `time_searches`: running-time for free spaces
 
 ###### continuous Frechet distance config
-- approximation error: `fred.set_continuous_frechet_epsilon(epsilon)` with parameter `epsilon`, which defaults to 0.001
-- rounding (rounding up to 3 decimals): `fred.set_continuous_frechet_rounding(round)` with parameter `round`, which defaults to true
+- approximation error in percent of distance: `fred.set_continuous_frechet_error(double percent)` with parameter `percent`, which defaults to 1
+- rounding: `fred.set_continuous_frechet_rounding(round)` with parameter `round`, which defaults to true
 
 #### discrete Fréchet distance
 - signature: `fred.discrete_frechet(curve1, curve2)`
@@ -40,19 +40,19 @@ By default, Fred will automatically determine the number of threads to use. If y
 
 All simplifications are vertex-restricted!
 
-#### weak minimum error simplification
+#### minimum error simplification
 - graph approach from [**Polygonal Approximations of a Curve — Formulations and Algorithms**](https://www.sciencedirect.com/science/article/pii/B9780444704672500114)
-- signature: `fred.weak_minimum_error_simplification(fred.Curve, int complexity)`
+- signature: `fred.minimum_error_simplification(fred.Curve, int complexity)`
 - returns: `fred.Curve`that uses input curves vertices, with `complexity` number of vertices and that has minimum distance to input curve
 
-#### approximate weak minimum link simplification
+#### approximate minimum link simplification
 - algorithm "FS" from [**Near-Linear Time Approximation Algorithms for Curve Simplification**](https://link.springer.com/article/10.1007/s00453-005-1165-y)
-- signature: `fred.approximate_weak_minimum_error_simplification(fred.Curve, double error)`
+- signature: `fred.approximate_minimum_link_simplification(fred.Curve, double error)`
 - returns: `fred.Curve` that uses input curves vertices, is of small complexity and with distance to input curve at most `error`
 
-#### approximate weak minimum error simplification
-- binary search on `fred.approximate_weak_minimum_link_simplification`
-- signature: `fred.approximate_weak_minimum_error_simplification(fred.Curve, int complexity)`
+#### approximate minimum error simplification
+- binary search on `fred.approximate_minimum_link_simplification`
+- signature: `fred.approximate_minimum_error_simplification(fred.Curve, int complexity)`
 - returns: `fred.Curve`that uses input curves vertices, with `complexity` number of vertices and that has small distance to input curve
 
 ### Clustering
@@ -68,7 +68,7 @@ A `fred.Distance_Matrix()` can be used to speed up consecutive calls of `fred.di
     - `l`: maximum complexity of the centers
     - `distances`: `fred.Distance_Matrix`, defaults to empty `fred.Distance_Matrix`
     - `random_first_center`: determines if first center is chosen uniformly at random or first curve is used as first center, optional, defaults to true
-    - `fast_simplification`: determines whether to use the weak minimum error simplification or the faster approximate weak minimum error simplification, defaults to false
+    - `fast_simplification`: determines whether to use the minimum error simplification or the faster approximate minimum error simplification, defaults to false
 - returns: `fred.Clustering_Result` with mebers 
     - `value`: objective value 
     - `time`: running-time 
@@ -80,7 +80,7 @@ A `fred.Distance_Matrix()` can be used to speed up consecutive calls of `fred.di
     - `k`: number of centers
     - `l`: maximum complexity of the centers
     - `distances`: `fred.Distance_Matrix`, defaults to empty `fred.Distance_Matrix`
-    - `fast_simplification`: determines whether to use the weak minimum error simplification or the faster approximate weak minimum error simplification, defaults to false
+    - `fast_simplification`: determines whether to use the minimum error simplification or the faster approximate minimum error simplification, defaults to false
 - returns: `fred.Clustering_Result` with mebers 
     - `value`: objective value 
     - `time`: running-time 
@@ -136,7 +136,7 @@ curve2d2 = fred.Curve(np.array([[1., -1.], [2., -2.], [3., -1.]]), "optional nam
 print(curve2d1)
 
 Fred.plot_curve(curve2d1, curve2d2)
-Fred.plot_curve(curve2d2, fred.weak_minimum_error_simplification(curve2d2, 2))
+Fred.plot_curve(curve2d2, fred.minimum_error_simplification(curve2d2, 2))
 
 print("distance is {}".format(fred.continuous_frechet(curve2d1, curve2d2).value))
 

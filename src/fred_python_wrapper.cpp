@@ -27,39 +27,39 @@ namespace fc = Frechet::Continuous;
 namespace fd = Frechet::Discrete;
 namespace ddtw = Dynamic_Time_Warping::Discrete;
 
-const distance_t default_epsilon = 0.001;
+const distance_t default_error = 1;
 
-void set_frechet_epsilon(const double eps) {
-    fc::epsilon = eps;
+void set_frechet_error(const distance_t error) {
+    fc::error = error;
 }
 
 void set_frechet_rounding(const bool round) {
     fc::round = round;
 }
 
-distance_t get_frechet_epsilon() {
-    return fc::epsilon;
+distance_t get_frechet_error() {
+    return fc::error;
 }
 
 bool get_frechet_rounding() {
     return fc::round;
 }
 
-Curve weak_minimum_error_simplification(const Curve &curve, const curve_size_t l) {
+Curve minimum_error_simplification(const Curve &curve, const curve_size_t l) {
     Simplification::Subcurve_Shortcut_Graph graph(const_cast<Curve&>(curve));
-    auto scurve = graph.weak_minimum_error_simplification(l);
+    auto scurve = graph.minimum_error_simplification(l);
     scurve.set_name("Simplification of " + curve.get_name());
     return scurve;
 }
 
-Curve approximate_weak_minimum_link_simplification(const Curve &curve, const distance_t epsilon) {
-    auto scurve = Simplification::approximate_weak_minimum_link_simplification(curve, epsilon);
+Curve approximate_minimum_link_simplification(const Curve &curve, const distance_t epsilon) {
+    auto scurve = Simplification::approximate_minimum_link_simplification(curve, epsilon);
     scurve.set_name("Simplification of " + curve.get_name());
     return scurve;
 }
 
-Curve approximate_weak_minimum_error_simplification(const Curve &curve, const curve_size_t ell) {
-    auto scurve = Simplification::approximate_weak_minimum_error_simplification(curve, ell);
+Curve approximate_minimum_error_simplification(const Curve &curve, const curve_size_t ell) {
+    auto scurve = Simplification::approximate_minimum_error_simplification(curve, ell);
     scurve.set_name("Simplification of " + curve.get_name());
     return scurve;
 }
@@ -71,7 +71,7 @@ void set_number_threads(std::uint64_t number) {
 
 PYBIND11_MODULE(backend, m) {
     
-    m.attr("default_epsilon_continuous_frechet") = default_epsilon;
+    m.attr("default_error_continuous_frechet") = default_error;
     
     py::class_<Point>(m, "Point")
         .def(py::init<dimensions_t>())
@@ -174,18 +174,18 @@ PYBIND11_MODULE(backend, m) {
         .def(py::init<curve_number_t, curve_size_t, Curves&, parameter_t>())
     ;
     
-    m.def("set_continuous_frechet_epsilon", &set_frechet_epsilon);
+    m.def("set_continuous_frechet_error", &set_frechet_error);
     m.def("set_continuous_frechet_rounding", &set_frechet_rounding);
-    m.def("get_continuous_frechet_epsilon", &get_frechet_epsilon);
+    m.def("get_continuous_frechet_error", &get_frechet_error);
     m.def("get_continuous_frechet_rounding", &get_frechet_rounding);
     
     m.def("continuous_frechet", &fc::distance);
     m.def("discrete_frechet", &fd::distance);
     m.def("discrete_dynamic_time_warping", &ddtw::distance);
     
-    m.def("weak_minimum_error_simplification", &weak_minimum_error_simplification);
-    m.def("approximate_weak_minimum_link_simplification", &approximate_weak_minimum_link_simplification);
-    m.def("approximate_weak_minimum_error_simplification", &approximate_weak_minimum_error_simplification);
+    m.def("minimum_error_simplification", &minimum_error_simplification);
+    m.def("approximate_minimum_link_simplification", &approximate_minimum_link_simplification);
+    m.def("approximate_minimum_error_simplification", &approximate_minimum_error_simplification);
     
     m.def("dimension_reduction", &JLTransform::transform_naive, py::arg("in") = Curves(), py::arg("epsilon") = 0.5, py::arg("empirical_constant") = true);
 

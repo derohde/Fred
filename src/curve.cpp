@@ -61,12 +61,12 @@ Curves Curves::simplify(const curve_size_t l, const bool approx = false) {
     Curves result(size(), l, Curves::dimensions());
     for (curve_number_t i = 0; i < size(); ++i) {
         if (approx) {
-            Curve simplified_curve = Simplification::approximate_weak_minimum_error_simplification(std::vector<Curve>::operator[](i), l);
+            Curve simplified_curve = Simplification::approximate_minimum_error_simplification(std::vector<Curve>::operator[](i), l);
             simplified_curve.set_name("Simplification of " + std::vector<Curve>::operator[](i).get_name());
             result[i] = simplified_curve;
         } else {
             Simplification::Subcurve_Shortcut_Graph graph(std::vector<Curve>::operator[](i));
-            Curve simplified_curve = graph.weak_minimum_error_simplification(l);
+            Curve simplified_curve = graph.minimum_error_simplification(l);
             simplified_curve.set_name("Simplification of " + std::vector<Curve>::operator[](i).get_name());
             result[i] = simplified_curve;
         }

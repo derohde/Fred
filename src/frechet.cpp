@@ -18,7 +18,7 @@ namespace Frechet {
 
 namespace Continuous {
     
-distance_t epsilon = 0.001;
+distance_t error = 1;
 bool round = true;
     
 std::string Distance::repr() const {
@@ -42,7 +42,7 @@ Distance distance(const Curve &curve1, const Curve &curve2) {
     }
     
     auto start = std::chrono::high_resolution_clock::now();
-    const distance_t lb = std::sqrt(std::max(curve1[0].dist_sqr(curve2[0]), curve1[curve1.complexity()-1].dist_sqr(curve2[curve2.complexity()-1])));
+    const distance_t lb = _projective_lower_bound(curve1, curve2);
     const distance_t ub = _greedy_upper_bound(curve1, curve2);
     auto end = std::chrono::high_resolution_clock::now();
 
@@ -52,7 +52,6 @@ Distance distance(const Curve &curve1, const Curve &curve2) {
 
     auto dist = _distance(curve1, curve2, ub, lb);
     dist.time_bounds = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
-    if (round) dist.value =  std::round(dist.value * 1e3) / 1e3;
 
     return dist;
 }
@@ -62,9 +61,10 @@ Distance _distance(const Curve &curve1, const Curve &curve2, distance_t ub, dist
     auto start = std::chrono::high_resolution_clock::now();
     
     distance_t split = (ub + lb)/2;
+    const distance_t p_error = lb > 0 ? lb * error / 100 : std::numeric_limits<distance_t>::epsilon();
     std::size_t number_searches = 0;
     
-    if (ub - lb > epsilon) {
+    if (ub - lb > p_error) {
         auto infty = std::numeric_limits<parameter_t>::infinity();
         std::vector<std::vector<parameter_t>> reachable1(curve1.complexity() - 1, std::vector<parameter_t>(curve2.complexity(), infty));
         std::vector<std::vector<parameter_t>> reachable2(curve1.complexity(), std::vector<parameter_t>(curve2.complexity() - 1, infty));
@@ -78,7 +78,7 @@ Distance _distance(const Curve &curve1, const Curve &curve2, distance_t ub, dist
         }
 
         //Binary search over the feasible distances
-        while (ub - lb > epsilon) {
+        while (ub - lb > p_error) {
             ++number_searches;
             split = (ub + lb)/2;
             auto isLessThan = _less_than_or_equal(split, curve1, curve2, reachable1, reachable2, free_intervals1, free_intervals2);
@@ -95,6 +95,10 @@ Distance _distance(const Curve &curve1, const Curve &curve2, distance_t ub, dist
     }
     
     distance_t value = (ub + lb)/2.;
+    const distance_t p_error_exp = std::log10(p_error);
+    const distance_t round_exp = p_error_exp >= 0 ? 0 : static_cast<unsigned int>(-p_error_exp);
+    const distance_t round_fact = std::pow(10, round_exp);
+    if (round) value =  std::round(value * round_fact) / round_fact;
     auto end = std::chrono::high_resolution_clock::now();
     result.value = value;
     result.time_searches = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
@@ -136,10 +140,10 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
     for (curve_size_t i = 0; i < n1; ++i) {
         for (curve_size_t j = 0; j < n2; ++j) {
             if ((i < n1 - 1) and (j > 0)) {
-                free_intervals1[j][i] = curve2[j].intersection_interval(dist_sqr, curve1[i], curve1[i+1]);
+                free_intervals1[j][i] = curve2[j].ball_intersection_interval(dist_sqr, curve1[i], curve1[i+1]);
             }
             if ((j < n2 - 1) and (i > 0)) {
-                free_intervals2[i][j] = curve1[i].intersection_interval(dist_sqr, curve2[j], curve2[j+1]);
+                free_intervals2[i][j] = curve1[i].ball_intersection_interval(dist_sqr, curve2[j], curve2[j+1]);
             }
         }
     }
@@ -199,6 +203,40 @@ distance_t _greedy_upper_bound(const Curve &curve1, const Curve &curve2) {
     while (j < len2) result = std::max(result, curve1[i].dist_sqr(curve2[j++]));
     
     return std::sqrt(result);
+}
+
+distance_t _projective_lower_bound(const Curve &curve1, const Curve &curve2) {
+    std::vector<distance_t> distances1_sqr = std::vector<distance_t>(curve2.complexity() - 1), distances2_sqr = std::vector<distance_t>(curve1.complexity() + curve2.complexity() + 2);
+    
+    for (curve_size_t i = 0; i < curve1.complexity(); ++i) {
+        #pragma omp parallel for
+        for (curve_size_t j = 0; j < curve2.complexity() - 1; ++j) {
+            if (curve2[j].dist_sqr(curve2[j+1]) > 0) {
+                distances1_sqr[j] = curve1[i].line_segment_dist_sqr(curve2[j], curve2[j+1]);
+            } else {
+                distances1_sqr[j] = curve1[i].dist_sqr(curve2[j]);
+            }
+        }
+        distances2_sqr[i] = *std::min_element(distances1_sqr.begin(), distances1_sqr.end());
+    }
+    
+    distances1_sqr = std::vector<distance_t>(curve1.complexity() - 1);
+    
+    for (curve_size_t i = 0; i < curve2.complexity(); ++i) {
+        #pragma omp parallel for
+        for (curve_size_t j = 0; j < curve1.complexity() - 1; ++j) {
+            if (curve1[j].dist_sqr(curve1[j+1]) > 0) {
+                distances1_sqr[j] = curve2[i].line_segment_dist_sqr(curve1[j], curve1[j+1]);
+            } else {
+                distances1_sqr[j] = curve2[i].dist_sqr(curve1[j]);
+            }
+        }
+        distances2_sqr[curve1.complexity() + i] = *std::min_element(distances1_sqr.begin(), distances1_sqr.end());
+    }
+    
+    distances2_sqr[curve1.complexity() + curve2.complexity()] = curve1[0].dist_sqr(curve2[0]);
+    distances2_sqr[curve1.complexity() + curve2.complexity() + 1] = curve1[curve1.complexity()-1].dist_sqr(curve2[curve2.complexity()-1]);
+    return std::sqrt(*std::max_element(distances2_sqr.begin(), distances2_sqr.end()));
 }
 
 } // end namespace Continuous

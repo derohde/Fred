@@ -52,7 +52,7 @@ public:
         }
     }
     
-    Curve weak_minimum_error_simplification(const curve_size_t ll) const {
+    Curve minimum_error_simplification(const curve_size_t ll) const {
         if (ll >= curve.complexity()) return curve;
         
         curve_size_t l = ll - 1;
@@ -111,7 +111,7 @@ public:
     
 };
 
-Curve approximate_weak_minimum_link_simplification(const Curve&, const distance_t);
-Curve approximate_weak_minimum_error_simplification(const Curve&, const curve_size_t);
+Curve approximate_minimum_link_simplification(const Curve&, const distance_t);
+Curve approximate_minimum_error_simplification(const Curve&, const curve_size_t);
  
 };

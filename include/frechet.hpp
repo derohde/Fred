@@ -18,7 +18,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 namespace Frechet {
 namespace Continuous {
     
-    extern distance_t epsilon;
+    extern distance_t error;
     extern bool round;
     
     struct Distance {
@@ -39,6 +39,7 @@ namespace Continuous {
             std::vector<std::vector<Interval>>&, std::vector<std::vector<Interval>>&);
             
     distance_t _greedy_upper_bound(const Curve&, const Curve&);
+    distance_t _projective_lower_bound(const Curve&, const Curve&);
 }
 namespace Discrete {
     

@@ -10,7 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
  
 #include "simplification.hpp"
  
-Curve Simplification::approximate_weak_minimum_link_simplification(const Curve &pcurve, const distance_t epsilon) {
+Curve Simplification::approximate_minimum_link_simplification(const Curve &pcurve, const distance_t epsilon) {
     Curve &curve = const_cast<Curve&>(pcurve);
     const curve_size_t complexity = curve.complexity();
     
@@ -63,7 +63,7 @@ Curve Simplification::approximate_weak_minimum_link_simplification(const Curve &
     return simplification;
 }
 
-Curve Simplification::approximate_weak_minimum_error_simplification(const Curve &curve, const curve_size_t ell) {
+Curve Simplification::approximate_minimum_error_simplification(const Curve &curve, const curve_size_t ell) {
     Curve simplification(curve.dimensions()), segment(2, curve.dimensions());
     
     segment[0] = curve.front();
@@ -73,17 +73,17 @@ Curve Simplification::approximate_weak_minimum_error_simplification(const Curve 
     
     distance_t min_distance = 0, max_distance = Frechet::Discrete::distance(curve, segment).value + 1, mid_distance;
     
-    Curve new_simplification = Simplification::approximate_weak_minimum_link_simplification(curve, max_distance);
+    Curve new_simplification = Simplification::approximate_minimum_link_simplification(curve, max_distance);
 
     while (new_simplification.complexity() > ell) {
         max_distance *= 2.;
-        new_simplification = Simplification::approximate_weak_minimum_link_simplification(curve, max_distance);
+        new_simplification = Simplification::approximate_minimum_link_simplification(curve, max_distance);
     }
     
-    while (max_distance - min_distance > Frechet::Continuous::epsilon) {
+    while (max_distance - min_distance > min_distance * Frechet::Continuous::error / 100) {
         mid_distance = (min_distance + max_distance) / 2.;
         
-        new_simplification = Simplification::approximate_weak_minimum_link_simplification(curve, mid_distance);
+        new_simplification = Simplification::approximate_minimum_link_simplification(curve, mid_distance);
         
         if (new_simplification.complexity() > ell) min_distance = mid_distance;
         else {
