@@ -74,7 +74,7 @@ class CMakeBuild(build_ext):
 
 setup(
     name='Fred-Frechet',
-    version='1.8',
+    version='1.8.4',
     author='Dennis Rohde',
     author_email='dennis.rohde@tu-dortmund.de',
     description='A fast, scalable and light-weight C++ Fréchet distance library, exposed to python and focused on (k,l)-clustering of polygonal curves.',

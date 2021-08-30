@@ -28,7 +28,7 @@ Curve::Curve(const py::array_t<coordinate_t> &in, const std::string &name) : Poi
     
     if (array_dim > 2){
         std::cerr << "A Curve requires a 1- or 2-dimensional numpy array of type " << typeid(coordinate_t).name() << "." << std::endl;
-        std::cerr << "Current dimensions: " << dimensions() << std::endl;
+        std::cerr << "Current dimensions: " << array_dim << std::endl;
         std::cerr << "WARNING: constructed empty curve" << std::endl;
         return;
     }
