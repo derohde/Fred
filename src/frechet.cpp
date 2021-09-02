@@ -41,15 +41,13 @@ Distance distance(const Curve &curve1, const Curve &curve2) {
         return result;
     }
     
-    auto start = std::chrono::high_resolution_clock::now();
+    const auto start = std::chrono::high_resolution_clock::now();
+    if (Config::verbose) std::cout << "CFD: computing lower bound" << std::endl;
     const distance_t lb = _projective_lower_bound(curve1, curve2);
+    if (Config::verbose) std::cout << "CFD: computing upper bound" << std::endl;
     const distance_t ub = _greedy_upper_bound(curve1, curve2);
-    auto end = std::chrono::high_resolution_clock::now();
-
-    #if DEBUG
-    std::cout << "narrowed to [" << lb << ", " << ub.value << "]" << std::endl;
-    #endif
-
+    const auto end = std::chrono::high_resolution_clock::now();
+    
     auto dist = _distance(curve1, curve2, ub, lb);
     dist.time_bounds = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
 
@@ -58,14 +56,16 @@ Distance distance(const Curve &curve1, const Curve &curve2) {
 
 Distance _distance(const Curve &curve1, const Curve &curve2, distance_t ub, distance_t lb) {
     Distance result;
-    auto start = std::chrono::high_resolution_clock::now();
+    const auto start = std::chrono::high_resolution_clock::now();
     
     distance_t split = (ub + lb)/2;
-    const distance_t p_error = lb > 0 ? lb * error / 100 : std::numeric_limits<distance_t>::epsilon();
+    const distance_t p_error = lb * error / 100 > std::numeric_limits<distance_t>::epsilon() ? lb * error / 100 : std::numeric_limits<distance_t>::epsilon();
     std::size_t number_searches = 0;
     
     if (ub - lb > p_error) {
-        auto infty = std::numeric_limits<parameter_t>::infinity();
+        if (Config::verbose) std::cout << "CFD: binary search using FSD" << std::endl;
+        
+        const auto infty = std::numeric_limits<parameter_t>::infinity();
         std::vector<std::vector<parameter_t>> reachable1(curve1.complexity() - 1, std::vector<parameter_t>(curve2.complexity(), infty));
         std::vector<std::vector<parameter_t>> reachable2(curve1.complexity(), std::vector<parameter_t>(curve2.complexity() - 1, infty));
         
@@ -88,19 +88,12 @@ Distance _distance(const Curve &curve1, const Curve &curve2, distance_t ub, dist
             else {
                 lb = split;
             }
-            #if DEBUG
-            std::cout << "narrowed to [" << lb << ", " << ub << "]" << std::endl;
-            #endif
+            if (Config::verbose) std::cout << "CFD: narrowed distance to to [" << lb << ", " << ub << "]" << std::endl;
         }
     }
     
-    distance_t value = (ub + lb)/2.;
-    const distance_t p_error_exp = std::log10(p_error);
-    const distance_t round_exp = p_error_exp >= 0 ? 0 : static_cast<unsigned int>(-p_error_exp);
-    const distance_t round_fact = std::pow(10, round_exp);
-    if (round) value =  std::round(value * round_fact) / round_fact;
-    auto end = std::chrono::high_resolution_clock::now();
-    result.value = value;
+    const auto end = std::chrono::high_resolution_clock::now();
+    result.value = (ub + lb)/2.;
     result.time_searches = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
     result.number_searches = number_searches;
     return result;
@@ -110,11 +103,13 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
         std::vector<std::vector<parameter_t>> &reachable1, std::vector<std::vector<parameter_t>> &reachable2,
         std::vector<std::vector<Interval>> &free_intervals1, std::vector<std::vector<Interval>> &free_intervals2) {
     
+    if (Config::verbose) std::cout << "CFD: constructing FSD" << std::endl;
     const distance_t dist_sqr = distance * distance;
     const auto infty = std::numeric_limits<parameter_t>::infinity();
     const curve_size_t n1 = curve1.complexity();
     const curve_size_t n2 = curve2.complexity();
 
+    if (Config::verbose) std::cout << "CFD: resetting old FSD" << std::endl;
     
     #pragma omp parallel for collapse(2) if (n1 * n2 > 1000)
     for (curve_size_t i = 0; i < n1; ++i) {
@@ -126,6 +121,8 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
         }
     }
     
+    if (Config::verbose) std::cout << "CFD: FSD borders" << std::endl;
+    
     for (curve_size_t i = 0; i < n1 - 1; ++i) {
         reachable1[i][0] = 0;
         if (curve2[0].dist_sqr(curve1[i+1]) > dist_sqr) break;
@@ -135,6 +132,8 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
         reachable2[0][j] = 0;
         if (curve1[0].dist_sqr(curve2[j+1]) > dist_sqr) break;
     }
+    
+    if (Config::verbose) std::cout << "CFD: computing free space" << std::endl;
     
     #pragma omp target teams distribute parallel for collapse(2) if (n1 * n2 > 1000)
     for (curve_size_t i = 0; i < n1; ++i) {
@@ -147,6 +146,8 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
             }
         }
     }
+    
+    if (Config::verbose) std::cout << "CFD: computing reachable space" << std::endl;
     
     for (curve_size_t i = 0; i < n1; ++i) {
         for (curve_size_t j = 0; j < n2; ++j) {
@@ -251,30 +252,37 @@ std::string Distance::repr() const {
     
 Distance distance(const Curve &curve1, const Curve &curve2) {
     Distance result;
-    auto start = std::chrono::high_resolution_clock::now();
-    std::vector<std::vector<distance_t>> a(curve1.complexity(), std::vector<distance_t>(curve2.complexity(), -1));
-    auto value = std::sqrt(_dp(a, curve1.complexity() - 1, curve2.complexity() - 1, curve1, curve2));
+    const auto start = std::chrono::high_resolution_clock::now();
+    
+    std::vector<std::vector<distance_t>> a(curve1.complexity(), std::vector<distance_t>(curve2.complexity()));
+    std::vector<std::vector<distance_t>> dists(curve1.complexity(), std::vector<distance_t>(curve2.complexity()));
+    
+    #pragma omp parallel for collapse(2)
+    for (curve_size_t i = 0; i < curve1.complexity(); ++i) {
+        for (curve_size_t j = 0; j < curve2.complexity(); ++j) {
+            dists[i][j] = curve1[i].dist_sqr(curve2[j]);
+        }
+    }
+    
+    for (curve_size_t i = 0; i < curve1.complexity(); ++i) {
+        for (curve_size_t j = 0; j < curve2.complexity(); ++j) {
+            if (i == 0 and j == 0) a[i][j] = dists[i][j];
+            else if (i == 0 and j > 0) a[i][j] = std::max(a[i][j-1], dists[i][j]);
+            else if (i > 0 and j == 0) a[i][j] = std::max(a[i-1][j], dists[i][j]);
+            else {
+                a[i][j] = std::max(std::min(std::min(a[i-1][j], a[i-1][j-1]), a[i][j-1]), dists[i][j]);
+            }
+        }
+    }
+    
+    const auto value = std::sqrt(a[curve1.complexity() - 1][curve2.complexity() - 1]);
+    
     auto end = std::chrono::high_resolution_clock::now();
+    
     result.time = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
     result.value = value;
     return result;
     
-}
-
-distance_t _dp(std::vector<std::vector<distance_t>> &a, const curve_size_t i, const curve_size_t j, const Curve &curve1, const Curve &curve2) {
-    if (a[i][j] > -1) return a[i][j];
-    else if (i == 0 and j == 0) return curve1[i].dist_sqr(curve2[j]);
-    else if (i > 0 and j == 0) return std::max(_dp(a, i-1, 0, curve1, curve2), curve1[i].dist_sqr(curve2[j]));
-    else if (i == 0 and j > 0) return std::max(_dp(a, 0, j-1, curve1, curve2), curve1[i].dist_sqr(curve2[j]));
-    else {
-        a[i][j] = std::max(
-                    std::min(
-                        std::min(_dp(a, i-1, j, curve1, curve2), 
-                            _dp(a, i-1, j-1, curve1, curve2)), 
-                        _dp(a, i, j-1, curve1, curve2)), 
-                    curve1[i].dist_sqr(curve2[j]));
-    }
-    return a[i][j];
 }
 
 } // end namespace Discrete

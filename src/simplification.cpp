@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include "simplification.hpp"
  
 Curve Simplification::approximate_minimum_link_simplification(const Curve &pcurve, const distance_t epsilon) {
+    if (Config::verbose) std::cout << "ASIMPL: computing approximate minimum link simplification" << std::endl;
     Curve &curve = const_cast<Curve&>(pcurve);
     const curve_size_t complexity = curve.complexity();
     
@@ -25,7 +26,10 @@ Curve Simplification::approximate_minimum_link_simplification(const Curve &pcurv
         
         segment[0] = curve[i];
         j = 0;
-                
+        
+        if (Config::verbose) std::cout << "ASIMPL: computing maximum shortcut starting at " << i << std::endl;
+        
+        if (Config::verbose) std::cout << "ASIMPL: exponential error search" << std::endl;
         while (distance <= epsilon) {
             ++j;
             
@@ -42,7 +46,8 @@ Curve Simplification::approximate_minimum_link_simplification(const Curve &pcurv
         
         low = j == 1 ? 0 : std::pow(2, j - 1);
         high = std::min(static_cast<curve_size_t>(std::pow(2, j)), complexity - i - 1);
-                
+        
+        if (Config::verbose) std::cout << "ASIMPL: binary error search" << std::endl;
         while (low < high) {
             mid = std::ceil((low + high) / 2.);
                         
@@ -55,7 +60,7 @@ Curve Simplification::approximate_minimum_link_simplification(const Curve &pcurv
             if (distance <= epsilon) low = mid;
             else high = mid - 1;
         }
-        
+        if (Config::verbose) std::cout << "ASIMPL: shortcutting from " << i << " to " << i+low << std::endl;
         i += low;
         curve.reset_subcurve();
         simplification.push_back(curve[i]);
@@ -64,6 +69,7 @@ Curve Simplification::approximate_minimum_link_simplification(const Curve &pcurv
 }
 
 Curve Simplification::approximate_minimum_error_simplification(const Curve &curve, const curve_size_t ell) {
+    if (Config::verbose) std::cout << "ASIMPL: computing approximate minimum error simplification" << std::endl;
     Curve simplification(curve.dimensions()), segment(2, curve.dimensions());
     
     segment[0] = curve.front();
@@ -75,11 +81,13 @@ Curve Simplification::approximate_minimum_error_simplification(const Curve &curv
     
     Curve new_simplification = Simplification::approximate_minimum_link_simplification(curve, max_distance);
 
+    if (Config::verbose) std::cout << "ASIMPL: computing upper bound for error by exponential search" << std::endl;
     while (new_simplification.complexity() > ell) {
         max_distance *= 2.;
         new_simplification = Simplification::approximate_minimum_link_simplification(curve, max_distance);
     }
     
+    if (Config::verbose) std::cout << "ASIMPL: binary search using upper bound" << std::endl;
     while (max_distance - min_distance > min_distance * Frechet::Continuous::error / 100) {
         mid_distance = (min_distance + max_distance) / 2.;
         
@@ -91,7 +99,7 @@ Curve Simplification::approximate_minimum_error_simplification(const Curve &curv
             max_distance = mid_distance;
         }
     }
-    
+    if (Config::verbose) std::cout << "ASIMPL: backwards construction of simplification" << std::endl;
     curve_size_t diff = ell - simplification.complexity();
     while (diff > 0) {
         simplification.push_back(simplification.back());

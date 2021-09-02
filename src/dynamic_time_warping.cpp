@@ -26,23 +26,31 @@ std::string Distance::repr() const {
     
 Distance distance(const Curve &curve1, const Curve &curve2) {
     Distance result;
-    auto start = std::chrono::high_resolution_clock::now();
+    const auto start = std::chrono::high_resolution_clock::now();
+    
     std::vector<std::vector<distance_t>> a(curve1.complexity() + 1, std::vector<distance_t>(curve2.complexity() + 1, std::numeric_limits<distance_t>::infinity()));
+    std::vector<std::vector<distance_t>> dists(curve1.complexity(), std::vector<distance_t>(curve2.complexity()));
+    
+    #pragma omp parallel for collapse(2)
+    for (curve_size_t i = 0; i < curve1.complexity(); ++i) {
+        for (curve_size_t j = 0; j < curve2.complexity(); ++j) {
+            dists[i][j] = curve1[i].dist(curve2[j]);
+        }
+    }
+    
     a[0][0] = 0;
-    #pragma omp parallel for ordered collapse(2)
     for (curve_size_t i = 1; i <= curve1.complexity(); ++i) {
         for (curve_size_t j = 1; j <= curve2.complexity(); ++j) {
-            a[i][j] = std::sqrt(curve1[i-1].dist_sqr(curve2[j-1]));
-            #pragma omp ordered
+            a[i][j] = dists[i-1][j-1];
             a[i][j] += std::min(std::min(a[i-1][j], a[i][j-1]), a[i-1][j-1]);
         }
     }
     auto value = a[curve1.complexity()][curve2.complexity()];
-    auto end = std::chrono::high_resolution_clock::now();
+    
+    const auto end = std::chrono::high_resolution_clock::now();
     result.time = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
     result.value = value;
     return result;
-    
 }
 
 } // end namespace Discrete

@@ -37,7 +37,6 @@ link_libraries(OpenMP::OpenMP_CXX)
 add_subdirectory(pybind11)
 
 pybind11_add_module(backend
-            src/fred_python_wrapper.cpp
             src/curve.cpp
             src/point.cpp
             src/interval.cpp
@@ -45,4 +44,7 @@ pybind11_add_module(backend
             src/jl_transform.cpp
             src/simplification.cpp
             src/dynamic_time_warping.cpp
+            src/clustering.cpp
+            src/config.cpp
+            src/fred_python_wrapper.cpp
 )

@@ -1,10 +1,9 @@
-from . import backend
+from .backend import *
 
-import numpy as np
-import matplotlib.pyplot as plt
-
+config = Config()
 
 def plot_curve(*curves, savename=None, saveextension=None):
+    import matplotlib.pyplot as plt
     for curve in curves:
         if isinstance(curve, backend.Curve):
             if curve.dimensions >= 2:

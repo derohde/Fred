@@ -4,12 +4,14 @@ A fast, scalable and light-weight C++ Fréchet distance library, exposed to pyth
 ### NOW USING PYBIND11 INSTEAD OF BOOST!
 ### NOW AVAILABLE VIA PIP
 
-## Ingredients C++ Backend
-`import Fred.backend as fred`
+## Ingredients
+`import Fred as fred`
+
+- for verbosity, set `fred.config.verbose`, default is false
 
 ### Number of Threads
 
-By default, Fred will automatically determine the number of threads to use. If you want to set an upper limit, call `fred.set_maximum_number_threads(number)`.
+By default, Fred will automatically determine the number of threads to use. If you want to set an upper limit, set `fred.config.number_threads`. Set to `-1` to enable dynamic mode again.
 
 ### Curve
 - signature: `fred.Curve(np.ndarray)`, `fred.Curve(np.ndarray, str name)`
@@ -24,9 +26,8 @@ By default, Fred will automatically determine the number of threads to use. If y
 - signature: `fred.continuous_frechet(curve1, curve2)`
 - returns: `fred.Continuous_Frechet_Result` with members `value`, `time_bounds`: running-time for upper and lower bound, `number_searches`: number of free space diagrams built, `time_searches`: running-time for free spaces
 
-###### continuous Frechet distance config
-- approximation error in percent of distance: `fred.set_continuous_frechet_error(double percent)` with parameter `percent`, which defaults to 1
-- rounding: `fred.set_continuous_frechet_rounding(round)` with parameter `round`, which defaults to true
+###### continuous Fréchet distance config
+- approximation error in percent of distance: `fred.config.continuous_frechet_error`, which defaults to 1
 
 #### discrete Fréchet distance
 - signature: `fred.discrete_frechet(curve1, curve2)`
@@ -57,18 +58,14 @@ All simplifications are vertex-restricted!
 
 ### Clustering
 
-##### Distance_Matrix
-
-A `fred.Distance_Matrix()` can be used to speed up consecutive calls of `fred.discrete_klcenter` and `fred.discrete_klmedian`. As the name suggests, it stores the distances already computed.
-
 #### discrete (k,l)-center clustering (continuous Fréchet)
 - from [**Approximating (k,l)-center clustering for curves**](https://dl.acm.org/doi/10.5555/3310435.3310616)
 - signature: `fred.discrete_klcenter(k, l, curves, distances, random_first_center, fast_simplification)` with parameters 
     - `k`: number of centers
     - `l`: maximum complexity of the centers
-    - `distances`: `fred.Distance_Matrix`, defaults to empty `fred.Distance_Matrix`
+    - `consecutive_call`: reuses distances and simplifications already computed in a previous call if `true`, defaults to `false`
     - `random_first_center`: determines if first center is chosen uniformly at random or first curve is used as first center, optional, defaults to true
-    - `fast_simplification`: determines whether to use the minimum error simplification or the faster approximate minimum error simplification, defaults to false
+    - `fast_simplification`: determines whether to use the minimum error simplification or the faster approximate minimum error simplification, defaults to `false`
 - returns: `fred.Clustering_Result` with mebers 
     - `value`: objective value 
     - `time`: running-time 
@@ -79,8 +76,8 @@ A `fred.Distance_Matrix()` can be used to speed up consecutive calls of `fred.di
 - signature: `fred.discrete_klmedian(k, l, curves, distances, fast_simplification)` with parameters 
     - `k`: number of centers
     - `l`: maximum complexity of the centers
-    - `distances`: `fred.Distance_Matrix`, defaults to empty `fred.Distance_Matrix`
-    - `fast_simplification`: determines whether to use the minimum error simplification or the faster approximate minimum error simplification, defaults to false
+    - `consecutive_call`: reuses distances and simplifications already computed in a previous call if `true`, defaults to `false`
+    - `fast_simplification`: determines whether to use the minimum error simplification or the faster approximate minimum error simplification, defaults to `false`
 - returns: `fred.Clustering_Result` with mebers 
     - `value`: objective value 
     - `time`: running-time 
@@ -88,12 +85,21 @@ A `fred.Distance_Matrix()` can be used to speed up consecutive calls of `fred.di
 
 #### Clustering Result
 - signature: `fred.Clustering_Result`
-- methods: `len(fred.Clustering_Result)`: number of centers, `fred.Clustering_Result[i]`: get ith center, `fred.Clustering_Result.compute_assignment(fred.Curves)`: assigns every curve to its nearest center
-- members: `value`: objective value, `time`: running-time, `assignment`: empty if compute_assignment was not called
+- methods: 
+    -`len(fred.Clustering_Result)`: number of centers
+    - `fred.Clustering_Result[i]`: get ith center
+    - `fred.Clustering_Result.compute_assignment(fred.Curves, bool consecutive_call)`: assigns every curve to its nearest center with parameter `consecutive_call`, which defaults to `false`; set to true, if you want to assign the curves used for clustering
+- members: 
+    - `value`: objective value
+    - `time`: running-time
+    - `assignment`: empty if compute_assignment was not called
 
 #### Cluster Assignment
 - signature: `fred.Cluster_Assignment`
-- methods: `len(fred.Cluster_Assignment)`: number of centers, `fred.Cluster_Assignment.count(i)`: number of curves assigned to center i, `fred.Cluster_Assignment.get(i,j)`: get index of jth curve assigned to center i
+- methods: 
+    - `len(fred.Cluster_Assignment)`: number of centers
+    -`fred.Cluster_Assignment.count(i)`: number of curves assigned to center `i`
+    - `fred.Cluster_Assignment.get(i,j)`: get index of `j`th curve assigned to center `i`
 
 ### Dimension Reduction via Gaussian Random Projection 
 - [Section 2 in **Random Projections and Sampling Algorithms for Clustering of High Dimensional Polygonal Curves**](https://papers.nips.cc/paper/9443-random-projections-and-sampling-algorithms-for-clustering-of-high-dimensional-polygonal-curves)
@@ -121,22 +127,21 @@ Just run `python py/test.py`.
   
 ## Mini Example
 ```python
-import Fred.backend as fred
-import Fred
+import Fred as fred
 import numpy as np
 import pandas as pd
 
-curve1d = fred.Curve(np.array([1., 2.])) # Curve stores a polygonal curve with 
+curve1d = fred.Curve([1., 2.]) # Curve stores a polygonal curve with 
                                          # at least two points of at least one 
                                          # and equal number of dimensions
 
-curve2d1 = fred.Curve(np.array([[1., 0.], [2., 1.], [3., 0.]])) # any number of dimensions and points works
-curve2d2 = fred.Curve(np.array([[1., -1.], [2., -2.], [3., -1.]]), "optional name, e.g. displayed in plot") 
+curve2d1 = fred.Curve([[1., 0.], [2., 1.], [3., 0.]]) # any number of dimensions and points works
+curve2d2 = fred.Curve([[1., -1.], [2., -2.], [3., -1.]], "optional name, e.g. displayed in plot") 
 
 print(curve2d1)
 
-Fred.plot_curve(curve2d1, curve2d2)
-Fred.plot_curve(curve2d2, fred.minimum_error_simplification(curve2d2, 2))
+fred.plot_curve(curve2d1, curve2d2)
+fred.plot_curve(curve2d2, fred.minimum_error_simplification(curve2d2, 2))
 
 print("distance is {}".format(fred.continuous_frechet(curve2d1, curve2d2).value))
 
@@ -165,13 +170,13 @@ curves.add(ps4)
 curves.add(ps5)
 curves.add(ps6)
 
-Fred.plot_curve(curves)
+fred.plot_curve(curves)
 
 curves = fred.dimension_reduction(curves, 0.95) # fred is pretty fast but with high dimensional data
                                                 # a dimension reduction massively improves running-time
                                                 # even for smaller values of epsilon
                                                 
-Fred.plot_curve(curves)
+fred.plot_curve(curves)
                                   
 # Oneshot clustering - if you already know the value of k
                                   
@@ -183,27 +188,23 @@ print("clustering cost is {}".format(clustering.value))
 
 for i, center in enumerate(clustering):
     print("center {} is {}".format(i, center))
-    
-    
-Fred.plot_curve(clustering)
+
+fred.plot_curve(clustering)
 
 # Multiple clustering calls - if you need to find a suitable value for k
-
-dm = fred.Distance_Matrix() # computing the Fréchet distance is costly,
-                            # therefore we buffer each distance already computed to
-                            # speed up consecutive clustering calls
                             
 for k in range(2, 6):
     
-    clustering = fred.discrete_klcenter(k, 10, curves, dm)
+    clustering = fred.discrete_klcenter(k, 10, curves, consecutive_call=True)
     print("clustering cost is {}".format(clustering.value))
             
-    clustering = fred.discrete_klmedian(k, 10, curves, dm)
+    clustering = fred.discrete_klmedian(k, 10, curves, consecutive_call=True)
     print("clustering cost is {}".format(clustering.value))
-    
+
 clustering.compute_assignment(curves)
 
 for i in range(0, len(clustering)):
     for j in range(0, clustering.assignment.count(i)):
         print("{} was assigned to center {}".format(curves[clustering.assignment.get(i,j)].name, clustering[i].name))
+
 ```

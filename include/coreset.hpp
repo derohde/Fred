@@ -31,8 +31,7 @@ class Median_Coreset {
 
 public:    
     inline Median_Coreset(const curve_number_t k, curve_size_t ell, const Curves &in, const parameter_t epsilon, const distance_t constant = 1) : in{in}, k{k}, ell{ell}, epsilon{epsilon}, constant{constant}, cluster_costs(k, 0), cluster_sizes(k, 0), lambda(in.size()), Lambda{2*k + 12*std::sqrt(k) + 18}, probabilities(in.size()) {
-        Clustering::Distance_Matrix distances;
-        c_approx = Clustering::kl_median(k, ell, in, distances);
+        c_approx = Clustering::kl_median(k, ell, in);
         c_approx.compute_assignment(in);
         for (curve_number_t i = 0; i < k; ++i) {
             for (curve_number_t j = 0; j < c_approx.assignment.count(i); ++j) {

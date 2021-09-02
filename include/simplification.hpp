@@ -17,6 +17,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <algorithm>
 #include <cmath>
 
+#include "config.hpp"
 #include "types.hpp"
 #include "curve.hpp"
 #include "frechet.hpp"
@@ -31,12 +32,15 @@ class Subcurve_Shortcut_Graph {
 public:
     
     Subcurve_Shortcut_Graph(Curve &curve) : curve{curve}, edges{std::vector<std::vector<distance_t>>(curve.complexity(), std::vector<distance_t>(curve.complexity(), std::numeric_limits<distance_t>::infinity()))} {
+        if (Config::verbose) std::cout << "SIMPL: computing shortcut graph" << std::endl;
         const curve_size_t complexity = curve.complexity();
         Curve segment(2, curve.front().dimensions());
         auto distance = Frechet::Continuous::Distance();
         
         for (curve_size_t i = 0; i < complexity - 1; ++i) {
             for (curve_size_t j = i + 1; j < complexity; ++j) {
+                
+                if (Config::verbose) std::cout << "SIMPL: computing shortcut distance from vertex " << i << " to vertex " << j << std::endl;
                 
                 curve.set_subcurve(i, j);
                 
@@ -53,6 +57,7 @@ public:
     }
     
     Curve minimum_error_simplification(const curve_size_t ll) const {
+        if (Config::verbose) std::cout << "SIMPL: computing exact minimum error simplification using shortcut graph" << std::endl;
         if (ll >= curve.complexity()) return curve;
         
         curve_size_t l = ll - 1;
@@ -70,10 +75,10 @@ public:
         
         std::vector<distance_t> others;
         curve_size_t best = 0;
-        
         for (curve_size_t i = 0; i < l; ++i) {
             
             if (i == 0) {
+                if (Config::verbose) std::cout << "SIMPL: initializing arrays" << std::endl;
                 #pragma omp parallel for
                 for (curve_size_t j = 1; j < curve.complexity(); ++j) {
                     distances[j][0] = edges[0][j];
@@ -81,6 +86,7 @@ public:
                 }
             } else {
                 for (curve_size_t j = 1; j < curve.complexity(); ++j) {
+                    if (Config::verbose) std::cout << "SIMPL: computing shortcut using " << i << " jumps" << std::endl;
                     others.resize(j);
                     #pragma omp parallel for
                     for (curve_size_t k = 0; k < j; ++k) {
@@ -94,6 +100,8 @@ public:
                 }
             }
         }
+        
+        if (Config::verbose) std::cout << "SIMPL: backwards constructing simplification" << std::endl;
         
         curve_size_t ell = l;
         
