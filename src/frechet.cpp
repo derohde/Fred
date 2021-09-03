@@ -42,9 +42,9 @@ Distance distance(const Curve &curve1, const Curve &curve2) {
     }
     
     const auto start = std::chrono::high_resolution_clock::now();
-    if (Config::verbose) std::cout << "CFD: computing lower bound" << std::endl;
+    if (Config::verbosity > 2) std::cout << "CFD: computing lower bound" << std::endl;
     const distance_t lb = _projective_lower_bound(curve1, curve2);
-    if (Config::verbose) std::cout << "CFD: computing upper bound" << std::endl;
+    if (Config::verbosity > 2) std::cout << "CFD: computing upper bound" << std::endl;
     const distance_t ub = _greedy_upper_bound(curve1, curve2);
     const auto end = std::chrono::high_resolution_clock::now();
     
@@ -63,7 +63,7 @@ Distance _distance(const Curve &curve1, const Curve &curve2, distance_t ub, dist
     std::size_t number_searches = 0;
     
     if (ub - lb > p_error) {
-        if (Config::verbose) std::cout << "CFD: binary search using FSD" << std::endl;
+        if (Config::verbosity > 2) std::cout << "CFD: binary search using FSD" << std::endl;
         
         const auto infty = std::numeric_limits<parameter_t>::infinity();
         std::vector<std::vector<parameter_t>> reachable1(curve1.complexity() - 1, std::vector<parameter_t>(curve2.complexity(), infty));
@@ -89,7 +89,7 @@ Distance _distance(const Curve &curve1, const Curve &curve2, distance_t ub, dist
             else {
                 lb = split;
             }
-            if (Config::verbose) std::cout << "CFD: narrowed distance to to [" << lb << ", " << ub << "]" << std::endl;
+            if (Config::verbosity > 2) std::cout << "CFD: narrowed distance to to [" << lb << ", " << ub << "]" << std::endl;
         }
     }
     
@@ -104,13 +104,13 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
         std::vector<std::vector<parameter_t>> &reachable1, std::vector<std::vector<parameter_t>> &reachable2,
         std::vector<std::vector<Interval>> &free_intervals1, std::vector<std::vector<Interval>> &free_intervals2) {
     
-    if (Config::verbose) std::cout << "CFD: constructing FSD" << std::endl;
+    if (Config::verbosity > 2) std::cout << "CFD: constructing FSD" << std::endl;
     const distance_t dist_sqr = distance * distance;
     const auto infty = std::numeric_limits<parameter_t>::infinity();
     const curve_size_t n1 = curve1.complexity();
     const curve_size_t n2 = curve2.complexity();
 
-    if (Config::verbose) std::cout << "CFD: resetting old FSD" << std::endl;
+    if (Config::verbosity > 2) std::cout << "CFD: resetting old FSD" << std::endl;
     
     #pragma omp parallel for collapse(2) if (n1 * n2 > 1000)
     for (curve_size_t i = 0; i < n1; ++i) {
@@ -122,7 +122,7 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
         }
     }
     
-    if (Config::verbose) std::cout << "CFD: FSD borders" << std::endl;
+    if (Config::verbosity > 2) std::cout << "CFD: FSD borders" << std::endl;
     
     for (curve_size_t i = 0; i < n1 - 1; ++i) {
         reachable1[i][0] = 0;
@@ -134,7 +134,7 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
         if (curve1[0].dist_sqr(curve2[j+1]) > dist_sqr) break;
     }
     
-    if (Config::verbose) std::cout << "CFD: computing free space" << std::endl;
+    if (Config::verbosity > 2) std::cout << "CFD: computing free space" << std::endl;
     
     #pragma omp target teams distribute parallel for collapse(2) if (n1 * n2 > 1000)
     for (curve_size_t i = 0; i < n1; ++i) {
@@ -148,7 +148,7 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
         }
     }
     
-    if (Config::verbose) std::cout << "CFD: computing reachable space" << std::endl;
+    if (Config::verbosity > 2) std::cout << "CFD: computing reachable space" << std::endl;
     
     for (curve_size_t i = 0; i < n1; ++i) {
         for (curve_size_t j = 0; j < n2; ++j) {

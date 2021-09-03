@@ -51,12 +51,12 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
     
     auto simplify = [&](const curve_number_t i) {
         if (fast_simplification) {
-            if (Config::verbose) std::cout << "KL_CLUST: computing approximate vertex restricted minimum error simplification" << std::endl;
+            if (Config::verbosity > 0) std::cout << "KL_CLUST: computing approximate vertex restricted minimum error simplification" << std::endl;
             auto simplified_curve = Simplification::approximate_minimum_error_simplification(const_cast<Curve&>(in[i]), ell);
             simplified_curve.set_name("Simplification of " + in[i].get_name());
             return simplified_curve;
         } else {
-            if (Config::verbose) std::cout << "KL_CLUST: computing exact vertex restricted minimum error simplification" << std::endl;
+            if (Config::verbosity > 0) std::cout << "KL_CLUST: computing exact vertex restricted minimum error simplification" << std::endl;
             Simplification::Subcurve_Shortcut_Graph graph(const_cast<Curve&>(in[i]));
             auto simplified_curve = graph.minimum_error_simplification(ell);
             simplified_curve.set_name("Simplification of " + in[i].get_name());
@@ -64,29 +64,29 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
         }
     };
 
-    if (Config::verbose) std::cout << "KL_CLUST: computing first center" << std::endl;
+    if (Config::verbosity > 0) std::cout << "KL_CLUST: computing first center" << std::endl;
     if (random_start_center) {
         Random::Uniform_Random_Generator<double> ugen;
         const curve_number_t r =  std::floor(simplifications.size() * ugen.get());
         if (simplifications[r].empty()) {
-            if (Config::verbose) std::cout << "KL_CLUST: computing simplification of curve " << r << std::endl;
+            if (Config::verbosity > 0) std::cout << "KL_CLUST: computing simplification of curve " << r << std::endl;
             simplifications[r] = simplify(r);
         }
         centers.push_back(r);
     } else {
         if (simplifications[0].empty()) {
-            if (Config::verbose) std::cout << "KL_CLUST: computing simplification of curve 0" << std::endl;
+            if (Config::verbosity > 0) std::cout << "KL_CLUST: computing simplification of curve 0" << std::endl;
             simplifications[0] = simplify(0);
         }
         centers.push_back(0);
     }
-    if (Config::verbose) std::cout << "KL_CLUST: first center is " << centers[0] << std::endl;
+    if (Config::verbosity > 0) std::cout << "KL_CLUST: first center is " << centers[0] << std::endl;
     
     distance_t curr_maxdist = 0;
     curve_number_t curr_maxcurve = 0;
     distance_t curr_curve_cost;
 
-    if (Config::verbose) std::cout << "KL_CLUST: computing remaining centers" << std::endl;
+    if (Config::verbosity > 0) std::cout << "KL_CLUST: computing remaining centers" << std::endl;
     {
         // remaining centers
         for (curve_number_t i = 2; i <= num_centers; ++i) {
@@ -98,7 +98,7 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
                 // all curves
                 for (curve_number_t j = 0; j < in.size(); ++j) {
                     
-                    if (Config::verbose) std::cout << "KL_CLUST: computing cost of curve " << j << std::endl;
+                    if (Config::verbosity > 0) std::cout << "KL_CLUST: computing cost of curve " << j << std::endl;
                     curr_curve_cost = _curve_cost(j, in, simplifications, centers, distances);
                     
                     if (curr_curve_cost > curr_maxdist) {
@@ -107,10 +107,10 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
                     }
                     
                 }
-                if (Config::verbose) std::cout << "KL_CLUST: center " << i << " is curve " << curr_maxcurve << std::endl;
+                if (Config::verbosity > 0) std::cout << "KL_CLUST: center " << i << " is curve " << curr_maxcurve << std::endl;
                 
                 if (simplifications[curr_maxcurve].empty()) {
-                    if (Config::verbose) std::cout << "KL_CLUST: computing simplification of " << curr_maxcurve << std::endl;
+                    if (Config::verbosity > 0) std::cout << "KL_CLUST: computing simplification of " << curr_maxcurve << std::endl;
                     simplifications[curr_maxcurve] = simplify(curr_maxcurve);
                 }
                 centers.push_back(curr_maxcurve);
@@ -120,7 +120,7 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
     
     if (local_search) {
         
-        if (Config::verbose) std::cout << "KL_CLUST: computing k-median cost" << std::endl;
+        if (Config::verbosity > 0) std::cout << "KL_CLUST: computing k-median cost" << std::endl;
         distance_t cost = _center_cost_sum(in, simplifications, centers, distances);
         distance_t approxcost = cost;
         distance_t curr_cost = cost;
@@ -128,7 +128,7 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
         bool found = true;
         auto curr_centers = centers;
         
-        if (Config::verbose) std::cout << "KL_CLUST: starting local search" << std::endl;
+        if (Config::verbosity > 0) std::cout << "KL_CLUST: starting local search" << std::endl;
         // try to improve current solution
         while (found) {
             found = false;
@@ -142,23 +142,23 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
                     // continue if curve is already part of center set
                     if (std::find(curr_centers.begin(), curr_centers.end(), j) != curr_centers.end()) continue;
                     
-                    if (Config::verbose) std::cout << "KL_CLUST: substituting curve " << curr_centers[i] << " for curve " << j << " as center" << std::endl;
+                    if (Config::verbosity > 0) std::cout << "KL_CLUST: substituting curve " << curr_centers[i] << " for curve " << j << " as center" << std::endl;
                     // swap
                     if (simplifications[j].empty()) {
-                        if (Config::verbose) std::cout << "KL_CLUST: computing simplification of curve " << j << std::endl;
+                        if (Config::verbosity > 0) std::cout << "KL_CLUST: computing simplification of curve " << j << std::endl;
                         simplifications[j] = simplify(j);
                     }
                     curr_centers[i] = j;
                     // new cost
-                        if (Config::verbose) std::cout << "KL_CLUST: updating k-median cost" << std::endl;
+                        if (Config::verbosity > 0) std::cout << "KL_CLUST: updating k-median cost" << std::endl;
                     curr_cost = _center_cost_sum(in, simplifications, curr_centers, distances);
                     // check if improvement is done
                     if (curr_cost < cost - gamma * approxcost) {
-                        if (Config::verbose) std::cout << "KL_CLUST: cost did improve" << std::endl;
+                        if (Config::verbosity > 0) std::cout << "KL_CLUST: cost did improve" << std::endl;
                         cost = curr_cost;
                         centers = curr_centers;
                         found = true;
-                    } else if (Config::verbose) std::cout << "KL_CLUST: cost did not improve" << std::endl;
+                    } else if (Config::verbosity > 0) std::cout << "KL_CLUST: cost did not improve" << std::endl;
                 }
             }
         }

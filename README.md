@@ -7,7 +7,7 @@ A fast, scalable and light-weight C++ Fréchet distance library, exposed to pyth
 ## Ingredients
 `import Fred as fred`
 
-- for verbosity, set `fred.config.verbose`, default is false
+- for verbosity, set `fred.config.verbosity`, default is `0`, possible values `0,1,2,3`
 
 ### Number of Threads
 

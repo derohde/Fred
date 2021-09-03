@@ -14,7 +14,7 @@ namespace Config {
     
     class Config{};
     
-    extern bool verbose;
+    extern unsigned int verbosity;
     extern bool mp_dynamic;
     extern int number_threads;
     

@@ -42,7 +42,6 @@ Curve approximate_minimum_link_simplification(const Curve &curve, const distance
 }
 
 Curve approximate_minimum_error_simplification(const Curve &curve, const curve_size_t ell) {
-    if (Config::verbose) std::cout << "ASIMPL: computing simplification" << std::endl;
     auto scurve = Simplification::approximate_minimum_error_simplification(curve, ell);
     scurve.set_name("Simplification of " + curve.get_name());
     return scurve;
@@ -53,7 +52,7 @@ PYBIND11_MODULE(backend, m) {
     py::class_<Config::Config>(m, "Config")
         .def(py::init<>())
         .def_property("continuous_frechet_error", [&](Config::Config&) { return fc::error; }, [&](Config::Config&, const bool error) { fc::error = error; })
-        .def_property("verbose", [&](Config::Config&) { return &Config::verbose; }, [&](Config::Config&, const bool verbose) { Config::verbose = verbose; })
+        .def_property("verbosity", [&](Config::Config&) { return &Config::verbosity; }, [&](Config::Config&, const unsigned int verbosity) { Config::verbosity = verbosity; })
         .def_property("number_threads", [&](Config::Config&){ return &Config::number_threads; }, [&](Config::Config&, const int number_threads) {
             if (number_threads <= 0) {
                 Config::number_threads = -1;

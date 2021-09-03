@@ -10,7 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace Config {
         
-    bool verbose = false;
+    unsigned int verbosity = 0;
     bool mp_dynamic = true;
     int number_threads = -1;
     
