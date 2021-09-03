@@ -98,7 +98,7 @@ All simplifications are vertex-restricted!
 - signature: `fred.Cluster_Assignment`
 - methods: 
     - `len(fred.Cluster_Assignment)`: number of centers
-    -`fred.Cluster_Assignment.count(i)`: number of curves assigned to center `i`
+    - `fred.Cluster_Assignment.count(i)`: number of curves assigned to center `i`
     - `fred.Cluster_Assignment.get(i,j)`: get index of `j`th curve assigned to center `i`
 
 ### Dimension Reduction via Gaussian Random Projection 

@@ -88,9 +88,10 @@ Curve Simplification::approximate_minimum_error_simplification(const Curve &curv
     }
     
     if (Config::verbose) std::cout << "ASIMPL: binary search using upper bound" << std::endl;
-    while (max_distance - min_distance > min_distance * Frechet::Continuous::error / 100) {
-        mid_distance = (min_distance + max_distance) / 2.;
-        
+    const distance_t epsilon = std::max(min_distance * Frechet::Continuous::error / 100, std::numeric_limits<distance_t>::epsilon());
+    while (max_distance - min_distance > epsilon) {
+        mid_distance = (min_distance + max_distance) / distance_t(2);
+        if (mid_distance == max_distance or mid_distance == min_distance) break;
         new_simplification = Simplification::approximate_minimum_link_simplification(curve, mid_distance);
         
         if (new_simplification.complexity() > ell) min_distance = mid_distance;

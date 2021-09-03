@@ -165,8 +165,8 @@ public:
         const Vector u = line_end-line_start, v = *this - line_start;
         const parameter_t ulen_sqr = u.length_sqr(), vlen_sqr = v.length_sqr();
         
-        if (ulen_sqr == 0) {
-            if (vlen_sqr <= distance_sqr) return Interval(0, 1);
+        if (near_eq(ulen_sqr, parameter_t(0))) {
+            if (vlen_sqr <= distance_sqr) return Interval(parameter_t(0), parameter_t(1));
             else return Interval();
         }
                 

@@ -50,8 +50,6 @@ Curve approximate_minimum_error_simplification(const Curve &curve, const curve_s
 
 PYBIND11_MODULE(backend, m) {
     
-    m.def("set_maximum_number_threads", set_number_threads);
-    
     py::class_<Config::Config>(m, "Config")
         .def(py::init<>())
         .def_property("continuous_frechet_error", [&](Config::Config&) { return fc::error; }, [&](Config::Config&, const bool error) { fc::error = error; })

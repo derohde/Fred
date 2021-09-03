@@ -11,6 +11,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #pragma once
 
 #include <vector>
+#include <cmath>
+#include <limits>
 
 typedef double distance_t;
 typedef double coordinate_t;
@@ -28,4 +30,10 @@ using Vector = Point;
 
 using Intervals = std::vector<Interval>;
 using Coordinates = std::vector<coordinate_t>;
+
+template<typename T>
+inline bool near_eq(T x, T y) {
+  return std::abs(x - y) <= std::min(std::abs(x), std::abs(y)) * std::numeric_limits<T>::epsilon();
+}
+
 

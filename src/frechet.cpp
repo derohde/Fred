@@ -80,7 +80,8 @@ Distance _distance(const Curve &curve1, const Curve &curve2, distance_t ub, dist
         //Binary search over the feasible distances
         while (ub - lb > p_error) {
             ++number_searches;
-            split = (ub + lb)/2;
+            split = (ub + lb)/distance_t(2);
+            if (split == lb or split == ub) break;
             auto isLessThan = _less_than_or_equal(split, curve1, curve2, reachable1, reachable2, free_intervals1, free_intervals2);
             if (isLessThan) {
                 ub = split;
@@ -93,7 +94,7 @@ Distance _distance(const Curve &curve1, const Curve &curve2, distance_t ub, dist
     }
     
     const auto end = std::chrono::high_resolution_clock::now();
-    result.value = (ub + lb)/2.;
+    result.value = lb;
     result.time_searches = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
     result.number_searches = number_searches;
     return result;
