@@ -41,12 +41,12 @@ Distance distance(const Curve &curve1, const Curve &curve2) {
         return result;
     }
     
-    const auto start = std::chrono::high_resolution_clock::now();
+    const auto start = std::chrono::steady_clock::now();
     if (Config::verbosity > 2) std::cout << "CFD: computing lower bound" << std::endl;
     const distance_t lb = _projective_lower_bound(curve1, curve2);
     if (Config::verbosity > 2) std::cout << "CFD: computing upper bound" << std::endl;
     const distance_t ub = _greedy_upper_bound(curve1, curve2);
-    const auto end = std::chrono::high_resolution_clock::now();
+    const auto end = std::chrono::steady_clock::now();
     
     auto dist = _distance(curve1, curve2, ub, lb);
     dist.time_bounds = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
@@ -56,7 +56,7 @@ Distance distance(const Curve &curve1, const Curve &curve2) {
 
 Distance _distance(const Curve &curve1, const Curve &curve2, distance_t ub, distance_t lb) {
     Distance result;
-    const auto start = std::chrono::high_resolution_clock::now();
+    const auto start = std::chrono::steady_clock::now();
     
     distance_t split = (ub + lb)/2;
     const distance_t p_error = lb * error / 100 > std::numeric_limits<distance_t>::epsilon() ? lb * error / 100 : std::numeric_limits<distance_t>::epsilon();
@@ -93,7 +93,7 @@ Distance _distance(const Curve &curve1, const Curve &curve2, distance_t ub, dist
         }
     }
     
-    const auto end = std::chrono::high_resolution_clock::now();
+    const auto end = std::chrono::steady_clock::now();
     result.value = lb;
     result.time_searches = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
     result.number_searches = number_searches;
@@ -253,7 +253,7 @@ std::string Distance::repr() const {
     
 Distance distance(const Curve &curve1, const Curve &curve2) {
     Distance result;
-    const auto start = std::chrono::high_resolution_clock::now();
+    const auto start = std::chrono::steady_clock::now();
     
     std::vector<std::vector<distance_t>> a(curve1.complexity(), std::vector<distance_t>(curve2.complexity()));
     std::vector<std::vector<distance_t>> dists(curve1.complexity(), std::vector<distance_t>(curve2.complexity()));
@@ -278,7 +278,7 @@ Distance distance(const Curve &curve1, const Curve &curve2) {
     
     const auto value = std::sqrt(a[curve1.complexity() - 1][curve2.complexity() - 1]);
     
-    auto end = std::chrono::high_resolution_clock::now();
+    auto end = std::chrono::steady_clock::now();
     
     result.time = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
     result.value = value;

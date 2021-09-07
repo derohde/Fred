@@ -26,7 +26,7 @@ std::string Distance::repr() const {
     
 Distance distance(const Curve &curve1, const Curve &curve2) {
     Distance result;
-    const auto start = std::chrono::high_resolution_clock::now();
+    const auto start = std::chrono::steady_clock::now();
     
     std::vector<std::vector<distance_t>> a(curve1.complexity() + 1, std::vector<distance_t>(curve2.complexity() + 1, std::numeric_limits<distance_t>::infinity()));
     std::vector<std::vector<distance_t>> dists(curve1.complexity(), std::vector<distance_t>(curve2.complexity()));
@@ -47,7 +47,7 @@ Distance distance(const Curve &curve1, const Curve &curve2) {
     }
     auto value = a[curve1.complexity()][curve2.complexity()];
     
-    const auto end = std::chrono::high_resolution_clock::now();
+    const auto end = std::chrono::steady_clock::now();
     result.time = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
     result.value = value;
     return result;

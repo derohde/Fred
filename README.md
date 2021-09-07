@@ -201,7 +201,8 @@ for k in range(2, 6):
     clustering = fred.discrete_klmedian(k, 10, curves, consecutive_call=True)
     print("clustering cost is {}".format(clustering.value))
 
-clustering.compute_assignment(curves)
+clustering.compute_assignment(curves, consecutive_call=True) # use consecutive_call = False when computing assignment for curves other
+                                                             # than those used for computing the clustering
 
 for i in range(0, len(clustering)):
     for j in range(0, clustering.assignment.count(i)):
