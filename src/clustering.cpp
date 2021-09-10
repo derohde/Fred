@@ -10,6 +10,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include "clustering.hpp"
 
+#include<ctime>
+
 namespace Clustering {
 
 Distance_Matrix distances;
@@ -27,7 +29,7 @@ void Distance_Matrix::print() const {
 Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, 
                              const bool local_search = false, const bool consecutive_call = false, const bool random_start_center = true, const bool fast_simplification = false) {
     
-    const auto start = std::chrono::steady_clock::now();
+    const auto start = std::clock();
     Clustering_Result result;
     
     if (in.empty()) return result;
@@ -168,11 +170,11 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
     Curves simpl_centers;
     for (const auto center: centers) simpl_centers.push_back(simplifications[center]);
     
-    auto end = std::chrono::steady_clock::now();
+    auto end = std::clock();
     result.centers = simpl_centers;
     result.set_center_indices(centers);
     result.value = curr_maxdist;
-    result.running_time = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
+    result.running_time = (end - start) / CLOCKS_PER_SEC;
     return result;
 }
 
