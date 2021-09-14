@@ -156,6 +156,7 @@ PYBIND11_MODULE(backend, m) {
     
     py::class_<Coreset::Median_Coreset>(m, "Median_Coreset")
         .def(py::init<curve_number_t, curve_size_t, Curves&, parameter_t>())
+        .def("cost", &Coreset::Median_Coreset::cost)
     ;
     
     m.def("continuous_frechet", &fc::distance);

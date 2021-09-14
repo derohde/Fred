@@ -97,10 +97,10 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
             curr_maxcurve = 0;
             {
             
+                if (Config::verbosity > 0) std::cout << "KL_CLUST: computing new center " << std::endl;
                 // all curves
                 for (curve_number_t j = 0; j < in.size(); ++j) {
                     
-                    if (Config::verbosity > 0) std::cout << "KL_CLUST: computing cost of curve " << j << std::endl;
                     curr_curve_cost = _curve_cost(j, in, simplifications, centers, distances);
                     
                     if (curr_curve_cost > curr_maxdist) {
@@ -143,7 +143,7 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
                 for (curve_number_t j = 0; j < simplifications.size(); ++j) {
                     // continue if curve is already part of center set
                     if (std::find(curr_centers.begin(), curr_centers.end(), j) != curr_centers.end()) continue;
-                    
+                                        
                     if (Config::verbosity > 0) std::cout << "KL_CLUST: substituting curve " << curr_centers[i] << " for curve " << j << " as center" << std::endl;
                     // swap
                     if (simplifications[j].empty()) {
@@ -152,7 +152,7 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
                     }
                     curr_centers[i] = j;
                     // new cost
-                        if (Config::verbosity > 0) std::cout << "KL_CLUST: updating k-median cost" << std::endl;
+                    if (Config::verbosity > 0) std::cout << "KL_CLUST: updating k-median cost" << std::endl;
                     curr_cost = _center_cost_sum(in, simplifications, curr_centers, distances);
                     // check if improvement is done
                     if (curr_cost < cost - gamma * approxcost) {
@@ -160,7 +160,9 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
                         cost = curr_cost;
                         centers = curr_centers;
                         found = true;
-                    } else if (Config::verbosity > 0) std::cout << "KL_CLUST: cost did not improve" << std::endl;
+                    } else {
+                        if (Config::verbosity > 0) std::cout << "KL_CLUST: cost did not improve" << std::endl;
+                    }
                 }
             }
         }
