@@ -23,11 +23,11 @@ class Median_Coreset {
     parameter_t epsilon;
     distance_t constant;
     Clustering::Clustering_Result c_approx;
-    std::vector<distance_t> cluster_costs;
-    std::vector<curve_number_t> cluster_sizes;
-    std::vector<curve_number_t> coreset;
-    std::vector<distance_t> lambda;
-    std::vector<parameter_t> probabilities;
+    Distances cluster_costs;
+    Curve_Numbers cluster_sizes;
+    Curve_Numbers coreset;
+    Distances lambda;
+    Parameters probabilities;
 
 public:
     inline Median_Coreset(const curve_number_t k, curve_size_t ell, const Curves &in, const parameter_t epsilon, const distance_t constant = 1) : in{in}, k{k}, ell{ell}, epsilon{epsilon}, constant{constant}, cluster_costs(k, 0), cluster_sizes(k, 0), lambda(in.size()), Lambda{2*k + 12*std::sqrt(k) + 18}, probabilities(in.size()), c_approx{Clustering::kl_median(k, ell, in)} {

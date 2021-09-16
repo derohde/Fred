@@ -66,11 +66,11 @@ Distance _distance(const Curve &curve1, const Curve &curve2, distance_t ub, dist
         if (Config::verbosity > 2) std::cout << "CFD: binary search using FSD" << std::endl;
         
         const auto infty = std::numeric_limits<parameter_t>::infinity();
-        std::vector<std::vector<parameter_t>> reachable1(curve1.complexity() - 1, std::vector<parameter_t>(curve2.complexity(), infty));
-        std::vector<std::vector<parameter_t>> reachable2(curve1.complexity(), std::vector<parameter_t>(curve2.complexity() - 1, infty));
+        std::vector<Parameters> reachable1(curve1.complexity() - 1, Parameters(curve2.complexity(), infty));
+        std::vector<Parameters> reachable2(curve1.complexity(), Parameters(curve2.complexity() - 1, infty));
         
-        std::vector<std::vector<Interval>> free_intervals1(curve2.complexity(), std::vector<Interval>(curve1.complexity(), Interval()));
-        std::vector<std::vector<Interval>> free_intervals2(curve1.complexity(), std::vector<Interval>(curve2.complexity(), Interval()));
+        std::vector<Intervals> free_intervals1(curve2.complexity(), Intervals(curve1.complexity(), Interval()));
+        std::vector<Intervals> free_intervals2(curve1.complexity(), Intervals(curve2.complexity(), Interval()));
 
         if (std::isnan(lb) or std::isnan(ub)) {
             result.value = std::numeric_limits<distance_t>::signaling_NaN();
@@ -101,8 +101,8 @@ Distance _distance(const Curve &curve1, const Curve &curve2, distance_t ub, dist
 }
 
 bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve const& curve2, 
-        std::vector<std::vector<parameter_t>> &reachable1, std::vector<std::vector<parameter_t>> &reachable2,
-        std::vector<std::vector<Interval>> &free_intervals1, std::vector<std::vector<Interval>> &free_intervals2) {
+        std::vector<Parameters> &reachable1, std::vector<Parameters> &reachable2,
+        std::vector<Intervals> &free_intervals1, std::vector<Intervals> &free_intervals2) {
     
     if (Config::verbosity > 2) std::cout << "CFD: constructing FSD" << std::endl;
     const distance_t dist_sqr = distance * distance;

@@ -21,29 +21,40 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include "simplification.hpp"
 
 namespace Clustering {
-    
-struct Distance_Matrix : public std::vector<std::vector<distance_t>> {
-    Distance_Matrix() {}
-    Distance_Matrix(const curve_number_t n, const curve_number_t m) : std::vector<std::vector<distance_t>>(n, std::vector<distance_t>(m, -1.0)) {}
-    
-    void print() const;
-};
+
+struct Distance_Matrix;
 
 extern Distance_Matrix distances;
 extern Curves simplifications;
 
-class Cluster_Assignment : public std::vector<std::vector<curve_number_t>> {
+struct Distance_Matrix : public std::vector<Distances> {
+    Distance_Matrix() = default;
+    Distance_Matrix(const curve_number_t n, const curve_number_t m) : std::vector<Distances>(n, Distances(m, -1.0)) {}
+    void print() const;
+};
+
+class Cluster_Assignment : public std::vector<Curve_Numbers> {
 public:
-    inline Cluster_Assignment(const curve_number_t k = 0) : std::vector<std::vector<curve_number_t>>(k, std::vector<curve_number_t>()) {}
+    explicit Cluster_Assignment(const curve_number_t k = 0) : std::vector<Curve_Numbers>(k, Curve_Numbers()) {}
+    curve_number_t count(const curve_number_t) const;
+    curve_number_t get(const curve_number_t, const curve_number_t) const;
+};
+
+struct Clustering_Result {
+    Curves centers;
+    distance_t value;
+    double running_time;
+    Cluster_Assignment assignment;
     
-    inline curve_number_t count(const curve_number_t i) const {
-        return operator[](i).size();
-    }
-    
-    inline curve_number_t get(const curve_number_t i, const curve_number_t j) const {
-        return operator[](i)[j];
-    }
-    
+    Curve& get(const curve_number_t);
+    curve_number_t size() const;
+    Curves::const_iterator cbegin() const;
+    Curves::const_iterator cend() const;
+    void compute_assignment(const Curves&, const bool = false);
+    void set_center_indices(const Curve_Numbers&);
+
+private:
+    Curve_Numbers center_indices;
 };
 
 inline distance_t _cheap_dist(const curve_number_t i, const curve_number_t j, const Curves &in, const Curves &simplified_in, Distance_Matrix &distances) {
@@ -54,7 +65,7 @@ inline distance_t _cheap_dist(const curve_number_t i, const curve_number_t j, co
     return distances[i][j];
 }
 
-inline curve_number_t _nearest_center(const curve_number_t i, const Curves &in, const Curves &simplified_in, const std::vector<curve_number_t> &centers, Distance_Matrix &distances) {
+inline curve_number_t _nearest_center(const curve_number_t i, const Curves &in, const Curves &simplified_in, const Curve_Numbers &centers, Distance_Matrix &distances) {
     const auto infty = std::numeric_limits<distance_t>::infinity();
     // cost for curve is infinity
     auto min_cost = infty;
@@ -70,11 +81,11 @@ inline curve_number_t _nearest_center(const curve_number_t i, const Curves &in, 
     return nearest;
 }
 
-inline distance_t _curve_cost(const curve_number_t i, const Curves &in, const Curves &simplified_in, const std::vector<curve_number_t> &centers, Distance_Matrix &distances) {
+inline distance_t _curve_cost(const curve_number_t i, const Curves &in, const Curves &simplified_in, const Curve_Numbers &centers, Distance_Matrix &distances) {
     return _cheap_dist(i, centers[_nearest_center(i, in, simplified_in, centers, distances)], in, simplified_in, distances);
 }
 
-inline distance_t _center_cost_sum(const Curves &in, const Curves &simplified_in, const std::vector<curve_number_t> &centers, Distance_Matrix &distances) {
+inline distance_t _center_cost_sum(const Curves &in, const Curves &simplified_in, const Curve_Numbers &centers, Distance_Matrix &distances) {
     distance_t cost = 0;
     
     // for all curves
@@ -84,47 +95,6 @@ inline distance_t _center_cost_sum(const Curves &in, const Curves &simplified_in
     }
     return cost;
 }
-
-struct Clustering_Result {
-    Curves centers;
-    distance_t value;
-    double running_time;
-    Cluster_Assignment assignment;
-    
-    inline Curve& get(const curve_number_t i) {
-        return centers[i];
-    }
-    inline curve_number_t size() const {
-        return centers.size();
-    }
-    
-    inline Curves::const_iterator cbegin() const {
-        return centers.cbegin();
-    }
-    
-    inline Curves::const_iterator cend() const {
-        return centers.cend();
-    }
-    
-    inline void compute_assignment(const Curves &in, const bool consecutive_call = false) {
-        assignment = Cluster_Assignment(centers.size());
-        if (consecutive_call and in.size() == distances.size()) {
-            for (curve_number_t i = 0; i < in.size(); ++i) assignment[_nearest_center(i, in, simplifications, center_indices, distances)].push_back(i);
-        } else {
-            auto ndistances = Distance_Matrix(in.size(), centers.size());
-            auto ncenter_indices = std::vector<curve_number_t>(centers.size());
-            std::iota(ncenter_indices.begin(), ncenter_indices.end(), 0);
-            for (curve_number_t i = 0; i < in.size(); ++i) assignment[_nearest_center(i, in, centers, ncenter_indices, ndistances)].push_back(i);
-        }
-    }
-    
-    inline void set_center_indices(const std::vector<curve_number_t> &pcenter_indices) {
-        center_indices = pcenter_indices;
-    }
-
-private:
-    std::vector<curve_number_t> center_indices;
-};
 
 Clustering_Result kl_cluster(const curve_number_t, const curve_size_t, const Curves &, const bool, const bool, const bool, const bool);
 

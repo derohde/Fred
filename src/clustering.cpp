@@ -8,15 +8,15 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "clustering.hpp"
-
 #include<ctime>
+
+#include "clustering.hpp"
 
 namespace Clustering {
 
 Distance_Matrix distances;
 Curves simplifications;
-    
+
 void Distance_Matrix::print() const {
     for (const auto &row : *this) {
         for (const auto elem : row) {
@@ -24,6 +24,46 @@ void Distance_Matrix::print() const {
         }
         std::cout << std::endl;
     }
+}
+
+Curve& Clustering_Result::get(const curve_number_t i) {
+    return centers[i];
+}
+
+curve_number_t Clustering_Result::size() const {
+    return centers.size();
+}
+
+Curves::const_iterator Clustering_Result::cbegin() const {
+    return centers.cbegin();
+}
+
+Curves::const_iterator Clustering_Result::cend() const {
+    return centers.cend();
+}
+
+void Clustering_Result::compute_assignment(const Curves &in, const bool consecutive_call) {
+    assignment = Cluster_Assignment(centers.size());
+    if (consecutive_call and in.size() == distances.size()) {
+        for (curve_number_t i = 0; i < in.size(); ++i) assignment[_nearest_center(i, in, simplifications, center_indices, distances)].push_back(i);
+    } else {
+        auto ndistances = Distance_Matrix(in.size(), centers.size());
+        auto ncenter_indices = Curve_Numbers(centers.size());
+        std::iota(ncenter_indices.begin(), ncenter_indices.end(), 0);
+        for (curve_number_t i = 0; i < in.size(); ++i) assignment[_nearest_center(i, in, centers, ncenter_indices, ndistances)].push_back(i);
+    }
+}
+
+void Clustering_Result::set_center_indices(const Curve_Numbers &pcenter_indices) {
+    center_indices = pcenter_indices;
+}
+
+curve_number_t Cluster_Assignment::count(const curve_number_t i) const {
+    return operator[](i).size();
+}
+
+curve_number_t Cluster_Assignment::get(const curve_number_t i, const curve_number_t j) const {
+    return operator[](i)[j];
 }
 
 Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, 
@@ -49,9 +89,9 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
         }
     }
 
-    std::vector<curve_number_t> centers;
+    Curve_Numbers centers;
     
-    auto simplify = [&](const curve_number_t i) {
+    const auto simplify = [&](const curve_number_t i) {
         if (fast_simplification) {
             if (Config::verbosity > 0) std::cout << "KL_CLUST: computing approximate vertex restricted minimum error simplification" << std::endl;
             auto simplified_curve = Simplification::approximate_minimum_error_simplification(const_cast<Curve&>(in[i]), ell);
@@ -172,7 +212,7 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
     Curves simpl_centers;
     for (const auto center: centers) simpl_centers.push_back(simplifications[center]);
     
-    auto end = std::clock();
+    const auto end = std::clock();
     result.centers = simpl_centers;
     result.set_center_indices(centers);
     result.value = curr_maxdist;

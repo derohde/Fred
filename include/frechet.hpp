@@ -35,8 +35,8 @@ namespace Continuous {
     Distance _distance(const Curve&, const Curve&, distance_t, distance_t);
             
     bool _less_than_or_equal(const distance_t, const Curve&, const Curve&, 
-            std::vector<std::vector<parameter_t>>&, std::vector<std::vector<parameter_t>>&, 
-            std::vector<std::vector<Interval>>&, std::vector<std::vector<Interval>>&);
+            std::vector<Parameters>&, std::vector<Parameters>&, 
+            std::vector<Intervals>&, std::vector<Intervals>&);
             
     distance_t _greedy_upper_bound(const Curve&, const Curve&);
     distance_t _projective_lower_bound(const Curve&, const Curve&);
@@ -52,7 +52,7 @@ namespace Discrete {
     
     Distance distance(const Curve&, const Curve&);
     
-    distance_t _dp(std::vector<std::vector<distance_t>> &a, const curve_size_t i, const curve_size_t j, 
+    distance_t _dp(std::vector<Distances> &a, const curve_size_t i, const curve_size_t j, 
             const Curve &curve1, const Curve &curve2);
 }
 }

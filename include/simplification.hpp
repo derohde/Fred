@@ -27,11 +27,11 @@ namespace Simplification {
 class Subcurve_Shortcut_Graph {
 
     Curve& curve;
-    std::vector<std::vector<distance_t>> edges;
+    std::vector<Distances> edges;
     
 public:
     
-    Subcurve_Shortcut_Graph(Curve &curve) : curve{curve}, edges{std::vector<std::vector<distance_t>>(curve.complexity(), std::vector<distance_t>(curve.complexity(), std::numeric_limits<distance_t>::infinity()))} {
+    Subcurve_Shortcut_Graph(Curve &curve) : curve{curve}, edges{std::vector<Distances>(curve.complexity(), Distances(curve.complexity(), std::numeric_limits<distance_t>::infinity()))} {
         if (Config::verbosity > 1) std::cout << "SIMPL: computing shortcut graph" << std::endl;
         const curve_size_t complexity = curve.complexity();
         Curve segment(2, curve.front().dimensions());
@@ -70,10 +70,10 @@ public:
             return result;
         }
         
-        std::vector<std::vector<distance_t>> distances(curve.complexity(), std::vector<distance_t>(l, std::numeric_limits<distance_t>::infinity()));
+        std::vector<Distances> distances(curve.complexity(), Distances(l, std::numeric_limits<distance_t>::infinity()));
         std::vector<std::vector<curve_size_t>> predecessors(curve.complexity(), std::vector<curve_size_t>(l));
         
-        std::vector<distance_t> others;
+        Distances others;
         curve_size_t best = 0;
         for (curve_size_t i = 0; i < l; ++i) {
             
