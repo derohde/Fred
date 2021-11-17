@@ -53,6 +53,75 @@ Distance distance(const Curve &curve1, const Curve &curve2) {
     return result;
 }
 
+Distance distance_randomized(const Curve &curve1, const Curve &curve2) {
+    Distance result;
+    const auto start = std::clock();
+    
+    std::priority_queue<std::pair<distance_t, std::pair<curve_size_t, curve_size_t>>> queue;
+    std::map<std::pair<curve_size_t, curve_size_t>, bool> seen;
+    distance_t cost = std::numeric_limits<distance_t>::infinity();
+    
+    Point min_coords(curve1.dimensions()), max_coords(curve1.dimensions());
+    for (curve_size_t i = 0; i < curve1.complexity(); ++i) {
+        for (dimensions_t j = 0; j < curve1.dimensions(); ++j) {
+            min_coords[j] = std::min(min_coords[j], curve1[i][j]);
+            max_coords[j] = std::max(max_coords[j], curve1[i][j]);
+        }
+    }
+    for (curve_size_t i = 0; i < curve2.complexity(); ++i) {
+        for (dimensions_t j = 0; j < curve1.dimensions(); ++j) {
+            min_coords[j] = std::min(min_coords[j], curve2[i][j]);
+            max_coords[j] = std::max(max_coords[j], curve2[i][j]);
+        }
+    }
+    
+    const distance_t w = min_coords.dist(max_coords);
+    distance_t d;
+    
+    auto ugen = Random::Uniform_Random_Generator<>();
+    
+    queue.emplace(-curve1[0].dist(curve2[0]), std::make_pair(0, 0));
+    
+    while (not queue.empty()) {
+        auto current = queue.top();
+        queue.pop();
+        
+        auto i = current.second.first;
+        auto j = current.second.second;
+        auto curr_cost = -current.first;
+        
+        if (i == curve1.complexity() - 1 and j == curve2.complexity() - 1) {
+            cost = std::min(cost, curr_cost);
+        }
+        
+        if (not seen[current.second]) {
+            seen[current.second] = true;
+            if (i < curve1.complexity() - 1) {
+                if (j < curve2.complexity() - 1) {
+                    d = curve1[i+1].dist(curve2[j+1]);
+                    if (ugen.get() > d / w)
+                        queue.emplace(-(curr_cost + d), std::make_pair(i+1, j+1));
+                    
+                    d = curve1[i].dist(curve2[j+1]);
+                    if (ugen.get() > d / w)
+                        queue.emplace(-(curr_cost + d), std::make_pair(i, j+1));
+                }
+                d = curve1[i+1].dist(curve2[j]);
+                if (ugen.get() > d / w)
+                    queue.emplace(-(curr_cost + d), std::make_pair(i+1, j));
+            } else if (j < curve2.complexity() - 1) {
+                d = curve1[i].dist(curve2[j+1]);
+                if (ugen.get() > d / w)
+                    queue.emplace(-(curr_cost + d), std::make_pair(i, j+1));
+            }
+        }
+    }
+    const auto end = std::clock();
+    result.time = (end - start) / CLOCKS_PER_SEC;
+    result.value = cost;
+    return result;
+}
+
 } // end namespace Discrete
 
 } // end namespace Dynamic Time Warping

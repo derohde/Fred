@@ -10,10 +10,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #pragma once
 
+#include <map>
+
 #include "types.hpp"
 #include "point.hpp"
 #include "interval.hpp"
 #include "curve.hpp"
+#include "random.hpp"
 
 namespace Dynamic_Time_Warping {
     
@@ -27,6 +30,7 @@ namespace Discrete {
     };
     
     Distance distance(const Curve&, const Curve&);
+    Distance distance_randomized(const Curve&, const Curve&);
 }
 
 }

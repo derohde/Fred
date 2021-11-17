@@ -162,6 +162,7 @@ PYBIND11_MODULE(backend, m) {
     m.def("continuous_frechet", &fc::distance);
     m.def("discrete_frechet", &fd::distance);
     m.def("discrete_dynamic_time_warping", &ddtw::distance);
+    m.def("discrete_dynamic_time_warping_randomized", &ddtw::distance_randomized);
     
     m.def("minimum_error_simplification", &minimum_error_simplification);
     m.def("approximate_minimum_link_simplification", &approximate_minimum_link_simplification);
