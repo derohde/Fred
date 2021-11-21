@@ -76,19 +76,21 @@ Distance distance_randomized(const Curve &curve1, const Curve &curve2) {
     }
     
     const distance_t w = min_coords.dist(max_coords);
-    distance_t d;
+    distance_t d, curr_cost;
+    curve_size_t i, j;
+    std::pair<distance_t, std::pair<curve_size_t, curve_size_t>> current;
     
     auto ugen = Random::Uniform_Random_Generator<>();
     
     queue.emplace(-curve1[0].dist(curve2[0]), std::make_pair(0, 0));
     
     while (not queue.empty()) {
-        auto current = queue.top();
+        current = queue.top();
         queue.pop();
         
-        auto i = current.second.first;
-        auto j = current.second.second;
-        auto curr_cost = -current.first;
+        i = current.second.first;
+        j = current.second.second;
+        curr_cost = -current.first;
         
         if (i == curve1.complexity() - 1 and j == curve2.complexity() - 1) {
             cost = std::min(cost, curr_cost);

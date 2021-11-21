@@ -136,7 +136,7 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
     
     if (Config::verbosity > 2) std::cout << "CFD: computing free space" << std::endl;
     
-    #pragma omp target teams distribute parallel for collapse(2) if (n1 * n2 > 1000)
+    #pragma omp parallel for collapse(2) if (n1 * n2 > 1000)
     for (curve_size_t i = 0; i < n1; ++i) {
         for (curve_size_t j = 0; j < n2; ++j) {
             if ((i < n1 - 1) and (j > 0)) {
