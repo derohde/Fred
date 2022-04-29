@@ -60,7 +60,7 @@ public:
         if (Config::verbosity > 1) std::cout << "SIMPL: computing exact minimum error simplification using shortcut graph" << std::endl;
         if (ll >= curve.complexity()) return curve;
         
-        curve_size_t l = ll - 1;
+        const curve_size_t l = ll - 1;
         
         Curve result(curve.dimensions());
         
@@ -103,16 +103,18 @@ public:
         
         if (Config::verbosity > 1) std::cout << "SIMPL: backwards constructing simplification" << std::endl;
         
-        curve_size_t ell = l;
+        curve_size_t ell = l - 1;
         
         result.push_back(curve.back());
-        curve_size_t predecessor = predecessors[curve.complexity() - 1][--ell];
+        curve_size_t predecessor = predecessors[curve.complexity() - 1][ell];
         
-        for (curve_size_t i = 0; i  < l; ++i) {
+        for (curve_size_t i = 0; i < l - 1; ++i) {
             result.push_back(curve[predecessor]);
             predecessor = predecessors[predecessor][--ell];
         }
-                
+        
+        result.push_back(curve.front());
+
         std::reverse(result.begin(), result.end());
         return result;
     }
