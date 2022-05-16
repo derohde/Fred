@@ -51,7 +51,7 @@ PYBIND11_MODULE(backend, m) {
     
     py::class_<Config::Config>(m, "Config")
         .def(py::init<>())
-        .def_property("continuous_frechet_error", [&](Config::Config&) { return fc::error; }, [&](Config::Config&, const bool error) { fc::error = error; })
+        .def_property("continuous_frechet_error", [&](Config::Config&) { return fc::error; }, [&](Config::Config&, const distance_t error) { fc::error = error; })
         .def_property("verbosity", [&](Config::Config&) { return &Config::verbosity; }, [&](Config::Config&, const unsigned int verbosity) { Config::verbosity = verbosity; })
         .def_property("number_threads", [&](Config::Config&){ return &Config::number_threads; }, [&](Config::Config&, const int number_threads) {
             if (number_threads <= 0) {

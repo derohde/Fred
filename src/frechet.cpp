@@ -63,7 +63,7 @@ Distance _distance(const Curve &curve1, const Curve &curve2, distance_t ub, dist
     std::size_t number_searches = 0;
     
     if (ub - lb > p_error) {
-        if (Config::verbosity > 2) std::cout << "CFD: binary search using FSD" << std::endl;
+        if (Config::verbosity > 2) std::cout << "CFD: binary search using FSD, error = " << p_error << std::endl;
         
         const auto infty = std::numeric_limits<parameter_t>::infinity();
         std::vector<Parameters> reachable1(curve1.complexity() - 1, Parameters(curve2.complexity(), infty));
@@ -77,12 +77,14 @@ Distance _distance(const Curve &curve1, const Curve &curve2, distance_t ub, dist
             return result;
         }
 
+        bool isLessThan;
+        
         //Binary search over the feasible distances
         while (ub - lb > p_error) {
             ++number_searches;
             split = (ub + lb)/distance_t(2);
             if (split == lb or split == ub) break;
-            auto isLessThan = _less_than_or_equal(split, curve1, curve2, reachable1, reachable2, free_intervals1, free_intervals2);
+            isLessThan = _less_than_or_equal(split, curve1, curve2, reachable1, reachable2, free_intervals1, free_intervals2);
             if (isLessThan) {
                 ub = split;
             }
