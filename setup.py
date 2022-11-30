@@ -51,8 +51,8 @@ class CMakeBuild(build_ext):
             cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(
                 cfg.upper(),
                 extdir)]
-            if sys.maxsize > 2**32:
-                cmake_args += ['-A', 'x64']
+            #if sys.maxsize > 2**32:
+            #    cmake_args += ['-A', 'x64']
             build_args += ['--', '/m']
         else:
             cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
@@ -74,7 +74,7 @@ class CMakeBuild(build_ext):
 
 setup(
     name='Fred-Frechet',
-    version='1.9.20',
+    version='1.9.22',
     author='Dennis Rohde',
     author_email='dennis.rohde@tu-dortmund.de',
     description='A fast, scalable and light-weight C++ Fréchet distance library, exposed to python and focused on (k,l)-clustering of polygonal curves.',
