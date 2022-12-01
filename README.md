@@ -117,6 +117,14 @@ You have to have installed:
  
 Thats it!
 
+#### Installing on Windows
+
+It's best to use the [Ubuntu subsystem](https://ubuntu.com/wsl), which is easy to install through powershell. Once you have this installed, use apt to install gcc, cmake and python. Afterwards you can follow the following procedure.
+
+#### Installing on Mac
+
+Apple's clang does not really support openmp, which is now kind of an integral part of Fred. You can try to install libomp via homebrew, but the best way would be to get a virtual ubuntu running.
+
 ### Installation Procedure
 
  - Variant 1: simply run `pip install Fred-Frechet`
