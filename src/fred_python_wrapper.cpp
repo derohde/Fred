@@ -61,8 +61,10 @@ PYBIND11_MODULE(backend, m) {
                 Config::number_threads = number_threads;
                 Config::mp_dynamic = false;
             }
+#ifdef WITH_OMP
             omp_set_num_threads(Config::number_threads);
             omp_set_dynamic(Config::mp_dynamic);
+#endif
         })
     ;
     
