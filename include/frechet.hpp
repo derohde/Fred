@@ -10,6 +10,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #pragma once
 
+#include <pybind11/pybind11.h>
+
 #include "config.hpp"
 #include "types.hpp"
 #include "point.hpp"
@@ -31,6 +33,8 @@ namespace Continuous {
     };
     
     Distance distance(const Curve&, const Curve&);
+
+    Points vertices_matching_points(const Curve&, const Curve&, const distance_t);
     
     Distance _distance(const Curve&, const Curve&, distance_t, distance_t);
             

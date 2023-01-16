@@ -27,24 +27,74 @@ std::string Distance::repr() const {
     return ss.str();
 }
 
+Points vertices_matching_points(const Curve &curve1, const Curve &curve2, const distance_t dist) {
+    if (Config::verbosity > 1) py::print("CFD: computing matching points for distance ", dist, " from curve1 of complexity ", curve1.complexity(), " to curve2 of complexity ", curve2.complexity());
+    if (Config::verbosity > 2) py::print("CFD: distance between curve1 and curve2 is ", distance(curve1, curve2).value);
+    if ((curve1.complexity() < 2) or (curve2.complexity() < 2)) {
+        py::print("WARNING: curves must be of at least two points");
+        Points result(curve1.dimensions());
+        return result;
+    }
+    
+    const auto dist_sqr = dist * dist;
+    const curve_size_t n1 = curve1.complexity();
+    const curve_size_t n2 = curve2.complexity();
+
+    std::vector<Intervals> free_intervals(n1, Intervals(n2, Interval()));
+        
+    #pragma omp parallel for collapse(2) if (n1 * n2 > 1000)
+    for (curve_size_t i = 1; i < n1; ++i) {
+        for (curve_size_t j = 0; j < n2 - 1; ++j) {
+            free_intervals[i][j] = curve1[i].ball_intersection_interval(dist_sqr, curve2[j], curve2[j+1]);
+        }
+    }
+    
+    if (Config::verbosity > 1) py::print("CFD: free space computed, computing matching");
+    
+    Points result(n1, curve1.dimensions());
+    parameter_t p;
+    curve_size_t jj(0);
+        
+    for (curve_size_t i = 1; i < n1 - 1; ++i) {
+        if (Config::verbosity > 1) py::print("CFD: computing matching points for vertex ", i);
+        for (curve_size_t j = jj; j < n2 - 1; ++j, p = 0) {
+            if (not free_intervals[i][j].empty()) {
+                if (j == jj) {
+                    p = std::max(p, free_intervals[i][j].begin());
+                    break;
+                }
+                p = free_intervals[i][j].begin();
+                jj = j;
+                break;
+            }
+        }
+        result[i] = curve2[jj].line_segment_point(curve2[jj+1], p);
+        if (Config::verbosity > 1) py::print("CFD: matching vertex ", i, "to ", p, "on segment ", jj, " to ", jj+1, " with distance ", result[i].dist(curve1[i]));
+    }
+    result[0] = curve2[0];
+    result[n1-1] = curve2[n2-1];
+    
+    return result;
+}
+
 Distance distance(const Curve &curve1, const Curve &curve2) {
     if ((curve1.complexity() < 2) or (curve2.complexity() < 2)) {
-        std::cerr << "WARNING: comparison possible only for curves of at least two points" << std::endl;
+        py::print("WARNING: comparison possible only for curves of at least two points");
         Distance result;
         result.value = std::numeric_limits<distance_t>::signaling_NaN();
         return result;
     }
     if (curve1.dimensions() != curve2.dimensions()) {
-        std::cerr << "WARNING: comparison possible only for curves of equal number of dimensions" << std::endl;
+        py::print("WARNING: comparison possible only for curves of equal number of dimensions");
         Distance result;
         result.value = std::numeric_limits<distance_t>::signaling_NaN();
         return result;
     }
     
     const auto start = std::clock();
-    if (Config::verbosity > 2) std::cout << "CFD: computing lower bound" << std::endl;
+    if (Config::verbosity > 2) py::print("CFD: computing lower bound");
     const distance_t lb = _projective_lower_bound(curve1, curve2);
-    if (Config::verbosity > 2) std::cout << "CFD: computing upper bound" << std::endl;
+    if (Config::verbosity > 2) py::print("CFD: computing upper bound");
     const distance_t ub = _greedy_upper_bound(curve1, curve2);
     const auto end = std::clock();
     
@@ -63,7 +113,7 @@ Distance _distance(const Curve &curve1, const Curve &curve2, distance_t ub, dist
     std::size_t number_searches = 0;
     
     if (ub - lb > p_error) {
-        if (Config::verbosity > 2) std::cout << "CFD: binary search using FSD, error = " << p_error << std::endl;
+        if (Config::verbosity > 2) py::print("CFD: binary search using FSD, error = ", p_error);
         
         const auto infty = std::numeric_limits<parameter_t>::infinity();
         std::vector<Parameters> reachable1(curve1.complexity() - 1, Parameters(curve2.complexity(), infty));
@@ -91,12 +141,12 @@ Distance _distance(const Curve &curve1, const Curve &curve2, distance_t ub, dist
             else {
                 lb = split;
             }
-            if (Config::verbosity > 2) std::cout << "CFD: narrowed distance to to [" << lb << ", " << ub << "]" << std::endl;
+            if (Config::verbosity > 2) py::print("CFD: narrowed distance to to [", lb, ", ", ub, "]");
         }
     }
     
     const auto end = std::clock();
-    result.value = lb;
+    result.value = ub;
     result.time_searches = (end - start) / CLOCKS_PER_SEC;
     result.number_searches = number_searches;
     return result;
@@ -106,13 +156,13 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
         std::vector<Parameters> &reachable1, std::vector<Parameters> &reachable2,
         std::vector<Intervals> &free_intervals1, std::vector<Intervals> &free_intervals2) {
     
-    if (Config::verbosity > 2) std::cout << "CFD: constructing FSD" << std::endl;
+    if (Config::verbosity > 2) py::print("CFD: constructing FSD");
     const distance_t dist_sqr = distance * distance;
     const auto infty = std::numeric_limits<parameter_t>::infinity();
     const curve_size_t n1 = curve1.complexity();
     const curve_size_t n2 = curve2.complexity();
 
-    if (Config::verbosity > 2) std::cout << "CFD: resetting old FSD" << std::endl;
+    if (Config::verbosity > 2) py::print("CFD: resetting old FSD");
     
     #pragma omp parallel for collapse(2) if (n1 * n2 > 1000)
     for (curve_size_t i = 0; i < n1; ++i) {
@@ -124,7 +174,7 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
         }
     }
     
-    if (Config::verbosity > 2) std::cout << "CFD: FSD borders" << std::endl;
+    if (Config::verbosity > 2) py::print("CFD: FSD borders");
     
     for (curve_size_t i = 0; i < n1 - 1; ++i) {
         reachable1[i][0] = 0;
@@ -136,7 +186,7 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
         if (curve1[0].dist_sqr(curve2[j+1]) > dist_sqr) break;
     }
     
-    if (Config::verbosity > 2) std::cout << "CFD: computing free space" << std::endl;
+    if (Config::verbosity > 2) py::print("CFD: computing free space");
     
     #pragma omp parallel for collapse(2) if (n1 * n2 > 1000)
     for (curve_size_t i = 0; i < n1; ++i) {
@@ -150,7 +200,7 @@ bool _less_than_or_equal(const distance_t distance, Curve const& curve1, Curve c
         }
     }
     
-    if (Config::verbosity > 2) std::cout << "CFD: computing reachable space" << std::endl;
+    if (Config::verbosity > 2) py::print("CFD: computing reachable space");
     
     for (curve_size_t i = 0; i < n1; ++i) {
         for (curve_size_t j = 0; j < n2; ++j) {

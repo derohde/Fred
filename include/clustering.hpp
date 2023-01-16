@@ -12,6 +12,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <unordered_map>
 
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+#include <pybind11/iostream.h>
+
 #include "config.hpp"
 #include "types.hpp"
 #include "random.hpp"
@@ -19,6 +23,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include "frechet.hpp"
 #include "dynamic_time_warping.hpp"
 #include "simplification.hpp"
+#include "bounding.hpp"
+
+namespace py = pybind11;
 
 namespace Clustering {
 
@@ -47,12 +54,13 @@ struct Clustering_Result {
     Cluster_Assignment assignment;
     
     Curve& get(const curve_number_t);
+    void set(const curve_number_t, const Curve&);
     curve_number_t size() const;
     Curves::const_iterator cbegin() const;
     Curves::const_iterator cend() const;
     void compute_assignment(const Curves&, const bool = false);
     void set_center_indices(const Curve_Numbers&);
-
+    py::list compute_center_enclosing_balls(const Curves&, const bool);
 private:
     Curve_Numbers center_indices;
 };
@@ -100,6 +108,6 @@ Clustering_Result kl_cluster(const curve_number_t, const curve_size_t, const Cur
 
 Clustering_Result kl_center(const curve_number_t, const curve_size_t, const Curves &, const bool = false, const bool = true, const bool = false);
 
-Clustering_Result kl_median(const curve_number_t, const curve_size_t, const Curves &, const bool = false, const bool = false);
+Clustering_Result kl_median(const curve_number_t, const curve_size_t, const Curves &, const bool = false, const bool = false); 
 
 }

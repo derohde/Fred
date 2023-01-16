@@ -1,4 +1,5 @@
 from .backend import *
+from .stabbing import stabbing_path
 
 config = Config()
 

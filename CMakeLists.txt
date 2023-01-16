@@ -42,5 +42,6 @@ pybind11_add_module(backend
             src/dynamic_time_warping.cpp
             src/clustering.cpp
             src/config.cpp
+            src/bounding.cpp
             src/fred_python_wrapper.cpp
 )

@@ -48,7 +48,7 @@ Curve approximate_minimum_error_simplification(const Curve &curve, const curve_s
 }
 
 PYBIND11_MODULE(backend, m) {
-    
+        
     py::class_<Config::Config>(m, "Config")
         .def(py::init<>())
         .def_property("continuous_frechet_error", [&](Config::Config&) { return fc::error; }, [&](Config::Config&, const distance_t error) { fc::error = error; })
@@ -118,6 +118,7 @@ PYBIND11_MODULE(backend, m) {
         .def("__iter__", [](Curves &v) { return py::make_iterator(v.begin(), v.end()); }, py::keep_alive<0, 1>())
         .def("__repr__", &Curves::repr)
         .def_property_readonly("values", &Curves::as_ndarray)
+        .def_property_readonly("dimensions", &Curves::dimensions)
     ;
     
     py::class_<fc::Distance>(m, "Continuous_Frechet_Distance")
@@ -145,9 +146,11 @@ PYBIND11_MODULE(backend, m) {
         .def_readwrite("time", &Clustering::Clustering_Result::running_time)
         .def_readwrite("assignment", &Clustering::Clustering_Result::assignment)
         .def("__getitem__", &Clustering::Clustering_Result::get, py::return_value_policy::reference)
+        .def("__setitem__", &Clustering::Clustering_Result::set)
         .def("__len__", &Clustering::Clustering_Result::size)
         .def("__iter__", [](Clustering::Clustering_Result &v) { return py::make_iterator(v.cbegin(), v.cend()); }, py::keep_alive<0, 1>())
         .def("compute_assignment", &Clustering::Clustering_Result::compute_assignment, py::arg("curves"), py::arg("consecutive_call") = false)
+        .def("compute_center_enclosing_balls", &Clustering::Clustering_Result::compute_center_enclosing_balls)
     ;
     
     py::class_<Clustering::Cluster_Assignment>(m, "Cluster_Assignment")

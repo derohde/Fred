@@ -148,6 +148,10 @@ public:
         return std::sqrt(length_sqr());
     }
     
+    inline Point line_segment_point(const Point &p2, const parameter_t p) const {
+        return *this * (1-p) + p2 * p;
+    }
+    
     inline distance_t line_segment_dist_sqr(const Point &p1, const Point &p2) const {
         const Vector u = p2 - p1;
         parameter_t projection_param = (*this - p1) * u / (u * u);
