@@ -67,7 +67,7 @@ def outer_tangents(r1, c1, r2, c2):
     if(c1[0] == c2[0] and c1[1] == c2[1]):
         angle2 = math.pi/2
     else:
-        angle2 = math.acos((r1 - r2) / np.linalg.norm(c1 - c2))
+        angle2 = math.acos(np.clip((r1 - r2) / np.linalg.norm(c1 - c2), -1, 1))
 
     t1StartX = c1[0] + math.cos(angle1 + angle2) * r1
     t1StartY = c1[1] + math.sin(angle1 + angle2) * r1

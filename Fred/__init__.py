@@ -3,6 +3,14 @@ from .stabbing import stabbing_path
 
 config = Config()
 
+def _optimize_centers(self, curves, consecutive_call=False):
+    all_balls = self.compute_center_enclosing_balls(curves, False)
+    for i, center_balls in enumerate(all_balls):
+        path, _ = stabbing_path(center_balls)
+        self[i] = Curve(path, "center {}".format(i))
+
+Clustering_Result.optimize_centers = _optimize_centers
+
 def plot_curve(*curves, vertex_markings=True, savename=None, saveextension=None, return_fig=False, legend=True):
     import matplotlib.pyplot as plt
     from mpl_toolkits.mplot3d import Axes3D
