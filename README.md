@@ -1,8 +1,8 @@
 # Fred ![alt text](https://raw.githubusercontent.com/derohde/Fred/master/logo/logo.png "Fred logo")
 A fast, scalable and light-weight C++ Fréchet distance library, exposed to python and focused on (k,l)-clustering of polygonal curves.
 
-### NOW USING PYBIND11 INSTEAD OF BOOST!
 ### NOW AVAILABLE VIA PIP
+### NOW WITH OPTIMIZED CLUSTER CENTERS
 
 ## Ingredients
 `import Fred as fred`
@@ -19,7 +19,7 @@ By default, Fred will automatically determine the number of threads to use. If y
 
 ### Curves
 - signature: `fred.Curves()`
-- methods: `fred.Curves.add(curve)`: add curve, `fred.Curves[i]`: get ith curve, `len(fred.Curves)`: number curves, `fred.Curves.simplify(l)`: return set of simplified curves
+- methods: `fred.Curves.add(curve)`: add curve, `fred.Curves[i]`: get ith curve, `len(fred.Curves)`: number curves, `fred.Curves + fred.Curves`: add two sets of curves,  `fred.Curves.simplify(l)`: return set of simplified curves
 - properties:  `fred.Curves.m`: maximum complexity of the contained curves, `fred.Curves.values`: curves as `np.ndarray`
 
 #### continous Fréchet distance
@@ -89,6 +89,7 @@ All simplifications are vertex-restricted!
     -`len(fred.Clustering_Result)`: number of centers
     - `fred.Clustering_Result[i]`: get ith center
     - `fred.Clustering_Result.compute_assignment(fred.Curves, bool consecutive_call)`: assigns every curve to its nearest center with parameter `consecutive_call`, which defaults to `false`; set to true, if you want to assign the curves used for clustering
+    - `fred.Clustering_Result.optimize(fred.Curves, bool consecutive_call)`: (heuristically) optimizes cluster centers using a [stabbing algorithm](https://arxiv.org/abs/2212.01458)
 - members: 
     - `value`: objective value
     - `time`: running-time

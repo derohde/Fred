@@ -1,4 +1,14 @@
+"""
+Copyright 2022 - 2023 Alexander Neuhaus, Dennis Rohde
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
 import numpy as np
+import numba
 import math
 from scipy import optimize
 import random
@@ -84,24 +94,35 @@ def outer_tangents(r1, c1, r2, c2):
     return t1, t2
 
 def convert_coordinates(p0, p1, p2):
-    x = unit_vector(p1-p0)
-    z = np.cross(x,(p2-p0))
-    y = np.cross(z,x)
+    if len(p0) < 3:
+        l = len(p0)
+        p0t = np.zeros(3)
+        p1t = np.zeros(3)
+        p2t = np.zeros(3)
+        for i in range(l):
+            p0t[i] = p0[i]
+            p1t[i] = p1[i]
+            p2t[i] = p2[i]
+        p0, p1, p2 = p0t, p1t, p2t
+        
+    x = unit_vector(p1 - p0)
+    z = np.cross(x,(p2 - p0))
+    y = np.cross(z, x)
     o = p0
     
-    #projection of p0 the origin
+    #projection of p0 to the origin
     x0 = 0
     y0 = 0
     
     #projection of p1 to d(p1,p0),0
-    x1 = np.linalg.norm(p1-o)
+    x1 = np.linalg.norm(p1 - o)
     y1 = 0
     
     #projection of p2
-    x2 = np.dot((p2-o), x)
-    y2 = np.dot((p2-o), y)
+    x2 = np.dot((p2 - o), x)
+    y2 = np.dot((p2 - o), y)
     
-    return np.array((x0,y0)), np.array((round(x1, 12),round(y1, 12))), np.array((round(x2, 12), round(y2, 12)))
+    return np.array((x0,y0)), np.array((round(x1, 12), round(y1, 12))), np.array((round(x2, 12), round(y2, 12)))
 
 def check_containment(c1, r1, c2, r2, p):
     p1, p2, p3 = convert_coordinates(c1, c2, p)
@@ -110,15 +131,17 @@ def check_containment(c1, r1, c2, r2, p):
     t1B = t1[1]
     t2A = t2[0]
     t2B = t2[1]
-
+    
+    p3p = np.array((p3[0], 0))
+    
     if((np.linalg.norm(p - c1) <= r1) or (np.linalg.norm(p - c2) <= r2)):
         return True
     else:
         sign1 = (p3[0] - t1A[0]) * (t1B[1] - t1A[1]) - (p3[1] - t1A[1]) * (t1B[0] - t1A[0])
         sign2 = (p3[0] - t2A[0]) * (t2B[1] - t2A[1]) - (p3[1] - t2A[1]) * (t2B[0] - t2A[0])
-        if((sign1 >= 0 and sign2 <=0)
-           and (np.linalg.norm(np.array((p3[0], 0)) - p1) <= np.linalg.norm(p1 - p2))
-           and (np.linalg.norm(np.array((p3[0], 0)) - p2) <= np.linalg.norm(p1 - p2))):
+        if((sign1 >= 0 and sign2 <= 0)
+           and (np.linalg.norm(p3p - p1) <= np.linalg.norm(p1 - p2))
+           and (np.linalg.norm(p3p - p2) <= np.linalg.norm(p1 - p2))):
             return True
         return False
 
@@ -161,8 +184,8 @@ def stabbing_path(balls, epsilon=0.1, n_samples=None):
             start = end
             stabbable = True
     if not stabbable:
-        tmp = compute_stabber(old_samples, start, end-1)
-        segments.append((tmp[0],tmp[len(tmp)-1]))
+        tmp = compute_stabber(old_samples, start, end - 1)
+        segments.append((tmp[0],tmp[len(tmp) - 1]))
         segments.append(np.array([old_samples[-1][0]]))
     else:
         tmp = compute_stabber(old_samples, start, end)

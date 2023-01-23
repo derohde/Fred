@@ -158,6 +158,12 @@ public:
         if (curve.complexity() > m) m = curve.complexity();
     }
     
+    inline Curves operator+(const Curves &other) const {
+        Curves result = *this;
+        result.insert(result.end(), other.begin(), other.end());
+        return result;
+    }
+    
     inline Curve& get(const curve_number_t i) {
         return std::vector<Curve>::operator[](i);
     }

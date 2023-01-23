@@ -113,6 +113,7 @@ PYBIND11_MODULE(backend, m) {
         .def("simplify", &Curves::simplify)
         .def("__getitem__", &Curves::get, py::return_value_policy::reference)
         .def("__setitem__", &Curves::set)
+        .def("__add__", &Curves::operator+)
         .def("__len__", &Curves::number)
         .def("__str__", &Curves::str)
         .def("__iter__", [](Curves &v) { return py::make_iterator(v.begin(), v.end()); }, py::keep_alive<0, 1>())
