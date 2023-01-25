@@ -114,7 +114,7 @@ def convert_coordinates(p0, p1, p2):
     x0 = 0
     y0 = 0
     
-    #projection of p1 to d(p1,p0),0
+    #projection of p1 to d(p1,p0), 0
     x1 = np.linalg.norm(p1 - o)
     y1 = 0
     

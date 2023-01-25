@@ -79,13 +79,13 @@ Curves Curves::simplify(const curve_size_t l, const bool approx = false) {
 
 std::string Curve::repr() const {
     std::stringstream ss;
-    ss << "fred.Curve '" << name << "' of complexity " << complexity() << " and " << dimensions() << " dimensions";
+    ss << "fred.Curve '" << name << "' of complexity " << complexity() << " and " << dimensions() << " dimensions" << std::flush;
     return ss.str();
 }
 
 std::string Curves::repr() const {
     std::stringstream ss;
-    ss << "fred.Curves collection with " << number() << " curves";
+    ss << "fred.Curves collection with " << number() << " curves" << std::flush;
     return ss.str();
 }
 
@@ -112,26 +112,26 @@ void Curve::set_name(const std::string &name) {
 
 std::ostream& operator<<(std::ostream &out, const Curve &curve) {
     if (curve.empty()) return out;
-    out << "[";
+    out << "[" << std::flush;
     
     for (curve_size_t i = 0; i < curve.complexity() - 1; ++i) {
-        out << curve[i] << ", ";
+        out << curve[i] << ", " << std::flush;
     }
     
-    out << curve[curve.complexity() -1] << "]";
+    out << curve[curve.complexity() -1] << "]" << std::flush;
 
     return out;
 }
 
 std::ostream& operator<<(std::ostream &out, const Curves &curves) {
     if (curves.empty()) return out;
-    out << "{";
+    out << "{" << std::flush;
     
     for (curve_number_t i = 0; i < curves.number() - 1; ++i) {
-        out << curves[i] << ", ";
+        out << curves[i] << ", " << std::flush;
     }
     
-    out << curves[curves.size() -1] << "}";
+    out << curves[curves.size() -1] << "}" << std::flush;
 
     return out;
 }
