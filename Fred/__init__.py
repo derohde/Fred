@@ -13,8 +13,8 @@ from .stabbing import stabbing_path as _stabbing_path
 config = Config()
 
 def _optimize_centers(self, curves, consecutive_call=False):
-    if curves.dimensions < 2 or curves.dimensions > 3:
-        print("this method only works for curves of at least two and at most three dimensions!")
+    if curves.dimensions < 2:
+        print("this method only works for curves of at least two dimensions!")
         return
     all_balls = self.compute_center_enclosing_balls(curves, False)
     for i, center_balls in enumerate(all_balls):
