@@ -48,7 +48,7 @@ def plot_curve(*curves, vertex_markings=True, savename=None, saveextension=None,
             if curve.dimensions >= 3:
                 p = ax.plot(curve.values[:, 0], curve.values[:, 1], curve.values[:, 2], linestyle='--', marker='o', label = curve.name, markersize = 7, markevery = curve.complexity)
                 if vertex_markings:
-                    ax.plot(curve.values[1:, 0], curve.values[1:, 1], curve.values[:, 2], linestyle='', marker='x', label = None, color = p[0].get_color(), markersize = 7)
+                    ax.plot(curve.values[1:, 0], curve.values[1:, 1], curve.values[1:, 2], linestyle='', marker='x', label = None, color = p[0].get_color(), markersize = 7)
             elif curve.dimensions == 2:
                 p = ax.plot(curve.values[:, 0], curve.values[:, 1], linestyle='--', marker='o', label = curve.name, markersize = 7, markevery = curve.complexity)
                 if vertex_markings:
@@ -62,7 +62,7 @@ def plot_curve(*curves, vertex_markings=True, savename=None, saveextension=None,
                 if curv.dimensions >= 3:
                     p = ax.plot(curv.values[:, 0], curv.values[:, 1], curv.values[:, 2], linestyle='--', marker='o', label = curv.name, markersize = 7, markevery = curv.complexity)
                     if vertex_markings:
-                        ax.plot(curv.values[1:, 0], curv.values[1:, 1], curv.values[:, 2], linestyle='', marker='x', label = None, color = p[0].get_color(), markersize = 7)
+                        ax.plot(curv.values[1:, 0], curv.values[1:, 1], curv.values[1:, 2], linestyle='', marker='x', label = None, color = p[0].get_color(), markersize = 7)
                 elif curv.dimensions == 2:
                     p = plt.plot(curv.values[:, 0], curv.values[:, 1], linestyle='--', marker='o', label = curv.name, markersize = 7, markevery = curv.complexity)
                     if vertex_markings:
@@ -76,7 +76,7 @@ def plot_curve(*curves, vertex_markings=True, savename=None, saveextension=None,
                 if curv.dimensions >= 3:
                     p = ax.plot(curv.values[:, 0], curv.values[:, 1], curv.values[:, 2], linestyle='-', marker='o', label = curv.name, markersize = 7, markevery = curv.complexity)
                     if vertex_markings:
-                        ax.plot(curv.values[1:, 0], curv.values[1:, 1], curv.values[:, 2], linestyle='', marker='x', label = None, color = p[0].get_color(), markersize = 7)
+                        ax.plot(curv.values[1:, 0], curv.values[1:, 1], curv.values[1:, 2], linestyle='', marker='x', label = None, color = p[0].get_color(), markersize = 7)
                 elif curv.dimensions == 2:
                     p = plt.plot(curv.values[:, 0], curv.values[:, 1], linestyle='-', marker='o', label = curv.name, markersize = 7, markevery = curv.complexity)
                     if vertex_markings:
@@ -127,7 +127,7 @@ def plot_clustering(clustering_result, curves, vertex_markings=True, savename=No
         if curve.dimensions >= 3:
             p = ax.plot(curve.values[:, 0], curve.values[:, 1], curve.values[:, 2], linestyle='-', marker='o', label = curve.name, color = colors[i], markersize = 7, markevery = curve.complexity)
             if vertex_markings:
-                ax.plot(curve.values[1:, 0], curve.values[1:, 1], curve.values[:, 2], linestyle='', marker='x', label = None, color = p[0].get_color(), markersize = 7)
+                ax.plot(curve.values[1:, 0], curve.values[1:, 1], curve.values[1:, 2], linestyle='', marker='x', label = None, color = p[0].get_color(), markersize = 7)
         elif curve.dimensions == 2:
             p = ax.plot(curve.values[:, 0], curve.values[:, 1], linestyle='-', marker='o', label = curve.name, color = colors[i], markersize = 7, markevery = curve.complexity)
             if vertex_markings:
@@ -142,7 +142,7 @@ def plot_clustering(clustering_result, curves, vertex_markings=True, savename=No
             if curve.dimensions >= 3:
                 p = ax.plot(curve.values[:, 0], curve.values[:, 1], curve.values[:, 2], linestyle=':', marker='o', label = curve.name, color = colors[i], markersize = 7, markevery = curve.complexity)
                 if vertex_markings:
-                    ax.plot(curve.values[1:, 0], curve.values[1:, 1], curve.values[:, 2], linestyle='', marker='x', label = None, color = p[0].get_color(), markersize = 7)
+                    ax.plot(curve.values[1:, 0], curve.values[1:, 1], curve.values[1:, 2], linestyle='', marker='x', label = None, color = p[0].get_color(), markersize = 7)
             elif curve.dimensions == 2:
                 p = ax.plot(curve.values[:, 0], curve.values[:, 1], linestyle=':', marker='o', label = curve.name, color = colors[i], markersize = 7, markevery = curve.complexity)
                 if vertex_markings:
