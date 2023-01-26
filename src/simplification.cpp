@@ -11,11 +11,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include "simplification.hpp"
  
 Curve Simplification::approximate_minimum_link_simplification(const Curve &pcurve, const distance_t epsilon) {
-    if (Config::verbosity > 1) py::print("ASIMPL: computing approximate minimum link simplification");
+    if (Config::verbosity > 1) py::print("ASIMPL: computing approximate minimum link simplification for curve of complexity ", pcurve.complexity());
     Curve &curve = const_cast<Curve&>(pcurve);
     const curve_size_t complexity = curve.complexity();
     
-    curve_size_t i = 0, j = 0;
+    curve_size_t i = 0, j = 0, low, mid, high;
     
     Curve simplification(curve.dimensions()), segment(2, curve.dimensions());
     simplification.push_back(curve.front());
@@ -28,7 +28,7 @@ Curve Simplification::approximate_minimum_link_simplification(const Curve &pcurv
         j = 0;
         distance = 0;
         
-        if (Config::verbosity > 1) py::print("ASIMPL: computing maximum shortcut starting at ", i);
+        if (Config::verbosity > 1) py::print("ASIMPL: computing maximum length shortcut starting at ", i);
         
         if (Config::verbosity > 1) py::print("ASIMPL: exponential error search");
         
@@ -44,14 +44,13 @@ Curve Simplification::approximate_minimum_link_simplification(const Curve &pcurv
             distance = Frechet::Continuous::distance(curve, segment).value;
         }
         
-        curve_size_t low, mid, high;
-        
-        low = j == 1 ? 0 : std::pow(2, j - 1);
+        low = std::pow(2, j - 1);
         high = std::min(static_cast<curve_size_t>(std::pow(2, j)), complexity - i - 1);
         
-        if (Config::verbosity > 1) py::print("ASIMPL: binary error search");
+        if (Config::verbosity > 1) py::print("ASIMPL: binary error search for low = ", low, " and high = ", high);
+        
         while (low < high) {
-            mid = std::ceil((low + high) / 2.);
+            mid = std::ceil(low + (high - low) * .5);
                         
             curve.reset_subcurve();
             segment[1] = curve[i + mid];
@@ -59,12 +58,16 @@ Curve Simplification::approximate_minimum_link_simplification(const Curve &pcurv
             
             distance = Frechet::Continuous::distance(curve, segment).value;
                                     
-            if (distance <= epsilon) low = mid;
-            else high = mid - 1;
+            if (distance > epsilon) high = mid - 1;
+            else low = mid;
         }
+        
         if (Config::verbosity > 1) py::print("ASIMPL: shortcutting from ", i, " to ", i+low);
+        
         i += low;
+        
         curve.reset_subcurve();
+        
         simplification.push_back(curve[i]);
     }
     return simplification;
