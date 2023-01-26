@@ -153,8 +153,8 @@ def check_containment(c1, r1, c2, r2, p):
         if((np.linalg.norm(p - c1) <= r1) or (np.linalg.norm(p - c2) <= r2)):
             return True
         else:
-            if((np.linalg.norm(p3p - p1) <= np.linalg.norm(p1 - p2))
-               and (np.linalg.norm(p3p - p2) <= np.linalg.norm(p1 - p2))):
+            if((np.linalg.norm(p - c1) <= np.linalg.norm(c1 - c2))
+               and (np.linalg.norm(p - c2) <= np.linalg.norm(c1 - c2))):
                 return True
             return False
     

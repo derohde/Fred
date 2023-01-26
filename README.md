@@ -86,7 +86,7 @@ All simplifications are vertex-restricted!
 #### Clustering Result
 - signature: `fred.Clustering_Result`
 - methods: 
-    -`len(fred.Clustering_Result)`: number of centers
+    - `len(fred.Clustering_Result)`: number of centers
     - `fred.Clustering_Result[i]`: get ith center
     - `fred.Clustering_Result.compute_assignment(fred.Curves, bool consecutive_call)`: assigns every curve to its nearest center with parameter `consecutive_call`, which defaults to `false`; set to true, if you want to assign the curves used for clustering
     - `fred.Clustering_Result.optimize(fred.Curves, bool consecutive_call)`: (heuristically) optimizes cluster centers using a [stabbing algorithm](https://arxiv.org/abs/2212.01458)
