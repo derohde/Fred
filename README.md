@@ -217,7 +217,9 @@ for i in range(len(clustering)):
     for j in range(clustering.assignment.count(i)):
         print(f"{curves[clustering.assignment.get(i,j)].name} was assigned to center {clustering[i].name}")
 
-clustering.optimize(curves, consecutive_call = True) # uses stabbing to get better centers
+clustering.optimize_centers(curves, consecutive_call = True) # uses stabbing to get better centers
+
+fred.plot_clustering(clustering, curves)
 
 ```
 ## Visual Example

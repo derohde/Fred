@@ -40,7 +40,7 @@ def plot_curve(*curves, vertex_markings=True, savename=None, saveextension=None,
                 max_compl = max(max_compl, curv.complexity)
                 max_dim = max(max_dim, curv.dimensions)
     if max_dim >= 3:
-        ax = fig.gca(projection='3d')
+        ax = fig.add_subplot(projection='3d')
     else:
         ax = fig.gca()
     for curve in curves:
@@ -120,7 +120,7 @@ def plot_clustering(clustering_result, curves, vertex_markings=True, savename=No
         max_compl = max(max_compl, curve.complexity)
         max_dim = max(max_dim, curve.dimensions)
     if max_dim >= 3:
-        ax = fig.gca(projection='3d')
+        ax = fig.add_subplot(projection='3d')
     else:
         ax = fig.gca()
     for i, curve in enumerate(clustering_result):
