@@ -16,7 +16,7 @@ def _optimize_centers(self, curves, consecutive_call=False):
     all_balls = self.compute_center_enclosing_balls(curves, False)
     for i, center_balls in enumerate(all_balls):
         path, _ = _stabbing_path(center_balls)
-        self[i] = Curve(path, "center {}".format(i))
+        self[i] = Curve(path, "{} (optimized)".format(self[i].name))
 
 Clustering_Result.optimize_centers = _optimize_centers
 
