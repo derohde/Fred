@@ -176,7 +176,7 @@ PYBIND11_MODULE(backend, m) {
     
     m.def("dimension_reduction", &JLTransform::transform_naive, py::arg("curves"), py::arg("epsilon") = 0.5, py::arg("empirical_constant") = true);
 
-    m.def("discrete_klcenter", &Clustering::kl_center, py::arg("k") = 2, py::arg("l") = 2, py::arg("curves"), py::arg("consecutive_call") = false, py::arg("random_start_center") = true, py::arg("fast_simplification") = false);
+    m.def("discrete_klcenter", &Clustering::kl_center, py::arg("k") = 2, py::arg("l") = 2, py::arg("curves"), py::arg("local_search") = 0, py::arg("consecutive_call") = false, py::arg("random_start_center") = true, py::arg("fast_simplification") = false);
     m.def("discrete_klmedian", &Clustering::kl_median, py::arg("k") = 2, py::arg("l") = 2, py::arg("curves"), py::arg("consecutive_call") = false, py::arg("fast_simplification") = false);
 
 }

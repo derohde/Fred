@@ -110,8 +110,8 @@ curve_number_t Cluster_Assignment::get(const curve_number_t i, const curve_numbe
     return operator[](i)[j];
 }
 
-Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, 
-                             const bool local_search = false, const bool consecutive_call = false, const bool random_start_center = true, const bool fast_simplification = false) {
+Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, unsigned int local_search = 0,
+                             const bool median = false, const bool consecutive_call = false, const bool random_start_center = true, const bool fast_simplification = false) {
     
     const auto start = std::clock();
     Clustering_Result result;
@@ -119,17 +119,24 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
     if (in.empty()) return result;
 
     if (not consecutive_call) {
+        if (Config::verbosity > 0) py::print("KL_CLUST: allocating ", in.size(), " x ", in.size(), " distance_matrix");
         distances = Distance_Matrix(in.size(), in.size());
-        simplifications = Curves(in.number(), ell, in.dimensions());
+        if (Config::verbosity > 0) py::print("KL_CLUST: allocating space for ", in.size(), " simplifications, each of complexity ", ell);
+        simplifications = Curves(in.size(), ell, in.dimensions());
     } else {
         if (distances.empty()) {
+            py::print("WARNING: consecutive_call is used wrongly");
+            if (Config::verbosity > 0) py::print("KL_CLUST: allocating ", in.size(), " x ", in.size(), " distance_matrix");
             distances = Distance_Matrix(in.size(), in.size());
-            simplifications = Curves(in.number(), ell, in.dimensions());
+            if (Config::verbosity > 0) py::print("KL_CLUST: allocating space for ", in.size(), " simplifications, each of complexity ", ell);
+            simplifications = Curves(in.size(), ell, in.dimensions());
         }
         if (distances.size() != in.size()) {
             py::print("WARNING: you have tried to use 'consecutive_call = true' with different input; ignoring!");
+            if (Config::verbosity > 0) py::print("KL_CLUST: allocating ", in.size(), " x ", in.size(), " distance_matrix");
             distances = Distance_Matrix(in.size(), in.size());
-            simplifications = Curves(in.number(), ell, in.dimensions());
+            if (Config::verbosity > 0) py::print("KL_CLUST: allocating space for ", in.size(), " simplifications, each of complexity ", ell);
+            simplifications = Curves(in.size(), ell, in.dimensions());
         }
     }
 
@@ -163,8 +170,8 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
         if (simplifications[0].empty()) {
             if (Config::verbosity > 0) py::print("KL_CLUST: computing simplification of curve 0");
             simplifications[0] = simplify(0);
+            centers.push_back(0);
         }
-        centers.push_back(0);
     }
     if (Config::verbosity > 0) py::print("KL_CLUST: first center is ", centers[0]);
     
@@ -175,7 +182,7 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
     if (Config::verbosity > 0) py::print("KL_CLUST: computing remaining centers");
     {
         // remaining centers
-        for (curve_number_t i = 2; i <= num_centers; ++i) {
+        for (curve_number_t i = 1; i < num_centers; ++i) {
             
             curr_maxdist = 0;
             curr_maxcurve = 0;
@@ -193,7 +200,7 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
                     }
                     
                 }
-                if (Config::verbosity > 0) py::print("KL_CLUST: center ", i, " is curve ", curr_maxcurve);
+                if (Config::verbosity > 0) py::print("KL_CLUST: center ", i + 1, " is curve ", curr_maxcurve);
                 
                 if (simplifications[curr_maxcurve].empty()) {
                     if (Config::verbosity > 0) py::print("KL_CLUST: computing simplification of ", curr_maxcurve);
@@ -204,17 +211,58 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
         }
     }
     
-    if (local_search) {
+    if (Config::verbosity > 0) py::print("KL_CLUST: k-center cost is ", curr_maxdist);
+    
+    if (local_search > 0) {
+        
+        auto curr_centers = centers;
+        auto cost = curr_maxdist, curr_cost = cost;
+        
+        if (Config::verbosity > 0) py::print("KL_CLUST: starting local search for k-center objective for ", local_search, " iterations");
+        
+        for (unsigned int k = 0; k < local_search; ++k) {
+        
+            if (Config::verbosity > 0) py::print("KL_CLUST: k-center local search iteration ", k + 1);
+        
+            for (curve_number_t i = 0; i < num_centers; ++i) {
+                
+                for (curve_number_t j = 0; j < simplifications.size(); ++j) {
+                    
+                    if (std::find(curr_centers.begin(), curr_centers.end(), j) != curr_centers.end()) continue;
+                    
+                    if (Config::verbosity > 0) py::print("KL_CLUST: substituting curve ", curr_centers[i]," for curve ", j," as center");
+                    // swap
+                    if (simplifications[j].empty()) {
+                        if (Config::verbosity > 0) py::print("KL_CLUST: computing simplification of curve ", j);
+                        simplifications[j] = simplify(j);
+                    }
+                    curr_centers[i] = j;
+                    // new cost
+                    if (Config::verbosity > 0) py::print("KL_CLUST: updating k-center cost");
+                    curr_cost = _center_cost_max(in, simplifications, curr_centers, distances);
+                    // check if improvement is done
+                    if (curr_cost < cost) {
+                        if (Config::verbosity > 0) py::print("KL_CLUST: cost improves to ", curr_cost);
+                        cost = curr_cost;
+                        centers = curr_centers;
+                    } else {
+                        if (Config::verbosity > 0) py::print("KL_CLUST: cost does not improve");
+                    }
+                }
+            }
+        }
+    }
+    
+    if (median) {
         
         if (Config::verbosity > 0) py::print("KL_CLUST: computing k-median cost");
-        distance_t cost = _center_cost_sum(in, simplifications, centers, distances);
-        distance_t approxcost = cost;
-        distance_t curr_cost = cost;
+        auto cost = _center_cost_sum(in, simplifications, centers, distances), approxcost = cost, curr_cost = cost;
+        if (Config::verbosity > 0) py::print("KL_CLUST: k-median cost is ", cost);
         distance_t gamma = 1/(10 * num_centers);
-        bool found = true;
+        auto found = true;
         auto curr_centers = centers;
         
-        if (Config::verbosity > 0) py::print("KL_CLUST: starting local search");
+        if (Config::verbosity > 0) py::print("KL_CLUST: starting k-median local search");
         // try to improve current solution
         while (found) {
             found = false;
@@ -240,12 +288,12 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
                     curr_cost = _center_cost_sum(in, simplifications, curr_centers, distances);
                     // check if improvement is done
                     if (curr_cost < cost - gamma * approxcost) {
-                        if (Config::verbosity > 0) py::print("KL_CLUST: cost did improve");
+                        if (Config::verbosity > 0) py::print("KL_CLUST: cost improves to ", curr_cost);
                         cost = curr_cost;
                         centers = curr_centers;
                         found = true;
                     } else {
-                        if (Config::verbosity > 0) py::print("KL_CLUST: cost did not improve");
+                        if (Config::verbosity > 0) py::print("KL_CLUST: cost does not improve");
                     }
                 }
             }
@@ -264,12 +312,12 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
     return result;
 }
 
-Clustering_Result kl_center(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, const bool consecutive_call, const bool random_start_center, const bool fast_simplification) {
-    return kl_cluster(num_centers, ell, in, false, consecutive_call, random_start_center, fast_simplification);
+Clustering_Result kl_center(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, unsigned int local_search, const bool consecutive_call, const bool random_start_center, const bool fast_simplification) {
+    return kl_cluster(num_centers, ell, in, local_search, false, consecutive_call, random_start_center, fast_simplification);
 }
 
 Clustering_Result kl_median(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, const bool consecutive_call, const bool fast_simplification) {
-    return kl_cluster(num_centers, ell, in, true, consecutive_call, true, fast_simplification);
+    return kl_cluster(num_centers, ell, in, 0, true, consecutive_call, true, fast_simplification);
 }
 
 }

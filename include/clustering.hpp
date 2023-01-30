@@ -104,9 +104,20 @@ inline distance_t _center_cost_sum(const Curves &in, const Curves &simplified_in
     return cost;
 }
 
-Clustering_Result kl_cluster(const curve_number_t, const curve_size_t, const Curves &, const bool, const bool, const bool, const bool);
+inline distance_t _center_cost_max(const Curves &in, const Curves &simplified_in, const Curve_Numbers &centers, Distance_Matrix &distances) {
+    distance_t cost = 0;
+    
+    // for all curves
+    for (curve_number_t i = 0; i < in.size(); ++i) {
+        const auto min_cost_elem = _curve_cost(i, in, simplified_in, centers, distances);
+        cost = std::max(cost, min_cost_elem);
+    }
+    return cost;
+}
 
-Clustering_Result kl_center(const curve_number_t, const curve_size_t, const Curves &, const bool = false, const bool = true, const bool = false);
+Clustering_Result kl_cluster(const curve_number_t, const curve_size_t, const Curves &, unsigned int, const bool, const bool, const bool, const bool);
+
+Clustering_Result kl_center(const curve_number_t, const curve_size_t, const Curves &, unsigned int, const bool = false, const bool = true, const bool = false);
 
 Clustering_Result kl_median(const curve_number_t, const curve_size_t, const Curves &, const bool = false, const bool = false); 
 
