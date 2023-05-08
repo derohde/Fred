@@ -11,6 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #pragma once
 
 #include <unordered_map>
+#include <cmath>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
@@ -33,6 +34,7 @@ struct Distance_Matrix;
 
 extern Distance_Matrix distances;
 extern Curves simplifications;
+extern bool use_distance_matrix;
 
 struct Distance_Matrix : public std::vector<Distances> {
     Distance_Matrix() = default;
@@ -66,11 +68,13 @@ private:
 };
 
 inline distance_t _cheap_dist(const curve_number_t i, const curve_number_t j, const Curves &in, const Curves &simplified_in, Distance_Matrix &distances) {
-    if (distances[i][j] < 0) {
-        const auto dist = Frechet::Continuous::distance(in[i], simplified_in[j]);
-        distances[i][j] = dist.value;
-    }
-    return distances[i][j];
+    if (use_distance_matrix) {
+        if (distances[i][j] < 0) {
+            const auto dist = Frechet::Continuous::distance(in[i], simplified_in[j]);
+            distances[i][j] = dist.value;
+        }
+        return distances[i][j];
+    } else return Frechet::Continuous::distance(in[i], simplified_in[j]).value;
 }
 
 inline curve_number_t _nearest_center(const curve_number_t i, const Curves &in, const Curves &simplified_in, const Curve_Numbers &centers, Distance_Matrix &distances) {

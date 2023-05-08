@@ -10,10 +10,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #pragma once
 
+#include <cstddef>
+
 namespace Config {
     
-    class Config{};
+    struct Config{};
     
+    extern std::size_t available_memory;
     extern unsigned int verbosity;
     extern bool mp_dynamic;
     extern int number_threads;

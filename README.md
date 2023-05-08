@@ -60,7 +60,7 @@ All simplifications are vertex-restricted!
 
 #### discrete (k,l)-center clustering (continuous Fréchet)
 - from [**Approximating (k,l)-center clustering for curves**](https://dl.acm.org/doi/10.5555/3310435.3310616)
-- signature: `fred.discrete_klcenter(k, l, curves, distances, random_first_center, fast_simplification)` with parameters 
+- signature: `fred.discrete_klcenter(k, l, curves, local_search, consecutive_call, random_first_center, fast_simplification)` with parameters 
     - `k`: number of centers
     - `l`: maximum complexity of the centers
     - `local_search`: number of iterations of local search to improve solution, defaults to `0`
@@ -74,7 +74,7 @@ All simplifications are vertex-restricted!
 
 #### discrete (k,l)-median clustering (continuous Fréchet)
 - Algorithm from section 4.3 in [**Geometric Approximation Algorithms**](http://www.ams.org/books/surv/173/) + simplification
-- signature: `fred.discrete_klmedian(k, l, curves, distances, fast_simplification)` with parameters 
+- signature: `fred.discrete_klmedian(k, l, curves, consecutive_call, fast_simplification)` with parameters 
     - `k`: number of centers
     - `l`: maximum complexity of the centers
     - `consecutive_call`: reuses distances and simplifications already computed in a previous call if `true`, defaults to `false`

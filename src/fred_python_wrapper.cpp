@@ -51,6 +51,7 @@ PYBIND11_MODULE(backend, m) {
         
     py::class_<Config::Config>(m, "Config")
         .def(py::init<>())
+        .def_property("available_memory", [&](Config::Config&) { return Config::available_memory; }, [&](Config::Config&, const std::size_t available_memory) { Config::available_memory = available_memory; })
         .def_property("continuous_frechet_error", [&](Config::Config&) { return fc::error; }, [&](Config::Config&, const distance_t error) { fc::error = error; })
         .def_property("verbosity", [&](Config::Config&) { return &Config::verbosity; }, [&](Config::Config&, const unsigned int verbosity) { Config::verbosity = verbosity; })
         .def_property("number_threads", [&](Config::Config&){ return &Config::number_threads; }, [&](Config::Config&, const int number_threads) {
@@ -176,7 +177,7 @@ PYBIND11_MODULE(backend, m) {
     
     m.def("dimension_reduction", &JLTransform::transform_naive, py::arg("curves"), py::arg("epsilon") = 0.5, py::arg("empirical_constant") = true);
 
-    m.def("discrete_klcenter", &Clustering::kl_center, py::arg("k") = 2, py::arg("l") = 2, py::arg("curves"), py::arg("local_search") = 0, py::arg("consecutive_call") = false, py::arg("random_start_center") = true, py::arg("fast_simplification") = false);
+    m.def("discrete_klcenter", &Clustering::kl_center, py::arg("k") = 2, py::arg("l") = 2, py::arg("curves"), py::arg("local_search") = 0, py::arg("consecutive_call") = false, py::arg("random_first_center") = true, py::arg("fast_simplification") = false);
     m.def("discrete_klmedian", &Clustering::kl_median, py::arg("k") = 2, py::arg("l") = 2, py::arg("curves"), py::arg("consecutive_call") = false, py::arg("fast_simplification") = false);
 
 }

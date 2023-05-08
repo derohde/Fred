@@ -10,7 +10,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 from .backend import *
 from .stabbing import stabbing_path as _stabbing_path
 
+import psutil
+
+virtual_memory = psutil.virtual_memory()
+available_memory = virtual_memory.available
+
 config = Config()
+config.available_memory = available_memory
 
 def _optimize_centers(self, curves, consecutive_call=False):
     all_balls = self.compute_center_enclosing_balls(curves, False)
