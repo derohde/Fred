@@ -167,6 +167,7 @@ Curve approximate_minimum_link_simplification(const Curve &pcurve, const distanc
 
 Curve approximate_minimum_error_simplification(const Curve &curve, const curve_size_t ell) {
     if (Config::verbosity > 1) py::print("ASIMPL: computing approximate minimum error simplification");
+    if (ell >= curve.complexity()) return curve;
     Curve simplification(curve.dimensions()), segment(2, curve.dimensions());
     
     segment[0] = curve.front();

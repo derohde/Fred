@@ -128,8 +128,10 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
     }
 
     if (not consecutive_call) {
-        if (Config::verbosity > 0) py::print("KL_CLUST: allocating ", in.size(), " x ", in.size(), " distance_matrix");
-        if (use_distance_matrix) distances = Distance_Matrix(in.size(), in.size());
+        if (use_distance_matrix) {
+            if (Config::verbosity > 0) py::print("KL_CLUST: allocating ", in.size(), " x ", in.size(), " distance_matrix");
+            distances = Distance_Matrix(in.size(), in.size());
+        }
         if (Config::verbosity > 0) py::print("KL_CLUST: allocating space for ", in.size(), " simplifications, each of complexity ", ell);
         simplifications = Curves(in.size(), ell, in.dimensions());
     } else if (use_distance_matrix) {
