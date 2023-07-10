@@ -1,7 +1,7 @@
 # Fred ![alt text](https://raw.githubusercontent.com/derohde/Fred/master/logo/logo.png "Fred logo")
 A fast, scalable and light-weight C++ Fréchet distance library, exposed to python and focused on (k,l)-clustering of polygonal curves.
 
-### NOW AVAILABLE VIA PIP
+### DISTANCE FUNCTION FOR CLUSTERING CAN BE CHOSEN (heuristic in case of DTW)
 ### NOW WITH OPTIMIZED CLUSTER CENTERS
 
 ## Ingredients
@@ -41,26 +41,35 @@ By default, Fred will automatically determine the number of threads to use. If y
 
 All simplifications are vertex-restricted!
 
-#### minimum error simplification
+#### Frechet distance
+
+##### minimum error simplification
 - graph approach from [**Polygonal Approximations of a Curve — Formulations and Algorithms**](https://www.sciencedirect.com/science/article/pii/B9780444704672500114)
 - signature: `fred.minimum_error_simplification(fred.Curve, int complexity)`
 - returns: `fred.Curve`that uses input curves vertices, with `complexity` number of vertices and that has minimum distance to input curve
 
-#### approximate minimum link simplification
+##### approximate minimum link simplification
 - algorithm "FS" from [**Near-Linear Time Approximation Algorithms for Curve Simplification**](https://link.springer.com/article/10.1007/s00453-005-1165-y)
 - signature: `fred.approximate_minimum_link_simplification(fred.Curve, double error)`
 - returns: `fred.Curve` that uses input curves vertices, is of small complexity and with distance to input curve at most `error`
 
-#### approximate minimum error simplification
+##### approximate minimum error simplification
 - binary search on `fred.approximate_minimum_link_simplification`
 - signature: `fred.approximate_minimum_error_simplification(fred.Curve, int complexity)`
 - returns: `fred.Curve`that uses input curves vertices, with `complexity` number of vertices and that has small distance to input curve
 
 ### Clustering
 
+# Underlying distance function
+
+The variable `distance_func` controls which distance function to use. Possible values:
+- `0`: continuous Fréchet distance
+- `1`: discrete Fréchet distance
+- `2`: discrete dynamic time warping distance (algorithms are then of heuristic nature)
+
 #### discrete (k,l)-center clustering (continuous Fréchet)
 - from [**Approximating (k,l)-center clustering for curves**](https://dl.acm.org/doi/10.5555/3310435.3310616)
-- signature: `fred.discrete_klcenter(k, l, curves, local_search, consecutive_call, random_first_center, fast_simplification)` with parameters 
+- signature: `fred.discrete_klcenter(k, l, curves, local_search, consecutive_call, random_first_center, fast_simplification, distance_func)` with parameters 
     - `k`: number of centers
     - `l`: maximum complexity of the centers
     - `local_search`: number of iterations of local search to improve solution, defaults to `0`
@@ -74,7 +83,7 @@ All simplifications are vertex-restricted!
 
 #### discrete (k,l)-median clustering (continuous Fréchet)
 - Algorithm from section 4.3 in [**Geometric Approximation Algorithms**](http://www.ams.org/books/surv/173/) + simplification
-- signature: `fred.discrete_klmedian(k, l, curves, consecutive_call, fast_simplification)` with parameters 
+- signature: `fred.discrete_klmedian(k, l, curves, consecutive_call, fast_simplification, distance_func)` with parameters 
     - `k`: number of centers
     - `l`: maximum complexity of the centers
     - `consecutive_call`: reuses distances and simplifications already computed in a previous call if `true`, defaults to `false`
@@ -89,7 +98,7 @@ All simplifications are vertex-restricted!
 - methods: 
     - `len(fred.Clustering_Result)`: number of centers
     - `fred.Clustering_Result[i]`: get ith center
-    - `fred.Clustering_Result.compute_assignment(fred.Curves, bool consecutive_call)`: assigns every curve to its nearest center with parameter `consecutive_call`, which defaults to `false`; set to true, if you want to assign the curves used for clustering
+    - `fred.Clustering_Result.compute_assignment(fred.Curves, bool consecutive_call, distance_func)`: assigns every curve to its nearest center with parameter `consecutive_call`, which defaults to `false`; set to true, if you want to assign the curves used for clustering
     - `fred.Clustering_Result.optimize(fred.Curves, bool consecutive_call)`: (heuristically) optimizes cluster centers using a [stabbing algorithm](https://arxiv.org/abs/2212.01458)
 - members: 
     - `value`: objective value

@@ -10,8 +10,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
  
 #include "simplification.hpp"
 
-namespace Simplification {
+namespace Frechet {
 
+namespace Continuous {
+
+namespace Simplification {
+    
 Subcurve_Shortcut_Graph::Subcurve_Shortcut_Graph(const Curve &pcurve) : curve{const_cast<Curve&>(pcurve)}, 
         edges{std::vector<Distances>(curve.complexity(), Distances(curve.complexity(), std::numeric_limits<distance_t>::infinity()))} {
             
@@ -177,12 +181,12 @@ Curve approximate_minimum_error_simplification(const Curve &curve, const curve_s
     
     distance_t min_distance = 0, max_distance = Frechet::Discrete::distance(curve, segment).value + 1, mid_distance;
     
-    Curve new_simplification = Simplification::approximate_minimum_link_simplification(curve, max_distance);
+    Curve new_simplification = approximate_minimum_link_simplification(curve, max_distance);
 
     if (Config::verbosity > 1) py::print("ASIMPL: computing upper bound for error by exponential search");
     while (new_simplification.complexity() > ell) {
         max_distance *= 2.;
-        new_simplification = Simplification::approximate_minimum_link_simplification(curve, max_distance);
+        new_simplification = approximate_minimum_link_simplification(curve, max_distance);
     }
     
     if (Config::verbosity > 1) py::print("ASIMPL: binary search using upper bound");
@@ -190,7 +194,7 @@ Curve approximate_minimum_error_simplification(const Curve &curve, const curve_s
     while (max_distance - min_distance > epsilon) {
         mid_distance = (min_distance + max_distance) / distance_t(2);
         if (mid_distance == max_distance or mid_distance == min_distance) break;
-        new_simplification = Simplification::approximate_minimum_link_simplification(curve, mid_distance);
+        new_simplification = approximate_minimum_link_simplification(curve, mid_distance);
         
         if (new_simplification.complexity() > ell) min_distance = mid_distance;
         else {
@@ -206,5 +210,9 @@ Curve approximate_minimum_error_simplification(const Curve &curve, const curve_s
     }
     return simplification;
 }
+
+};
+
+};
 
 };

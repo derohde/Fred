@@ -60,24 +60,44 @@ struct Clustering_Result {
     curve_number_t size() const;
     Curves::const_iterator cbegin() const;
     Curves::const_iterator cend() const;
-    void compute_assignment(const Curves&, const bool = false);
+    void compute_assignment(const Curves&, const bool = false, const unsigned int distance_func = 0);
     void set_center_indices(const Curve_Numbers&);
     py::list compute_center_enclosing_balls(const Curves&, const bool);
 private:
     Curve_Numbers center_indices;
 };
 
-inline distance_t _cheap_dist(const curve_number_t i, const curve_number_t j, const Curves &in, const Curves &simplified_in, Distance_Matrix &distances) {
+inline distance_t _cheap_dist(const curve_number_t i, const curve_number_t j, const Curves &in, const Curves &simplified_in, Distance_Matrix &distances, const unsigned int distance_func) {
     if (use_distance_matrix) {
         if (distances[i][j] < 0) {
-            const auto dist = Frechet::Continuous::distance(in[i], simplified_in[j]);
-            distances[i][j] = dist.value;
+            switch (distance_func) {
+                case 0:
+                    distances[i][j] = Frechet::Continuous::distance(in[i], simplified_in[j]).value;
+                    break;
+                case 1:
+                    distances[i][j] = Frechet::Discrete::distance(in[i], simplified_in[j]).value;
+                    break;
+                case 2:
+                    distances[i][j] = Dynamic_Time_Warping::Discrete::distance(in[i], simplified_in[j]).value;
+                    break;
+            }
         }
         return distances[i][j];
-    } else return Frechet::Continuous::distance(in[i], simplified_in[j]).value;
+    } else {
+        switch (distance_func) {
+                case 0:
+                    return Frechet::Continuous::distance(in[i], simplified_in[j]).value;
+                case 1:
+                    return Frechet::Discrete::distance(in[i], simplified_in[j]).value;
+                case 2:
+                    return Dynamic_Time_Warping::Discrete::distance(in[i], simplified_in[j]).value;
+                default:
+                    return std::numeric_limits<distance_t>::signaling_NaN();
+        }
+    }
 }
 
-inline curve_number_t _nearest_center(const curve_number_t i, const Curves &in, const Curves &simplified_in, const Curve_Numbers &centers, Distance_Matrix &distances) {
+inline curve_number_t _nearest_center(const curve_number_t i, const Curves &in, const Curves &simplified_in, const Curve_Numbers &centers, Distance_Matrix &distances, const unsigned int distance_func) {
     const auto infty = std::numeric_limits<distance_t>::infinity();
     // cost for curve is infinity
     auto min_cost = infty;
@@ -85,44 +105,44 @@ inline curve_number_t _nearest_center(const curve_number_t i, const Curves &in, 
     
     // except there is a center with smaller cost, then choose the one with smallest cost
     for (curve_number_t j = 0; j < centers.size(); ++j) {
-        if (_cheap_dist(i, centers[j], in, simplified_in, distances) < min_cost) {
-            min_cost = _cheap_dist(i, centers[j], in, simplified_in, distances);
+        if (_cheap_dist(i, centers[j], in, simplified_in, distances, distance_func) < min_cost) {
+            min_cost = _cheap_dist(i, centers[j], in, simplified_in, distances, distance_func);
             nearest = j;
         }
     }
     return nearest;
 }
 
-inline distance_t _curve_cost(const curve_number_t i, const Curves &in, const Curves &simplified_in, const Curve_Numbers &centers, Distance_Matrix &distances) {
-    return _cheap_dist(i, centers[_nearest_center(i, in, simplified_in, centers, distances)], in, simplified_in, distances);
+inline distance_t _curve_cost(const curve_number_t i, const Curves &in, const Curves &simplified_in, const Curve_Numbers &centers, Distance_Matrix &distances, const unsigned int distance_func) {
+    return _cheap_dist(i, centers[_nearest_center(i, in, simplified_in, centers, distances, distance_func)], in, simplified_in, distances, distance_func);
 }
 
-inline distance_t _center_cost_sum(const Curves &in, const Curves &simplified_in, const Curve_Numbers &centers, Distance_Matrix &distances) {
+inline distance_t _center_cost_sum(const Curves &in, const Curves &simplified_in, const Curve_Numbers &centers, Distance_Matrix &distances, const unsigned int distance_func) {
     distance_t cost = 0;
     
     // for all curves
     for (curve_number_t i = 0; i < in.size(); ++i) {
-        const auto min_cost_elem = _curve_cost(i, in, simplified_in, centers, distances);
+        const auto min_cost_elem = _curve_cost(i, in, simplified_in, centers, distances, distance_func);
         cost += min_cost_elem;
     }
     return cost;
 }
 
-inline distance_t _center_cost_max(const Curves &in, const Curves &simplified_in, const Curve_Numbers &centers, Distance_Matrix &distances) {
+inline distance_t _center_cost_max(const Curves &in, const Curves &simplified_in, const Curve_Numbers &centers, Distance_Matrix &distances, const unsigned int distance_func) {
     distance_t cost = 0;
     
     // for all curves
     for (curve_number_t i = 0; i < in.size(); ++i) {
-        const auto min_cost_elem = _curve_cost(i, in, simplified_in, centers, distances);
+        const auto min_cost_elem = _curve_cost(i, in, simplified_in, centers, distances, distance_func);
         cost = std::max(cost, min_cost_elem);
     }
     return cost;
 }
 
-Clustering_Result kl_cluster(const curve_number_t, const curve_size_t, const Curves &, unsigned int, const bool, const bool, const bool, const bool);
+Clustering_Result kl_cluster(const curve_number_t, const curve_size_t, const Curves &, unsigned int, const bool, const bool, const bool, const bool, const unsigned int distance_func);
 
-Clustering_Result kl_center(const curve_number_t, const curve_size_t, const Curves &, unsigned int, const bool = false, const bool = true, const bool = false);
+Clustering_Result kl_center(const curve_number_t, const curve_size_t, const Curves &, unsigned int, const bool = false, const bool = true, const bool = false, const unsigned int distance_func = 0);
 
-Clustering_Result kl_median(const curve_number_t, const curve_size_t, const Curves &, const bool = false, const bool = false); 
+Clustering_Result kl_median(const curve_number_t, const curve_size_t, const Curves &, const bool = false, const bool = false, const unsigned int distance_func = 0); 
 
 }

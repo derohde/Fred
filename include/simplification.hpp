@@ -26,7 +26,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 namespace py = pybind11;
 
+namespace Frechet {
+    
+namespace Continuous {
+
 namespace Simplification {
+    
 
 class Subcurve_Shortcut_Graph {
 
@@ -43,4 +48,8 @@ public:
 Curve approximate_minimum_link_simplification(const Curve&, const distance_t);
 Curve approximate_minimum_error_simplification(const Curve&, const curve_size_t);
  
+};
+ 
+};
+
 };

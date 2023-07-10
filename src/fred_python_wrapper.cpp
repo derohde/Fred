@@ -18,7 +18,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include "jl_transform.hpp"
 #include "clustering.hpp"
 #include "coreset.hpp"
-#include "grid.hpp"
+//#include "grid.hpp"
 #include "simplification.hpp"
 #include "dynamic_time_warping.hpp"
 
@@ -29,20 +29,20 @@ namespace fd = Frechet::Discrete;
 namespace ddtw = Dynamic_Time_Warping::Discrete;
 
 Curve minimum_error_simplification(const Curve &curve, const curve_size_t l) {
-    Simplification::Subcurve_Shortcut_Graph graph(const_cast<Curve&>(curve));
+    Frechet::Continuous::Simplification::Subcurve_Shortcut_Graph graph(const_cast<Curve&>(curve));
     auto scurve = graph.minimum_error_simplification(l);
     scurve.set_name("Simplification of " + curve.get_name());
     return scurve;
 }
 
 Curve approximate_minimum_link_simplification(const Curve &curve, const distance_t epsilon) {
-    auto scurve = Simplification::approximate_minimum_link_simplification(curve, epsilon);
+    auto scurve = Frechet::Continuous::Simplification::approximate_minimum_link_simplification(curve, epsilon);
     scurve.set_name("Simplification of " + curve.get_name());
     return scurve;
 }
 
 Curve approximate_minimum_error_simplification(const Curve &curve, const curve_size_t ell) {
-    auto scurve = Simplification::approximate_minimum_error_simplification(curve, ell);
+    auto scurve = Frechet::Continuous::Simplification::approximate_minimum_error_simplification(curve, ell);
     scurve.set_name("Simplification of " + curve.get_name());
     return scurve;
 }
@@ -151,7 +151,7 @@ PYBIND11_MODULE(backend, m) {
         .def("__setitem__", &Clustering::Clustering_Result::set)
         .def("__len__", &Clustering::Clustering_Result::size)
         .def("__iter__", [](Clustering::Clustering_Result &v) { return py::make_iterator(v.cbegin(), v.cend()); }, py::keep_alive<0, 1>())
-        .def("compute_assignment", &Clustering::Clustering_Result::compute_assignment, py::arg("curves"), py::arg("consecutive_call") = false)
+        .def("compute_assignment", &Clustering::Clustering_Result::compute_assignment, py::arg("curves"), py::arg("consecutive_call") = false, py::arg("distance_func") = 0)
         .def("compute_center_enclosing_balls", &Clustering::Clustering_Result::compute_center_enclosing_balls)
     ;
     
@@ -177,7 +177,7 @@ PYBIND11_MODULE(backend, m) {
     
     m.def("dimension_reduction", &JLTransform::transform_naive, py::arg("curves"), py::arg("epsilon") = 0.5, py::arg("empirical_constant") = true);
 
-    m.def("discrete_klcenter", &Clustering::kl_center, py::arg("k") = 2, py::arg("l") = 2, py::arg("curves"), py::arg("local_search") = 0, py::arg("consecutive_call") = false, py::arg("random_first_center") = true, py::arg("fast_simplification") = false);
-    m.def("discrete_klmedian", &Clustering::kl_median, py::arg("k") = 2, py::arg("l") = 2, py::arg("curves"), py::arg("consecutive_call") = false, py::arg("fast_simplification") = false);
+    m.def("discrete_klcenter", &Clustering::kl_center, py::arg("k") = 2, py::arg("l") = 2, py::arg("curves"), py::arg("local_search") = 0, py::arg("consecutive_call") = false, py::arg("random_first_center") = true, py::arg("fast_simplification") = false, py::arg("distance_func") = 0);
+    m.def("discrete_klmedian", &Clustering::kl_median, py::arg("k") = 2, py::arg("l") = 2, py::arg("curves"), py::arg("consecutive_call") = false, py::arg("fast_simplification") = false, py::arg("distance_func") = 0);
 
 }
