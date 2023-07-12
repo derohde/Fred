@@ -120,7 +120,7 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
     if (in.empty()) return result;
     
     std::size_t memory_distance_matrix = std::pow(in.size(), 2) * sizeof(distance_t), memory_available = .666 * Config::available_memory;
-    use_distance_matrix = true;
+    bool use_distance_matrix = Config::use_distance_matrix;
     
     if (memory_distance_matrix > memory_available and use_distance_matrix == true) {
         py::print("KL_CLUST: WARNING distance preprocessing requires more memory (", memory_distance_matrix * 1e-9, "GB) than available (", memory_available * 1e-9, "GB), consecutive_call will NOT be available");
