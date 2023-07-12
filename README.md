@@ -60,7 +60,11 @@ All simplifications are vertex-restricted!
 
 ### Clustering
 
-# Underlying distance function
+#### Distance storing
+
+- Set `fred.config.use_distance_matrix` to `False` if already computed distances should not be stored. This makes sense for massive data sets, especially when so much memory is consumed that the OS kills the process.
+
+#### Underlying distance function
 
 The variable `distance_func` controls which distance function to use. Possible values:
 - `0`: continuous Fréchet distance

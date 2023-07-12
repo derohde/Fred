@@ -48,7 +48,7 @@ Curves::const_iterator Clustering_Result::cend() const {
 }
 
 void Clustering_Result::compute_assignment(const Curves &in, const bool consecutive_call, const unsigned int distance_func) {
-    if (Config::verbosity > 1) py::print("Clustering Result: computing assignment");
+    if (Config::verbosity > 0) py::print("Clustering Result: computing assignment");
     assignment = Cluster_Assignment(centers.size());
     if (consecutive_call and in.size() == distances.size()) {
         for (curve_number_t i = 0; i < in.size(); ++i) assignment[_nearest_center(i, in, simplifications, center_indices, distances, distance_func)].push_back(i);
@@ -119,12 +119,12 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
     
     if (in.empty()) return result;
     
-    std::size_t memory_distance_matrix = std::pow(in.size(), 2) * sizeof(distance_t);
+    std::size_t memory_distance_matrix = std::pow(in.size(), 2) * sizeof(distance_t), memory_available = .666 * Config::available_memory;
     use_distance_matrix = true;
     
-    if (memory_distance_matrix > static_cast<std::size_t>(0.666 * Config::available_memory)) {
-        py::print("KL_CLUST: WARNING distance preprocessing requires more memory (", memory_distance_matrix, ") than available (", Config::available_memory, "), consecutive_call will NOT be available");
-        use_distance_matrix = false;
+    if (memory_distance_matrix > memory_available and use_distance_matrix == true) {
+        py::print("KL_CLUST: WARNING distance preprocessing requires more memory (", memory_distance_matrix * 1e-9, "GB) than available (", memory_available * 1e-9, "GB), consecutive_call will NOT be available");
+        use_distance_matrix = Config::use_distance_matrix;
     }
 
     if (not consecutive_call) {

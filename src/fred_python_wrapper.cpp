@@ -54,6 +54,7 @@ PYBIND11_MODULE(backend, m) {
         .def_property("available_memory", [&](Config::Config&) { return Config::available_memory; }, [&](Config::Config&, const std::size_t available_memory) { Config::available_memory = available_memory; })
         .def_property("continuous_frechet_error", [&](Config::Config&) { return fc::error; }, [&](Config::Config&, const distance_t error) { fc::error = error; })
         .def_property("verbosity", [&](Config::Config&) { return &Config::verbosity; }, [&](Config::Config&, const unsigned int verbosity) { Config::verbosity = verbosity; })
+        .def_property("use_distance_matrix", [&](Config::Config&) { return &Config::use_distance_matrix; }, [&](Config::Config&, const bool use_distance_matrix) { Config::use_distance_matrix = use_distance_matrix; })
         .def_property("number_threads", [&](Config::Config&){ return &Config::number_threads; }, [&](Config::Config&, const int number_threads) {
             if (number_threads <= 0) {
                 Config::number_threads = -1;
