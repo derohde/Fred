@@ -111,6 +111,11 @@ curve_number_t Cluster_Assignment::get(const curve_number_t i, const curve_numbe
     return operator[](i)[j];
 }
 
+distance_t Cluster_Assignment::distance(const curve_number_t i, const curve_number_t j) const {
+    return distances[i][j];
+}
+
+
 Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, unsigned int local_search = 0,
                              const bool median = false, const bool consecutive_call = false, const bool random_start_center = true, const bool fast_simplification = false, const unsigned int distance_func = 0) {
     

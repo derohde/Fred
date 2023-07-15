@@ -42,11 +42,11 @@ struct Distance_Matrix : public std::vector<Distances> {
     void print() const;
 };
 
-class Cluster_Assignment : public std::vector<Curve_Numbers> {
-public:
+struct Cluster_Assignment : public std::vector<Curve_Numbers> {
     explicit Cluster_Assignment(const curve_number_t k = 0) : std::vector<Curve_Numbers>(k, Curve_Numbers()) {}
     curve_number_t count(const curve_number_t) const;
     curve_number_t get(const curve_number_t, const curve_number_t) const;
+    distance_t distance(const curve_number_t, const curve_number_t) const;
 };
 
 struct Clustering_Result {

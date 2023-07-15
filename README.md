@@ -115,6 +115,7 @@ The variable `distance_func` controls which distance function to use. Possible v
     - `len(fred.Cluster_Assignment)`: number of centers
     - `fred.Cluster_Assignment.count(i)`: number of curves assigned to center `i`
     - `fred.Cluster_Assignment.get(i,j)`: get index of `j`th curve assigned to center `i`
+    - `fred.Cluster_Assignment.distance(i,j)`: get distance of `j`th curve assigned to center `i` to center `i`
 
 ### Dimension Reduction via Gaussian Random Projection 
 - [Section 2 in **Random Projections and Sampling Algorithms for Clustering of High Dimensional Polygonal Curves**](https://papers.nips.cc/paper/9443-random-projections-and-sampling-algorithms-for-clustering-of-high-dimensional-polygonal-curves)

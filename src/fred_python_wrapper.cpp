@@ -160,6 +160,7 @@ PYBIND11_MODULE(backend, m) {
         .def("__len__", &Clustering::Cluster_Assignment::size)
         .def("count", &Clustering::Cluster_Assignment::count)
         .def("get", &Clustering::Cluster_Assignment::get)
+        .def("distance", &Clustering::Cluster_Assignment::distance)
     ;
     
     py::class_<Coreset::Median_Coreset>(m, "Median_Coreset")
