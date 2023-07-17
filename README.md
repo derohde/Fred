@@ -2,7 +2,7 @@
 A fast, scalable and light-weight C++ Fréchet distance library, exposed to python and focused on (k,l)-clustering of polygonal curves.
 
 ### DISTANCE FUNCTION FOR CLUSTERING CAN BE CHOSEN (heuristic in case of DTW)
-### NOW WITH OPTIMIZED CLUSTER CENTERS
+### CURVE AND CURVES CAN NOW BE PICKLED
 
 ## Ingredients
 `import Fred as fred`

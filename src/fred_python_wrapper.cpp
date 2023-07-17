@@ -106,6 +106,15 @@ PYBIND11_MODULE(backend, m) {
         .def("__str__", &Curve::str)
         .def("__iter__", [](Curve &v) { return py::make_iterator(v.begin(), v.end()); }, py::keep_alive<0, 1>())
         .def("__repr__", &Curve::repr)
+        .def(py::pickle(
+            [](const Curve &c) {
+                return py::make_tuple(c.as_ndarray(), c.get_name());
+            },
+            [](py::tuple t) {
+                const auto coords = t[0].cast<py::array_t<coordinate_t>>();
+                const auto name = t[1].cast<std::string>();
+                return Curve(coords, name);
+            } ))
     ;
         
     py::class_<Curves>(m, "Curves")
@@ -122,6 +131,24 @@ PYBIND11_MODULE(backend, m) {
         .def("__repr__", &Curves::repr)
         .def_property_readonly("values", &Curves::as_ndarray)
         .def_property_readonly("dimensions", &Curves::dimensions)
+        .def(py::pickle(
+            [](const Curves &c) {
+                py::list l;
+                for (const Curve &elem : c) {
+                    l.append(py::make_tuple(elem.as_ndarray(), elem.get_name()));
+                }
+                return l;
+            },
+            [](py::list l) {
+                Curves result;
+                for (const auto &elem : l) {
+                    const auto t = elem.cast<py::tuple>();
+                    const auto coords = t[0].cast<py::array_t<coordinate_t>>();
+                    const auto name = t[1].cast<std::string>();
+                    result.push_back(Curve(coords, name));
+                }
+                return result;
+            } ))
     ;
     
     py::class_<fc::Distance>(m, "Continuous_Frechet_Distance")

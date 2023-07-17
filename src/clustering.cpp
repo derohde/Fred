@@ -53,7 +53,7 @@ void Clustering_Result::compute_assignment(const Curves &in, const bool consecut
     if (consecutive_call and in.size() == distances.size()) {
         for (curve_number_t i = 0; i < in.size(); ++i) assignment[_nearest_center(i, in, simplifications, center_indices, distances, distance_func)].push_back(i);
     } else {
-        distances = Distance_Matrix(in.size(), centers.size());
+        if (use_distance_matrix) distances = Distance_Matrix(in.size(), centers.size());
         auto ncenter_indices = Curve_Numbers(centers.size());
         std::iota(ncenter_indices.begin(), ncenter_indices.end(), 0);
         for (curve_number_t i = 0; i < in.size(); ++i) 
