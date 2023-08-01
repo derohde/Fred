@@ -17,7 +17,7 @@ namespace Continuous {
 namespace Simplification {
     
 Subcurve_Shortcut_Graph::Subcurve_Shortcut_Graph(const Curve &pcurve) : curve{const_cast<Curve&>(pcurve)}, 
-        edges{std::vector<Distances>(curve.complexity(), Distances(curve.complexity(), std::numeric_limits<distance_t>::infinity()))} {
+        edges{std::vector<std::vector<distance_t>>(curve.complexity(), std::vector<distance_t>(curve.complexity(), std::numeric_limits<distance_t>::infinity()))} {
             
     if (Config::verbosity > 1) py::print("SIMPL: computing shortcut graph");
     const curve_size_t complexity = curve.complexity();
@@ -57,10 +57,10 @@ Curve Subcurve_Shortcut_Graph::minimum_error_simplification(const curve_size_t l
         return result;
     }
     
-    std::vector<Distances> distances(curve.complexity(), Distances(l, std::numeric_limits<distance_t>::infinity()));
+    std::vector<std::vector<distance_t>> distances(curve.complexity(), std::vector<distance_t>(l, std::numeric_limits<distance_t>::infinity()));
     std::vector<std::vector<curve_size_t>> predecessors(curve.complexity(), std::vector<curve_size_t>(l));
     
-    Distances others;
+    std::vector<distance_t> others;
     curve_size_t best = 0;
     for (curve_size_t i = 0; i < l; ++i) {
         

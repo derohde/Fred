@@ -27,16 +27,16 @@ std::string Distance::repr() const {
     return ss.str();
 }
 
-Points vertices_matching_points(const Curve &curve1, const Curve &curve2, const distance_t dist) {
-    if (Config::verbosity > 1) py::print("CFD: computing matching points for distance ", dist, " from curve1 of complexity ", curve1.complexity(), " to curve2 of complexity ", curve2.complexity());
-    if (Config::verbosity > 2) py::print("CFD: distance between curve1 and curve2 is ", distance(curve1, curve2).value);
+Points vertices_matching_points(const Curve &curve1, const Curve &curve2, Distance &dist) {
     if ((curve1.complexity() < 2) or (curve2.complexity() < 2)) {
         py::print("WARNING: curves must be of at least two points");
         Points result(curve1.dimensions());
         return result;
     }
     
-    const auto dist_sqr = dist * dist;
+    if (Config::verbosity > 1) py::print("CFD: computing matching points for distance ", dist.value, " from curve1 of complexity ", curve1.complexity(), " to curve2 of complexity ", curve2.complexity());
+    
+    const distance_t dist_sqr = dist.value * dist.value;
     const curve_size_t n1 = curve1.complexity();
     const curve_size_t n2 = curve2.complexity();
 
@@ -100,6 +100,7 @@ Distance distance(const Curve &curve1, const Curve &curve2) {
     
     auto dist = _distance(curve1, curve2, ub, lb);
     dist.time_bounds = (end - start) / CLOCKS_PER_SEC;
+    dist.time = dist.time_bounds + dist.time_searches;
 
     return dist;
 }

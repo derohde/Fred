@@ -18,20 +18,25 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include "interval.hpp"
 #include "curve.hpp"
 #include "random.hpp"
+#include "config.hpp"
 
 namespace Dynamic_Time_Warping {
     
 namespace Discrete {
     
-    struct Distance {
-        distance_t value;
-        double time;
+    struct Distance : public PDistance {
+        explicit operator bool() const {
+            return true;
+        }
         
         std::string repr() const;
+        
+        std::vector<std::pair<curve_number_t, curve_number_t>> matching;
     };
     
+    Points vertices_matching_points(const Curve&, const Curve&, Distance&);
+    
     Distance distance(const Curve&, const Curve&);
-    Distance distance_randomized(const Curve&, const Curve&);
 }
 
 }

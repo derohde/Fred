@@ -13,6 +13,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <vector>
 #include <cmath>
 #include <limits>
+#include <string>
+#include <sstream>
+#include <memory>
 
 typedef double distance_t; // Distances
 typedef double coordinate_t; // Coordinates
@@ -26,10 +29,38 @@ class Point;
 class Curve;
 class Interval;
 
+struct PDistance {
+  
+  PDistance() {};
+  PDistance(distance_t value) : value{value} {};
+  
+  explicit virtual operator bool() const {
+    return false;
+  }
+  
+  operator distance_t() const {
+    return value;
+  }
+  
+  bool operator<(const PDistance &other) const {
+    return value < other.value;
+  }
+  
+  virtual std::string repr() const {
+    std::stringstream ss;
+    ss << "Prototype of distance";
+    return ss.str();
+  }
+    
+  distance_t value = std::numeric_limits<distance_t>::signaling_NaN();
+  double time = 0;
+  
+};
+
 using Vector = Point;
 using Intervals = std::vector<Interval>;
 using Coordinates = std::vector<coordinate_t>;
-using Distances = std::vector<distance_t>;
+using Distances = std::vector<std::unique_ptr<PDistance>>;
 using Curve_Numbers = std::vector<curve_number_t>;
 using Parameters = std::vector<parameter_t>;
 

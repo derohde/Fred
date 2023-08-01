@@ -24,10 +24,46 @@ std::string Distance::repr() const {
     return ss.str();
 }
     
+Points vertices_matching_points(const Curve &curve1, const Curve &curve2, Distance &dist) {
+    if ((curve1.complexity() < 2) or (curve2.complexity() < 2)) {
+        py::print("WARNING: curves must be of at least two points");
+        Points result(curve1.dimensions());
+        return result;
+    }
+    
+    if (Config::verbosity > 1) py::print("DDTW: computing matching points from curve1 of complexity ", curve1.complexity(), " to curve2 of complexity ", curve2.complexity());
+    if (Config::verbosity > 2) py::print("DDTW: distance between curve1 and curve2 is ", dist.value);
+    
+    std::vector<Points> matching_points(curve1.size(), Points(curve1.dimensions()));    
+    
+    for (curve_number_t i = 0; i < dist.matching.size(); ++i) {
+        curve_number_t j = dist.matching[i].first, k = dist.matching[i].second;
+        matching_points[j].push_back(curve2[k]);
+    }
+    
+    Points result(curve1.size(), curve1.dimensions());
+    
+    for (curve_size_t i = 0; i < curve1.size(); ++i) {
+        result[i] = matching_points[i].centroid();
+    }
+        
+    return result;
+}
+    
 Distance distance(const Curve &curve1, const Curve &curve2) {
     Distance result;
+    
+    if ((curve1.complexity() < 2) or (curve2.complexity() < 2)) {
+        py::print("WARNING: curves must be of at least two points");
+        return result;
+    }
+    
     const auto start = std::clock();
     
+    const curve_size_t n1 = curve1.complexity();
+    const curve_size_t n2 = curve2.complexity();
+    
+    std::vector<std::vector<std::pair<curve_number_t, curve_number_t>>> b(n1 + 1, std::vector<std::pair<curve_number_t, curve_number_t>>(n2 + 1));
     std::vector<std::vector<distance_t>> a(curve1.complexity() + 1, std::vector<distance_t>(curve2.complexity() + 1, std::numeric_limits<distance_t>::infinity()));
     std::vector<std::vector<distance_t>> dists(curve1.complexity(), std::vector<distance_t>(curve2.complexity()));
     
@@ -42,85 +78,37 @@ Distance distance(const Curve &curve1, const Curve &curve2) {
     for (curve_size_t i = 1; i <= curve1.complexity(); ++i) {
         for (curve_size_t j = 1; j <= curve2.complexity(); ++j) {
             a[i][j] = dists[i-1][j-1];
-            a[i][j] += std::min(std::min(a[i-1][j], a[i][j-1]), a[i-1][j-1]);
-        }
-    }
-    auto value = a[curve1.complexity()][curve2.complexity()];
-    
-    const auto end = std::clock();
-    result.time = (end - start) / CLOCKS_PER_SEC;
-    result.value = value;
-    return result;
-}
-
-Distance distance_randomized(const Curve &curve1, const Curve &curve2) {
-    Distance result;
-    const auto start = std::clock();
-    
-    std::priority_queue<std::pair<distance_t, std::pair<curve_size_t, curve_size_t>>> queue;
-    std::map<std::pair<curve_size_t, curve_size_t>, bool> seen;
-    distance_t cost = std::numeric_limits<distance_t>::infinity();
-    
-    Point min_coords(curve1.dimensions()), max_coords(curve1.dimensions());
-    for (curve_size_t i = 0; i < curve1.complexity(); ++i) {
-        for (dimensions_t j = 0; j < curve1.dimensions(); ++j) {
-            min_coords[j] = std::min(min_coords[j], curve1[i][j]);
-            max_coords[j] = std::max(max_coords[j], curve1[i][j]);
-        }
-    }
-    for (curve_size_t i = 0; i < curve2.complexity(); ++i) {
-        for (dimensions_t j = 0; j < curve1.dimensions(); ++j) {
-            min_coords[j] = std::min(min_coords[j], curve2[i][j]);
-            max_coords[j] = std::max(max_coords[j], curve2[i][j]);
-        }
-    }
-    
-    const distance_t w = min_coords.dist(max_coords);
-    distance_t d, curr_cost;
-    curve_size_t i, j;
-    std::pair<distance_t, std::pair<curve_size_t, curve_size_t>> current;
-    
-    auto ugen = Random::Uniform_Random_Generator<>();
-    
-    queue.emplace(-curve1[0].dist(curve2[0]), std::make_pair(0, 0));
-    
-    while (not queue.empty()) {
-        current = queue.top();
-        queue.pop();
-        
-        i = current.second.first;
-        j = current.second.second;
-        curr_cost = -current.first;
-        
-        if (i == curve1.complexity() - 1 and j == curve2.complexity() - 1) {
-            cost = std::min(cost, curr_cost);
-        }
-        
-        if (not seen[current.second]) {
-            seen[current.second] = true;
-            if (i < curve1.complexity() - 1) {
-                if (j < curve2.complexity() - 1) {
-                    d = curve1[i+1].dist(curve2[j+1]);
-                    if (ugen.get() > d / w)
-                        queue.emplace(-(curr_cost + d), std::make_pair(i+1, j+1));
-                    
-                    d = curve1[i].dist(curve2[j+1]);
-                    if (ugen.get() > d / w)
-                        queue.emplace(-(curr_cost + d), std::make_pair(i, j+1));
-                }
-                d = curve1[i+1].dist(curve2[j]);
-                if (ugen.get() > d / w)
-                    queue.emplace(-(curr_cost + d), std::make_pair(i+1, j));
-            } else if (j < curve2.complexity() - 1) {
-                d = curve1[i].dist(curve2[j+1]);
-                if (ugen.get() > d / w)
-                    queue.emplace(-(curr_cost + d), std::make_pair(i, j+1));
+            
+            curve_number_t ii = i - 1, jj = j;
+            distance_t min_ele = a[i - 1][j];
+            
+            if (a[i][j - 1] < min_ele) {
+                min_ele = a[i][j - 1];
+                ii = i;
+                jj = j - 1;
             }
+            
+            if (a[i - 1][j - 1] < min_ele) {
+                min_ele = a[i - 1][j - 1];
+                ii = i - 1;
+                jj = j - 1;
+            }
+            
+            a[i][j] += min_ele;
+            b[i][j] = std::make_pair(ii, jj);
         }
     }
+            
+    for (curve_number_t i = n1, j = n2; ; i = b[i][j].first, j = b[i][j].second) {
+        result.matching.push_back(std::make_pair(i - 1, j - 1));
+        if (b[i][j].first == 1 and b[i][j].second == 1) break;
+    }
+    
+    result.matching.push_back(std::make_pair(0, 0));
+    
     const auto end = std::clock();
     result.time = (end - start) / CLOCKS_PER_SEC;
-    result.value = cost;
+    result.value = a[n1][n2];
     return result;
 }
 

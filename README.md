@@ -73,7 +73,7 @@ The variable `distance_func` controls which distance function to use. Possible v
 
 #### discrete (k,l)-center clustering (continuous Fréchet)
 - from [**Approximating (k,l)-center clustering for curves**](https://dl.acm.org/doi/10.5555/3310435.3310616)
-- signature: `fred.discrete_klcenter(k, l, curves, local_search, consecutive_call, random_first_center, fast_simplification, distance_func)` with parameters 
+- signature: `fred.discrete_klcenter(int k, int l, fred.Curves, bool local_search, bool consecutive_call, bool random_first_center, bool fast_simplification, int distance_func)` with parameters 
     - `k`: number of centers
     - `l`: maximum complexity of the centers
     - `local_search`: number of iterations of local search to improve solution, defaults to `0`
@@ -87,7 +87,7 @@ The variable `distance_func` controls which distance function to use. Possible v
 
 #### discrete (k,l)-median clustering (continuous Fréchet)
 - Algorithm from section 4.3 in [**Geometric Approximation Algorithms**](http://www.ams.org/books/surv/173/) + simplification
-- signature: `fred.discrete_klmedian(k, l, curves, consecutive_call, fast_simplification, distance_func)` with parameters 
+- signature: `fred.discrete_klmedian(int k, int l, fred.Curves, bool consecutive_call, bool fast_simplification, int distance_func)` with parameters 
     - `k`: number of centers
     - `l`: maximum complexity of the centers
     - `consecutive_call`: reuses distances and simplifications already computed in a previous call if `true`, defaults to `false`
@@ -102,8 +102,8 @@ The variable `distance_func` controls which distance function to use. Possible v
 - methods: 
     - `len(fred.Clustering_Result)`: number of centers
     - `fred.Clustering_Result[i]`: get ith center
-    - `fred.Clustering_Result.compute_assignment(fred.Curves, bool consecutive_call, distance_func)`: assigns every curve to its nearest center with parameter `consecutive_call`, which defaults to `false`; set to true, if you want to assign the curves used for clustering
-    - `fred.Clustering_Result.optimize(fred.Curves, bool consecutive_call)`: (heuristically) optimizes cluster centers using a [stabbing algorithm](https://arxiv.org/abs/2212.01458)
+    - `fred.Clustering_Result.compute_assignment(fred.Curves, bool consecutive_call, int distance_func)`: assigns every curve to its nearest center with parameter `consecutive_call`, which defaults to `false`; set to true, if you want to assign the curves used for clustering
+    - `fred.Clustering_Result.optimize(fred.Curves, bool consecutive_call, int distance_func)`: (heuristically) optimizes cluster centers using a [stabbing algorithm](https://arxiv.org/abs/2212.01458)
 - members: 
     - `value`: objective value
     - `time`: running-time
@@ -115,7 +115,7 @@ The variable `distance_func` controls which distance function to use. Possible v
     - `len(fred.Cluster_Assignment)`: number of centers
     - `fred.Cluster_Assignment.count(i)`: number of curves assigned to center `i`
     - `fred.Cluster_Assignment.get(i,j)`: get index of `j`th curve assigned to center `i`
-    - `fred.Cluster_Assignment.distance(i,j)`: get distance of `j`th curve assigned to center `i` to center `i`
+    - `fred.Cluster_Assignment.distance(i,j)`: get distance of `j`th curve assigned to center `i` to center `i` (only available when distance matrix is used)
 
 ### Dimension Reduction via Gaussian Random Projection 
 - [Section 2 in **Random Projections and Sampling Algorithms for Clustering of High Dimensional Polygonal Curves**](https://papers.nips.cc/paper/9443-random-projections-and-sampling-algorithms-for-clustering-of-high-dimensional-polygonal-curves)

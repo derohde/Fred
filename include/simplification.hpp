@@ -36,7 +36,7 @@ namespace Simplification {
 class Subcurve_Shortcut_Graph {
 
     Curve& curve;
-    std::vector<Distances> edges;
+    std::vector<std::vector<distance_t>> edges;
     
 public:
     

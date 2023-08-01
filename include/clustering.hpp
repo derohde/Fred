@@ -12,6 +12,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <unordered_map>
 #include <cmath>
+#include <memory>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
@@ -38,7 +39,12 @@ extern bool use_distance_matrix;
 
 struct Distance_Matrix : public std::vector<Distances> {
     Distance_Matrix() = default;
-    Distance_Matrix(const curve_number_t n, const curve_number_t m) : std::vector<Distances>(n, Distances(m, -1.0)) {}
+    Distance_Matrix(const curve_number_t n, const curve_number_t m) : std::vector<Distances>(n) {
+        for (curve_number_t i = 0; i < m; ++i) {
+            operator[](i).reserve(m);
+            std::generate_n(std::back_inserter(operator[](i)), m, [] { return std::make_unique<PDistance>(); });
+        }
+    }
     void print() const;
 };
 
@@ -62,27 +68,27 @@ struct Clustering_Result {
     Curves::const_iterator cend() const;
     void compute_assignment(const Curves&, const bool = false, const unsigned int distance_func = 0);
     void set_center_indices(const Curve_Numbers&);
-    py::list compute_center_enclosing_balls(const Curves&, const bool);
+    py::list compute_center_enclosing_balls(const Curves&, const bool, const unsigned int);
 private:
     Curve_Numbers center_indices;
 };
 
 inline distance_t _cheap_dist(const curve_number_t i, const curve_number_t j, const Curves &in, const Curves &simplified_in, Distance_Matrix &distances, const unsigned int distance_func) {
     if (use_distance_matrix) {
-        if (distances[i][j] < 0) {
+        if (not distances[i][j]) {
             switch (distance_func) {
                 case 0:
-                    distances[i][j] = Frechet::Continuous::distance(in[i], simplified_in[j]).value;
+                    distances[i][j] = std::make_unique<Frechet::Continuous::Distance>(Frechet::Continuous::distance(in[i], simplified_in[j]));
                     break;
                 case 1:
-                    distances[i][j] = Frechet::Discrete::distance(in[i], simplified_in[j]).value;
+                    distances[i][j] = std::make_unique<Frechet::Discrete::Distance>(Frechet::Discrete::distance(in[i], simplified_in[j]));
                     break;
                 case 2:
-                    distances[i][j] = Dynamic_Time_Warping::Discrete::distance(in[i], simplified_in[j]).value;
+                    distances[i][j] = std::make_unique<Dynamic_Time_Warping::Discrete::Distance>(Dynamic_Time_Warping::Discrete::distance(in[i], simplified_in[j]));
                     break;
             }
         }
-        return distances[i][j];
+        return distances[i][j]->value;
     } else {
         switch (distance_func) {
                 case 0:
@@ -98,9 +104,9 @@ inline distance_t _cheap_dist(const curve_number_t i, const curve_number_t j, co
 }
 
 inline curve_number_t _nearest_center(const curve_number_t i, const Curves &in, const Curves &simplified_in, const Curve_Numbers &centers, Distance_Matrix &distances, const unsigned int distance_func) {
-    const auto infty = std::numeric_limits<distance_t>::infinity();
+    const distance_t infty = std::numeric_limits<distance_t>::infinity();
     // cost for curve is infinity
-    auto min_cost = infty;
+    distance_t min_cost = infty;
     curve_number_t nearest = 0;
     
     // except there is a center with smaller cost, then choose the one with smallest cost

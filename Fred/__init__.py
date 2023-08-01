@@ -18,13 +18,17 @@ available_memory = virtual_memory.available
 config = Config()
 config.available_memory = available_memory
 
-def _optimize_centers(self, curves, consecutive_call=False):
-    all_balls = self.compute_center_enclosing_balls(curves, False)
+def _optimize_centers(self, curves, consecutive_call=False, distance_func = 0):
+    if self.optimize_called:
+        return
+    all_balls = self.compute_center_enclosing_balls(curves, consecutive_call, distance_func)
     for i, center_balls in enumerate(all_balls):
         path, _ = _stabbing_path(center_balls)
         self[i] = Curve(path, "{} (optimized)".format(self[i].name))
+    self.optimize_called = True
 
 Clustering_Result.optimize_centers = _optimize_centers
+Clustering_Result.optimize_called = False
 
 def plot_curve(*curves, vertex_markings=True, savename=None, saveextension=None, return_fig=False, legend=True):
     import matplotlib.pyplot as plt
@@ -100,8 +104,7 @@ def plot_curve(*curves, vertex_markings=True, savename=None, saveextension=None,
     elif return_fig:
         return fig
     else:
-        plt.show()
-        plt.close()
+        plt.show(block=False)
     
 def plot_clustering(clustering_result, curves, vertex_markings=True, savename=None, saveextension=None, return_fig=False, legend=True):
     if not (isinstance(clustering_result, backend.Clustering_Result) and isinstance(curves, backend.Curves)):
@@ -166,5 +169,4 @@ def plot_clustering(clustering_result, curves, vertex_markings=True, savename=No
     elif return_fig:
         return fig
     else:
-        plt.show()
-        plt.close()
+        plt.show(block=False)

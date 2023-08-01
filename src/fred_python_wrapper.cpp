@@ -8,6 +8,8 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#define PYBIND11_DETAILED_ERROR_MESSAGES true
+
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 
@@ -198,7 +200,6 @@ PYBIND11_MODULE(backend, m) {
     m.def("continuous_frechet", &fc::distance);
     m.def("discrete_frechet", &fd::distance);
     m.def("discrete_dynamic_time_warping", &ddtw::distance);
-    m.def("discrete_dynamic_time_warping_randomized", &ddtw::distance_randomized);
     
     m.def("minimum_error_simplification", &minimum_error_simplification);
     m.def("approximate_minimum_link_simplification", &approximate_minimum_link_simplification);

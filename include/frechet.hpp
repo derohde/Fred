@@ -23,18 +23,21 @@ namespace Continuous {
     
     extern distance_t error;
     
-    struct Distance {
-        distance_t value;
+    struct Distance : public PDistance {
+        explicit operator bool() const {
+            return true;
+        }
+        
+        std::string repr() const;
+        
         double time_searches;
         double time_bounds;
         std::size_t number_searches;
-        
-        std::string repr() const;
     };
     
     Distance distance(const Curve&, const Curve&);
 
-    Points vertices_matching_points(const Curve&, const Curve&, const distance_t);
+    Points vertices_matching_points(const Curve&, const Curve&, Distance&);
     
     Distance _distance(const Curve&, const Curve&, distance_t, distance_t);
             
@@ -47,9 +50,10 @@ namespace Continuous {
 }
 namespace Discrete {
     
-    struct Distance {
-        distance_t value;
-        double time;
+    struct Distance : public PDistance {
+        explicit operator bool() const {
+            return true;
+        }
         
         std::string repr() const;
     };

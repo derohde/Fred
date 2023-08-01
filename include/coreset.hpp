@@ -23,10 +23,10 @@ class Median_Coreset {
     parameter_t epsilon;
     distance_t constant;
     Clustering::Clustering_Result c_approx;
-    Distances cluster_costs;
+    std::vector<distance_t> cluster_costs;
     Curve_Numbers cluster_sizes;
     Curve_Numbers coreset;
-    Distances lambda;
+    std::vector<distance_t> lambda;
     Parameters probabilities;
 
 public:
