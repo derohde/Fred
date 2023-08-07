@@ -17,5 +17,6 @@ namespace Config {
     bool mp_dynamic = true;
     int number_threads = -1;
     bool use_distance_matrix = true;
+    bool dtw_contingency = false;
     
 }

@@ -17,14 +17,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 namespace Dynamic_Time_Warping {
 
 namespace Discrete {
-    
+        
 std::string Distance::repr() const {
     std::stringstream ss;
     ss << value;
     return ss.str();
 }
     
-Points vertices_matching_points(const Curve &curve1, const Curve &curve2, Distance &dist) {
+Points vertices_matching_points(const Curve &curve1, const Curve &curve2, const Distance &dist) {
     if ((curve1.complexity() < 2) or (curve2.complexity() < 2)) {
         py::print("WARNING: curves must be of at least two points");
         Points result(curve1.dimensions());
@@ -60,11 +60,17 @@ Distance distance(const Curve &curve1, const Curve &curve2) {
     
     const auto start = std::clock();
     
-    const curve_size_t n1 = curve1.complexity();
-    const curve_size_t n2 = curve2.complexity();
-    
-    std::vector<std::vector<std::pair<curve_number_t, curve_number_t>>> b(n1 + 1, std::vector<std::pair<curve_number_t, curve_number_t>>(n2 + 1));
-    std::vector<std::vector<distance_t>> a(curve1.complexity() + 1, std::vector<distance_t>(curve2.complexity() + 1, std::numeric_limits<distance_t>::infinity()));
+    const auto infty = std::numeric_limits<distance_t>::infinity();
+        
+    const curve_size_t n1 = curve1.complexity(), n2 = curve2.complexity();
+    curve_size_t contingency1 = std::ceil(std::sqrt(n1)), contingency2 = std::ceil(std::sqrt(n2));
+        
+    if (n1 < n2) contingency1 += n2 - n1 + 1;
+    if (n2 < n1) contingency2 += n1 - n2 + 1;
+
+    std::vector<std::vector<std::pair<curve_number_t, curve_number_t>>> multi_warp_counter(n1 + 1, std::vector<std::pair<curve_number_t, curve_number_t>>(n2 + 1, std::make_pair(0, 0)));
+    std::vector<std::vector<std::pair<curve_number_t, curve_number_t>>> b(n1 + 1, std::vector<std::pair<curve_number_t, curve_number_t>>(n2 + 1, std::make_pair(0, 0)));
+    std::vector<std::vector<distance_t>> a(curve1.complexity() + 1, std::vector<distance_t>(curve2.complexity() + 1, infty));
     std::vector<std::vector<distance_t>> dists(curve1.complexity(), std::vector<distance_t>(curve2.complexity()));
     
     #pragma omp parallel for collapse(2)
@@ -74,25 +80,41 @@ Distance distance(const Curve &curve1, const Curve &curve2) {
         }
     }
     
+    unsigned int mwd = 0;
+    
+    curve_number_t ii = 1, jj = 1;
+    distance_t min_ele;
+    
     a[0][0] = 0;
     for (curve_size_t i = 1; i <= curve1.complexity(); ++i) {
         for (curve_size_t j = 1; j <= curve2.complexity(); ++j) {
             a[i][j] = dists[i-1][j-1];
+            mwd = 0;
             
-            curve_number_t ii = i - 1, jj = j;
-            distance_t min_ele = a[i - 1][j];
+            ii = i - 1, jj = j - 1;
+            min_ele = a[i - 1][j - 1];
             
             if (a[i][j - 1] < min_ele) {
-                min_ele = a[i][j - 1];
-                ii = i;
-                jj = j - 1;
+                if ((Config::dtw_contingency and multi_warp_counter[i][j - 1].first < contingency1) or not Config::dtw_contingency) {
+                    min_ele = a[i][j - 1];
+                    ii = i;
+                    jj = j - 1;
+                    mwd = 1;
+                }
             }
             
-            if (a[i - 1][j - 1] < min_ele) {
-                min_ele = a[i - 1][j - 1];
-                ii = i - 1;
-                jj = j - 1;
+            if (a[i - 1][j] < min_ele) {
+                if ((Config::dtw_contingency and multi_warp_counter[i - 1][j].second < contingency2) or not Config::dtw_contingency) {
+                    min_ele = a[i - 1][j];
+                    ii = i - 1;
+                    jj = j;
+                    mwd = 2;
+                }
             }
+            
+            multi_warp_counter[i][j] = multi_warp_counter[ii][jj];
+            if (mwd == 1) ++multi_warp_counter[i][j].first;
+            else if (mwd == 2) ++multi_warp_counter[i][j].second;
             
             a[i][j] += min_ele;
             b[i][j] = std::make_pair(ii, jj);
@@ -109,6 +131,7 @@ Distance distance(const Curve &curve1, const Curve &curve2) {
     const auto end = std::clock();
     result.time = (end - start) / CLOCKS_PER_SEC;
     result.value = a[n1][n2];
+        
     return result;
 }
 

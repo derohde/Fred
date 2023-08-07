@@ -60,7 +60,7 @@ struct PDistance {
 using Vector = Point;
 using Intervals = std::vector<Interval>;
 using Coordinates = std::vector<coordinate_t>;
-using Distances = std::vector<std::unique_ptr<PDistance>>;
+using Distances = std::vector<std::unique_ptr<const PDistance>>;
 using Curve_Numbers = std::vector<curve_number_t>;
 using Parameters = std::vector<parameter_t>;
 

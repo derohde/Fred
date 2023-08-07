@@ -85,7 +85,7 @@ py::list Clustering_Result::compute_center_enclosing_balls(const Curves &in, con
             Points tpoints(get(i).dimensions());
             switch (distance_func) {
                 case 0:
-                    if (use_distance_matrix) tpoints = Frechet::Continuous::vertices_matching_points(get(i), in[assignment[i][j]], dynamic_cast<Frechet::Continuous::Distance&>(*distances[assignment[i][j]][i]));
+                    if (use_distance_matrix) tpoints = Frechet::Continuous::vertices_matching_points(get(i), in[assignment[i][j]], dynamic_cast<const Frechet::Continuous::Distance&>(*distances[assignment[i][j]][i]));
                     else {
                         Frechet::Continuous::Distance curr_dist = Frechet::Continuous::distance(get(i), in[assignment[i][j]]);
                         tpoints = Frechet::Continuous::vertices_matching_points(get(i), in[assignment[i][j]], curr_dist);
@@ -94,7 +94,7 @@ py::list Clustering_Result::compute_center_enclosing_balls(const Curves &in, con
                 case 1:
                     break;
                 case 2:
-                    if (use_distance_matrix) tpoints = Dynamic_Time_Warping::Discrete::vertices_matching_points(get(i), in[assignment[i][j]], dynamic_cast<Dynamic_Time_Warping::Discrete::Distance&>(*distances[assignment[i][j]][i]));
+                    if (use_distance_matrix) tpoints = Dynamic_Time_Warping::Discrete::vertices_matching_points(get(i), in[assignment[i][j]], dynamic_cast<const Dynamic_Time_Warping::Discrete::Distance&>(*distances[assignment[i][j]][i]));
                     else {
                         Dynamic_Time_Warping::Discrete::Distance curr_dist = Dynamic_Time_Warping::Discrete::distance(get(i), in[assignment[i][j]]);
                         tpoints = Dynamic_Time_Warping::Discrete::vertices_matching_points(get(i), in[assignment[i][j]], curr_dist);

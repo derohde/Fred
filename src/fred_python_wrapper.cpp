@@ -57,6 +57,7 @@ PYBIND11_MODULE(backend, m) {
         .def_property("continuous_frechet_error", [&](Config::Config&) { return fc::error; }, [&](Config::Config&, const distance_t error) { fc::error = error; })
         .def_property("verbosity", [&](Config::Config&) { return &Config::verbosity; }, [&](Config::Config&, const unsigned int verbosity) { Config::verbosity = verbosity; })
         .def_property("use_distance_matrix", [&](Config::Config&) { return &Config::use_distance_matrix; }, [&](Config::Config&, const bool use_distance_matrix) { Config::use_distance_matrix = use_distance_matrix; })
+        .def_property("dtw_contingency", [&](Config::Config&) { return &Config::dtw_contingency; }, [&](Config::Config&, const bool dtw_contingency) { Config::dtw_contingency = dtw_contingency; })
         .def_property("number_threads", [&](Config::Config&){ return &Config::number_threads; }, [&](Config::Config&, const int number_threads) {
             if (number_threads <= 0) {
                 Config::number_threads = -1;

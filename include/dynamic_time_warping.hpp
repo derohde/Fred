@@ -23,7 +23,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 namespace Dynamic_Time_Warping {
     
 namespace Discrete {
-    
+        
     struct Distance : public PDistance {
         explicit operator bool() const {
             return true;
@@ -34,7 +34,7 @@ namespace Discrete {
         std::vector<std::pair<curve_number_t, curve_number_t>> matching;
     };
     
-    Points vertices_matching_points(const Curve&, const Curve&, Distance&);
+    Points vertices_matching_points(const Curve&, const Curve&, const Distance&);
     
     Distance distance(const Curve&, const Curve&);
 }

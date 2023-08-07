@@ -19,16 +19,12 @@ config = Config()
 config.available_memory = available_memory
 
 def _optimize_centers(self, curves, consecutive_call=False, distance_func = 0):
-    if self.optimize_called:
-        return
     all_balls = self.compute_center_enclosing_balls(curves, consecutive_call, distance_func)
     for i, center_balls in enumerate(all_balls):
         path, _ = _stabbing_path(center_balls)
         self[i] = Curve(path, "{} (optimized)".format(self[i].name))
-    self.optimize_called = True
 
 Clustering_Result.optimize_centers = _optimize_centers
-Clustering_Result.optimize_called = False
 
 def plot_curve(*curves, vertex_markings=True, savename=None, saveextension=None, return_fig=False, legend=True):
     import matplotlib.pyplot as plt

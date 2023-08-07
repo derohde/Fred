@@ -27,7 +27,7 @@ std::string Distance::repr() const {
     return ss.str();
 }
 
-Points vertices_matching_points(const Curve &curve1, const Curve &curve2, Distance &dist) {
+Points vertices_matching_points(const Curve &curve1, const Curve &curve2, const Distance &dist) {
     if ((curve1.complexity() < 2) or (curve2.complexity() < 2)) {
         py::print("WARNING: curves must be of at least two points");
         Points result(curve1.dimensions());

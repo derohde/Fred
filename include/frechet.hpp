@@ -37,7 +37,7 @@ namespace Continuous {
     
     Distance distance(const Curve&, const Curve&);
 
-    Points vertices_matching_points(const Curve&, const Curve&, Distance&);
+    Points vertices_matching_points(const Curve&, const Curve&, const Distance&);
     
     Distance _distance(const Curve&, const Curve&, distance_t, distance_t);
             
