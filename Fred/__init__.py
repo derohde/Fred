@@ -18,8 +18,8 @@ available_memory = virtual_memory.available
 config = Config()
 config.available_memory = available_memory
 
-def _optimize_centers(self, curves, consecutive_call=False, distance_func = 0):
-    all_balls = self.compute_center_enclosing_balls(curves, consecutive_call, distance_func)
+def _optimize_centers(self, curves, consecutive_call=False):
+    all_balls = self.compute_center_enclosing_balls(curves, consecutive_call)
     for i, center_balls in enumerate(all_balls):
         path, _ = _stabbing_path(center_balls)
         self[i] = Curve(path, "{} (optimized)".format(self[i].name))

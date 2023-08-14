@@ -16,7 +16,6 @@ namespace Clustering {
 
 Distance_Matrix distances;
 Curves simplifications;
-bool use_distance_matrix;
 
 void Distance_Matrix::print() const {
     for (const auto &row : *this) {
@@ -27,8 +26,12 @@ void Distance_Matrix::print() const {
     }
 }
 
-Curve& Clustering_Result::get(const curve_number_t i) {
+const Curve& Clustering_Result::get(const curve_number_t i) const {
     return centers[i];
+}
+
+Cluster_Assignment& Clustering_Result::get_assignment() const {
+    return *assignment;
 }
 
 void Clustering_Result::set(const curve_number_t i, const Curve &curve) {
@@ -47,17 +50,22 @@ Curves::const_iterator Clustering_Result::cend() const {
     return centers.cend();
 }
 
-void Clustering_Result::compute_assignment(const Curves &in, const bool consecutive_call, const unsigned int distance_func) {
+void Clustering_Result::compute_assignment(const Curves &in, const bool consecutive_call) {
     if (Config::verbosity > 0) py::print("Clustering Result: computing assignment");
-    assignment = Cluster_Assignment(centers.size());
+    assignment = std::make_unique<Cluster_Assignment>(*this, in, distance_func);
     if (consecutive_call and in.size() == distances.size()) {
-        for (curve_number_t i = 0; i < in.size(); ++i) assignment[_nearest_center(i, in, simplifications, center_indices, distances, distance_func)].push_back(i);
+        for (curve_number_t i = 0; i < in.size(); ++i) assignment->operator[](_nearest_center(i, in, simplifications, center_indices, distances, distance_func)).push_back(i);
     } else {
-        if (use_distance_matrix) distances = Distance_Matrix(in.size(), centers.size());
-        auto ncenter_indices = Curve_Numbers(centers.size());
-        std::iota(ncenter_indices.begin(), ncenter_indices.end(), 0);
-        for (curve_number_t i = 0; i < in.size(); ++i) 
-            assignment[_nearest_center(i, in, centers, ncenter_indices, distances, distance_func)].push_back(i);
+        if (Config::use_distance_matrix) distances = Distance_Matrix(in.size(), centers.size());
+        
+        Curve_Numbers ncenter_indices = Curve_Numbers(centers.size());
+        
+        for (curve_number_t i = 0; i < centers.size(); ++i) 
+            ncenter_indices[i] = i;
+
+        for (curve_number_t i = 0; i < in.size(); ++i) {
+            assignment->operator[](_nearest_center(i, in, centers, ncenter_indices, distances, distance_func)).push_back(i);
+        }
     }
 }
 
@@ -65,12 +73,12 @@ void Clustering_Result::set_center_indices(const Curve_Numbers &pcenter_indices)
     center_indices = pcenter_indices;
 }
 
-py::list Clustering_Result::compute_center_enclosing_balls(const Curves &in, const bool consecutive_call, const unsigned int distance_func) {
+py::list Clustering_Result::compute_center_enclosing_balls(const Curves &in, const bool consecutive_call) {
     if (Config::verbosity > 1) py::print("Clustering Result: computing enclosing balls");
     
     py::list result;
     
-    compute_assignment(in, consecutive_call, distance_func);
+    compute_assignment(in, consecutive_call);
     
     std::vector<std::vector<Points>> center_matching_points;
     
@@ -81,23 +89,23 @@ py::list Clustering_Result::compute_center_enclosing_balls(const Curves &in, con
     for (curve_number_t i = 0; i < size(); ++i) {
         if (Config::verbosity > 2) py::print("Clustering Result: computing points for center ", i);
         py::list center_list;
-        for (curve_number_t j = 0; j < assignment[i].size(); ++j) {
+        for (curve_number_t j = 0; j < (*assignment)[i].size(); ++j) {
             Points tpoints(get(i).dimensions());
             switch (distance_func) {
                 case 0:
-                    if (use_distance_matrix) tpoints = Frechet::Continuous::vertices_matching_points(get(i), in[assignment[i][j]], dynamic_cast<const Frechet::Continuous::Distance&>(*distances[assignment[i][j]][i]));
+                    if (Config::use_distance_matrix) tpoints = Frechet::Continuous::vertices_matching_points(get(i), in[(*assignment)[i][j]], dynamic_cast<const Frechet::Continuous::Distance&>(*distances[(*assignment)[i][j]][i]));
                     else {
-                        Frechet::Continuous::Distance curr_dist = Frechet::Continuous::distance(get(i), in[assignment[i][j]]);
-                        tpoints = Frechet::Continuous::vertices_matching_points(get(i), in[assignment[i][j]], curr_dist);
+                        Frechet::Continuous::Distance curr_dist = Frechet::Continuous::distance(get(i), in[(*assignment)[i][j]]);
+                        tpoints = Frechet::Continuous::vertices_matching_points(get(i), in[(*assignment)[i][j]], curr_dist);
                     }
                     break;
                 case 1:
                     break;
                 case 2:
-                    if (use_distance_matrix) tpoints = Dynamic_Time_Warping::Discrete::vertices_matching_points(get(i), in[assignment[i][j]], dynamic_cast<const Dynamic_Time_Warping::Discrete::Distance&>(*distances[assignment[i][j]][i]));
+                    if (Config::use_distance_matrix) tpoints = Dynamic_Time_Warping::Discrete::vertices_matching_points(get(i), in[(*assignment)[i][j]], dynamic_cast<const Dynamic_Time_Warping::Discrete::Distance&>(*distances[(*assignment)[i][j]][i]));
                     else {
-                        Dynamic_Time_Warping::Discrete::Distance curr_dist = Dynamic_Time_Warping::Discrete::distance(get(i), in[assignment[i][j]]);
-                        tpoints = Dynamic_Time_Warping::Discrete::vertices_matching_points(get(i), in[assignment[i][j]], curr_dist);
+                        Dynamic_Time_Warping::Discrete::Distance curr_dist = Dynamic_Time_Warping::Discrete::distance(get(i), in[(*assignment)[i][j]]);
+                        tpoints = Dynamic_Time_Warping::Discrete::vertices_matching_points(get(i), in[(*assignment)[i][j]], curr_dist);
                     }
                     break;
                 default:
@@ -149,36 +157,45 @@ curve_number_t Cluster_Assignment::get(const curve_number_t i, const curve_numbe
 }
 
 distance_t Cluster_Assignment::distance(const curve_number_t i, const curve_number_t j) const {
-    if (use_distance_matrix) return distances[i][j]->value;
-    else return std::numeric_limits<distance_t>::signaling_NaN();
+    if (Config::use_distance_matrix) return distances[i][j]->value;
+    else {
+        switch (distance_func) {
+            case 0:
+                return Frechet::Continuous::distance(clustering_result.get(i), assignment_curves[(*this)[i][j]]).value;
+            case 1:
+                return Frechet::Discrete::distance(clustering_result.get(i), assignment_curves[(*this)[i][j]]).value;
+            case 2:
+                return Dynamic_Time_Warping::Discrete::distance(clustering_result.get(i), assignment_curves[(*this)[i][j]]).value;
+            default:
+                return std::numeric_limits<distance_t>::signaling_NaN();
+        }
+    }
 }
-
 
 Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_t ell, const Curves &in, unsigned int local_search = 0,
                              const bool median = false, const bool consecutive_call = false, const bool random_start_center = true, const bool fast_simplification = false, const unsigned int distance_func = 0) {
     
     const auto start = std::clock();
-    Clustering_Result result;
+    Clustering_Result result(distance_func);
     
     if (in.empty()) return result;
     
     std::size_t memory_distance_matrix = std::pow(in.size(), 2) * (sizeof(distance_t) + 3 * sizeof(double) + ell * in.get_m() * 2 * sizeof(curve_number_t) + sizeof(std::size_t)), 
         memory_available = .666 * Config::available_memory;
-    bool use_distance_matrix = Config::use_distance_matrix;
-    
-    if (memory_distance_matrix > memory_available and use_distance_matrix == true) {
+        
+    if (memory_distance_matrix > memory_available and Config::use_distance_matrix == true) {
         py::print("KL_CLUST: WARNING distance preprocessing requires more memory (", memory_distance_matrix * 1e-9, "GB) than available (", memory_available * 1e-9, "GB), consecutive_call will NOT be available");
-        use_distance_matrix = Config::use_distance_matrix;
+        Config::use_distance_matrix = false;
     }
 
     if (not consecutive_call) {
-        if (use_distance_matrix) {
+        if (Config::use_distance_matrix) {
             if (Config::verbosity > 0) py::print("KL_CLUST: allocating ", in.size(), " x ", in.size(), " distance_matrix");
             distances = Distance_Matrix(in.size(), in.size());
         }
         if (Config::verbosity > 0) py::print("KL_CLUST: allocating space for ", in.size(), " simplifications, each of complexity ", ell);
         simplifications = Curves(in.size(), ell, in.dimensions());
-    } else if (use_distance_matrix) {
+    } else if (Config::use_distance_matrix) {
         if (distances.empty()) {
             py::print("WARNING: consecutive_call is used wrongly");
             if (Config::verbosity > 0) py::print("KL_CLUST: allocating ", in.size(), " x ", in.size(), " distance_matrix");
@@ -236,9 +253,8 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
     }
     if (Config::verbosity > 0) py::print("KL_CLUST: first center is ", centers[0]);
     
-    distance_t curr_maxdist = 0;
+    distance_t curr_curve_cost, curr_maxdist = 0;
     curve_number_t curr_maxcurve = 0;
-    distance_t curr_curve_cost;
 
     if (Config::verbosity > 0) py::print("KL_CLUST: computing remaining centers");
     {
@@ -262,6 +278,7 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
                     
                 }
                 if (Config::verbosity > 0) py::print("KL_CLUST: center ", i + 1, " is curve ", curr_maxcurve);
+                if (Config::verbosity > 0) py::print("KL_CLUST: current cost is ", curr_maxdist);
                 
                 if (simplifications[curr_maxcurve].empty()) {
                     if (Config::verbosity > 0) py::print("KL_CLUST: computing simplification of ", curr_maxcurve);
@@ -276,8 +293,8 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
     
     if (local_search > 0) {
         
-        auto curr_centers = centers;
-        auto cost = curr_maxdist, curr_cost = cost;
+        Curve_Numbers curr_centers = centers;
+        distance_t cost = curr_maxdist, curr_cost = cost;
         
         if (Config::verbosity > 0) py::print("KL_CLUST: starting local search for k-center objective for ", local_search, " iterations");
         
@@ -317,11 +334,11 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
     if (median) {
         
         if (Config::verbosity > 0) py::print("KL_CLUST: computing k-median cost");
-        auto cost = _center_cost_sum(in, simplifications, centers, distances, distance_func), approxcost = cost, curr_cost = cost;
+        distance_t cost = _center_cost_sum(in, simplifications, centers, distances, distance_func), approxcost = cost, curr_cost = cost;
         if (Config::verbosity > 0) py::print("KL_CLUST: k-median cost is ", cost);
         distance_t gamma = 1/(10 * num_centers);
-        auto found = true;
-        auto curr_centers = centers;
+        bool found = true;
+        Curve_Numbers curr_centers = centers;
         
         if (Config::verbosity > 0) py::print("KL_CLUST: starting k-median local search");
         // try to improve current solution
@@ -362,8 +379,9 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
         curr_maxdist = cost;
     }
 
-    Curves simpl_centers;
-    for (const auto center: centers) simpl_centers.push_back(simplifications[center]);
+    Curves simpl_centers(centers.size(), ell, in.dimensions());
+    
+    for (curve_number_t i = 0; i < centers.size(); ++i) simpl_centers[i] = simplifications[centers[i]];
     
     const auto end = std::clock();
     result.centers = simpl_centers;

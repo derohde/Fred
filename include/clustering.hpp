@@ -32,59 +32,70 @@ namespace py = pybind11;
 namespace Clustering {
 
 struct Distance_Matrix;
+struct Cluster_Assignment;
 
 extern Distance_Matrix distances;
 extern Curves simplifications;
-extern bool use_distance_matrix;
 
 struct Distance_Matrix : public std::vector<Distances> {
     Distance_Matrix() = default;
     Distance_Matrix(const curve_number_t n, const curve_number_t m) : std::vector<Distances>(n) {
-        for (curve_number_t i = 0; i < m; ++i) {
+        for (curve_number_t i = 0; i < n; ++i) {
             operator[](i).reserve(m);
-            std::generate_n(std::back_inserter(operator[](i)), m, [] { return std::make_unique<PDistance>(); });
+            std::generate_n(std::back_inserter(operator[](i)), m, [] { return std::make_unique<const PDistance>(); });
         }
     }
     void print() const;
-};
-
-struct Cluster_Assignment : public std::vector<Curve_Numbers> {
-    explicit Cluster_Assignment(const curve_number_t k = 0) : std::vector<Curve_Numbers>(k, Curve_Numbers()) {}
-    curve_number_t count(const curve_number_t) const;
-    curve_number_t get(const curve_number_t, const curve_number_t) const;
-    distance_t distance(const curve_number_t, const curve_number_t) const;
 };
 
 struct Clustering_Result {
     Curves centers;
     distance_t value;
     double running_time;
-    Cluster_Assignment assignment;
     
-    Curve& get(const curve_number_t);
+    explicit Clustering_Result(const unsigned int distance_func = 0) : distance_func{distance_func} {}
+    const Curve& get(const curve_number_t) const;
+    Cluster_Assignment& get_assignment() const;
     void set(const curve_number_t, const Curve&);
     curve_number_t size() const;
     Curves::const_iterator cbegin() const;
     Curves::const_iterator cend() const;
-    void compute_assignment(const Curves&, const bool = false, const unsigned int distance_func = 0);
+    void compute_assignment(const Curves&, const bool = false);
     void set_center_indices(const Curve_Numbers&);
-    py::list compute_center_enclosing_balls(const Curves&, const bool, const unsigned int);
+    py::list compute_center_enclosing_balls(const Curves&, const bool);
+    
 private:
     Curve_Numbers center_indices;
+    unsigned int distance_func;
+    std::unique_ptr<Cluster_Assignment> assignment;
+};
+
+struct Cluster_Assignment : public std::vector<Curve_Numbers> {
+    explicit Cluster_Assignment(const Clustering_Result &cr, const Curves &ac, const unsigned int distance_func) : 
+        std::vector<Curve_Numbers>(cr.size(), Curve_Numbers()), clustering_result{cr}, assignment_curves{ac}, distance_func{distance_func} {}
+        
+    curve_number_t count(const curve_number_t) const;
+    curve_number_t get(const curve_number_t, const curve_number_t) const;
+    distance_t distance(const curve_number_t, const curve_number_t) const;
+    
+private:
+    const Clustering_Result &clustering_result;
+    const Curves &assignment_curves;
+    const unsigned int distance_func;
 };
 
 inline distance_t _cheap_dist(const curve_number_t i, const curve_number_t j, const Curves &in, const Curves &simplified_in, Distance_Matrix &distances, const unsigned int distance_func) {
-    if (use_distance_matrix) {
-        if (not distances[i][j]) {
+    if (Config::use_distance_matrix) {
+        if (not *distances[i][j]) {
             switch (distance_func) {
                 case 0:
-                    distances[i][j] = std::make_unique<Frechet::Continuous::Distance>(Frechet::Continuous::distance(in[i], simplified_in[j]));
+                    distances[i][j] = std::make_unique<const Frechet::Continuous::Distance>(Frechet::Continuous::distance(in[i], simplified_in[j]));
                     break;
                 case 1:
-                    distances[i][j] = std::make_unique<Frechet::Discrete::Distance>(Frechet::Discrete::distance(in[i], simplified_in[j]));
+                    distances[i][j] = std::make_unique<const Frechet::Discrete::Distance>(Frechet::Discrete::distance(in[i], simplified_in[j]));
                     break;
                 case 2:
-                    distances[i][j] = std::make_unique<Dynamic_Time_Warping::Discrete::Distance>(Dynamic_Time_Warping::Discrete::distance(in[i], simplified_in[j]));
+                    distances[i][j] = std::make_unique<const Dynamic_Time_Warping::Discrete::Distance>(Dynamic_Time_Warping::Discrete::distance(in[i], simplified_in[j]));
                     break;
             }
         }
@@ -106,13 +117,14 @@ inline distance_t _cheap_dist(const curve_number_t i, const curve_number_t j, co
 inline curve_number_t _nearest_center(const curve_number_t i, const Curves &in, const Curves &simplified_in, const Curve_Numbers &centers, Distance_Matrix &distances, const unsigned int distance_func) {
     const distance_t infty = std::numeric_limits<distance_t>::infinity();
     // cost for curve is infinity
-    distance_t min_cost = infty;
+    distance_t min_cost = infty, curr_cost;
     curve_number_t nearest = 0;
     
     // except there is a center with smaller cost, then choose the one with smallest cost
     for (curve_number_t j = 0; j < centers.size(); ++j) {
-        if (_cheap_dist(i, centers[j], in, simplified_in, distances, distance_func) < min_cost) {
-            min_cost = _cheap_dist(i, centers[j], in, simplified_in, distances, distance_func);
+        curr_cost = _cheap_dist(i, centers[j], in, simplified_in, distances, distance_func);
+        if (curr_cost < min_cost) {
+            min_cost = curr_cost;
             nearest = j;
         }
     }
@@ -128,7 +140,7 @@ inline distance_t _center_cost_sum(const Curves &in, const Curves &simplified_in
     
     // for all curves
     for (curve_number_t i = 0; i < in.size(); ++i) {
-        const auto min_cost_elem = _curve_cost(i, in, simplified_in, centers, distances, distance_func);
+        const distance_t min_cost_elem = _curve_cost(i, in, simplified_in, centers, distances, distance_func);
         cost += min_cost_elem;
     }
     return cost;

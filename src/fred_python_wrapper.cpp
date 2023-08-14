@@ -177,12 +177,12 @@ PYBIND11_MODULE(backend, m) {
     py::class_<Clustering::Clustering_Result>(m, "Clustering_Result")
         .def_readwrite("value", &Clustering::Clustering_Result::value)
         .def_readwrite("time", &Clustering::Clustering_Result::running_time)
-        .def_readwrite("assignment", &Clustering::Clustering_Result::assignment)
+        .def_property_readonly("assignment", &Clustering::Clustering_Result::get_assignment, py::return_value_policy::reference)
         .def("__getitem__", &Clustering::Clustering_Result::get, py::return_value_policy::reference)
         .def("__setitem__", &Clustering::Clustering_Result::set)
         .def("__len__", &Clustering::Clustering_Result::size)
         .def("__iter__", [](Clustering::Clustering_Result &v) { return py::make_iterator(v.cbegin(), v.cend()); }, py::keep_alive<0, 1>())
-        .def("compute_assignment", &Clustering::Clustering_Result::compute_assignment, py::arg("curves"), py::arg("consecutive_call") = false, py::arg("distance_func") = 0)
+        .def("compute_assignment", &Clustering::Clustering_Result::compute_assignment, py::arg("curves"), py::arg("consecutive_call") = false)
         .def("compute_center_enclosing_balls", &Clustering::Clustering_Result::compute_center_enclosing_balls)
     ;
     

@@ -1,5 +1,5 @@
 # Fred ![alt text](https://raw.githubusercontent.com/derohde/Fred/master/logo/logo.png "Fred logo")
-A fast, scalable and light-weight C++ Fréchet distance library, exposed to python and focused on (k,l)-clustering of polygonal curves.
+A fast, scalable and light-weight C++ Fréchet and DTW distance library, exposed to python and focused on clustering of polygonal curves.
 
 ### DISTANCE FUNCTION FOR CLUSTERING CAN BE CHOSEN (heuristic in case of DTW)
 ### CURVE AND CURVES CAN NOW BE PICKLED
@@ -66,10 +66,14 @@ All simplifications are vertex-restricted!
 
 #### Underlying distance function
 
-The variable `distance_func` controls which distance function to use. Possible values:
+The parameter `distance_func` controls which distance function to use. Possible values:
 - `0`: continuous Fréchet distance
 - `1`: discrete Fréchet distance
 - `2`: discrete dynamic time warping distance (algorithms are then of heuristic nature)
+
+#### Consecutive call option
+
+The parameter `consecutive_call` controls whether distances and simplifications already computed in a previous clustering call are resused (set to `true` then); defaults to `false`.
 
 #### discrete (k,l)-center clustering (continuous Fréchet)
 - from [**Approximating (k,l)-center clustering for curves**](https://dl.acm.org/doi/10.5555/3310435.3310616)
@@ -77,7 +81,6 @@ The variable `distance_func` controls which distance function to use. Possible v
     - `k`: number of centers
     - `l`: maximum complexity of the centers
     - `local_search`: number of iterations of local search to improve solution, defaults to `0`
-    - `consecutive_call`: reuses distances and simplifications already computed in a previous call if `true`, defaults to `false`
     - `random_first_center`: determines if first center is chosen uniformly at random or first curve is used as first center, optional, defaults to true
     - `fast_simplification`: determines whether to use the minimum error simplification or the faster approximate minimum error simplification, defaults to `false`
 - returns: `fred.Clustering_Result` with mebers 
@@ -90,7 +93,6 @@ The variable `distance_func` controls which distance function to use. Possible v
 - signature: `fred.discrete_klmedian(int k, int l, fred.Curves, bool consecutive_call, bool fast_simplification, int distance_func)` with parameters 
     - `k`: number of centers
     - `l`: maximum complexity of the centers
-    - `consecutive_call`: reuses distances and simplifications already computed in a previous call if `true`, defaults to `false`
     - `fast_simplification`: determines whether to use the minimum error simplification or the faster approximate minimum error simplification, defaults to `false`
 - returns: `fred.Clustering_Result` with mebers 
     - `value`: objective value 
@@ -102,8 +104,8 @@ The variable `distance_func` controls which distance function to use. Possible v
 - methods: 
     - `len(fred.Clustering_Result)`: number of centers
     - `fred.Clustering_Result[i]`: get ith center
-    - `fred.Clustering_Result.compute_assignment(fred.Curves, bool consecutive_call, int distance_func)`: assigns every curve to its nearest center with parameter `consecutive_call`, which defaults to `false`; set to true, if you want to assign the curves used for clustering
-    - `fred.Clustering_Result.optimize(fred.Curves, bool consecutive_call, int distance_func)`: (heuristically) optimizes cluster centers using a [stabbing algorithm](https://arxiv.org/abs/2212.01458)
+    - `fred.Clustering_Result.compute_assignment(fred.Curves, bool consecutive_call)`: assigns every curve to its nearest center with parameter `consecutive_call`, which defaults to `false`; set to true, if you want to assign the curves used for clustering
+    - `fred.Clustering_Result.optimize(fred.Curves, bool consecutive_call)`: (heuristically) optimizes cluster centers using a [stabbing algorithm](https://arxiv.org/abs/2212.01458)
 - members: 
     - `value`: objective value
     - `time`: running-time
@@ -115,7 +117,7 @@ The variable `distance_func` controls which distance function to use. Possible v
     - `len(fred.Cluster_Assignment)`: number of centers
     - `fred.Cluster_Assignment.count(i)`: number of curves assigned to center `i`
     - `fred.Cluster_Assignment.get(i,j)`: get index of `j`th curve assigned to center `i`
-    - `fred.Cluster_Assignment.distance(i,j)`: get distance of `j`th curve assigned to center `i` to center `i` (only available when distance matrix is used)
+    - `fred.Cluster_Assignment.distance(i,j)`: get distance of `j`th curve assigned to center `i` to center `i`
 
 ### Dimension Reduction via Gaussian Random Projection 
 - [Section 2 in **Random Projections and Sampling Algorithms for Clustering of High Dimensional Polygonal Curves**](https://papers.nips.cc/paper/9443-random-projections-and-sampling-algorithms-for-clustering-of-high-dimensional-polygonal-curves)
@@ -257,7 +259,7 @@ curves.add(fred.Curve([[-10.92366833, -37.04470333],[-10.92388667, -37.04459   ]
 curves.add(fred.Curve([[-10.89688234, -37.05339968],[-10.89689515, -37.05332973],[-10.89688042, -37.05333247],[-10.89688029, -37.05333484],[-10.89688058, -37.05333512],[-10.89688073, -37.05333528],[-10.8968805 , -37.05333564],[-10.89688045, -37.0533357 ],[-10.89688034, -37.05333584],[-10.89688022, -37.05333665],[-10.89687998, -37.05333665],[-10.8968798 , -37.05333672],[-10.8968771 , -37.05333475],[-10.89686571, -37.05335033],[-10.89686453, -37.05338245],[-10.89690625, -37.053412  ],[-10.89714799, -37.05345149],[-10.89731552, -37.05353814],[-10.89722363, -37.0537264 ],[-10.89712402, -37.05392281],[-10.89700272, -37.05391454],[-10.89669729, -37.05377559],[-10.89637283, -37.05373788],[-10.89628634, -37.05376364],[-10.89625468, -37.05380163],[-10.89626958, -37.05404301],[-10.89630975, -37.05439376],[-10.8963886 , -37.05509832],[-10.89644765, -37.05538955],[-10.8965611 , -37.05575682],[-10.89665346, -37.05613108],[-10.89677345, -37.05672517],[-10.89689319, -37.05728734],[-10.89692781, -37.05739169],[-10.89695023, -37.05753143],[-10.89702285, -37.05769891],[-10.8971346 , -37.057792  ],[-10.89734674, -37.05797843],[-10.89746565, -37.05809327],[-10.89745873, -37.05809087],[-10.89746601, -37.05809045],[-10.89746603, -37.05809043],[-10.89746598, -37.0580906 ],[-10.89746595, -37.05809065],[-10.89750503, -37.05812029],[-10.89776568, -37.05832533],[-10.89815091, -37.05824039],[-10.89867417, -37.05785587],[-10.89905788, -37.05755751],[-10.89965258, -37.05710931],[-10.90031391, -37.05666742],[-10.90072693, -37.05639989],[-10.90117312, -37.0560867 ],[-10.90167986, -37.05570044],[-10.90223155, -37.05532095],[-10.90267435, -37.05501594],[-10.90281205, -37.05492839],[-10.90281977, -37.05492466],[-10.9028111 , -37.05493056],[-10.90281184, -37.05493098],[-10.90281179, -37.05493125],[-10.90281184, -37.05493146],[-10.9028119 , -37.05493155],[-10.90281195, -37.05493173],[-10.9028117 , -37.05493193],[-10.90281944, -37.05492637],[-10.90318115, -37.05466438],[-10.90361849, -37.05433795],[-10.90395364, -37.05420787],[-10.90395573, -37.05453654],[-10.90394111, -37.05505263],[-10.90394185, -37.05587736],[-10.90392791, -37.05664783],[-10.90389758, -37.05750308],[-10.90388737, -37.05786664],[-10.90403   , -37.05799884],[-10.90431907, -37.05799646],[-10.90463524, -37.05800058],[-10.90492265, -37.0580025 ],[-10.90509223, -37.0580149 ],[-10.90513417, -37.05805725],[-10.90519558, -37.05826165],[-10.90527994, -37.05877507],[-10.90535515, -37.05906472],[-10.90619649, -37.05905899],[-10.90641173, -37.06018562],[-10.90644041, -37.06067098],[-10.90642897, -37.06086107],[-10.90641925, -37.06087587],[-10.90642255, -37.06088143],[-10.90642329, -37.06088235],[-10.90642264, -37.06088388],[-10.90642211, -37.06090121],[-10.90642028, -37.06112732],[-10.90649051, -37.06164138],[-10.90728268, -37.06183192],[-10.90753491, -37.06201037],[-10.90761894, -37.06208487],[-10.90763191, -37.06209038],[-10.90764293, -37.06208956],[-10.90764576, -37.06209575],[-10.90764926, -37.06209673],[-10.90764498, -37.06210186],[-10.90764444, -37.0621018 ],[-10.9076441 , -37.06210176],[-10.90764407, -37.06210173],[-10.90791968, -37.06228879],[-10.90840258, -37.06261833],[-10.90885022, -37.06293506],[-10.90941396, -37.06335066],[-10.91002845, -37.06379331],[-10.91021656, -37.06385412],[-10.91021107, -37.06382905],[-10.91020892, -37.0638263 ],[-10.91020903, -37.06382629],[-10.91020921, -37.06382624],[-10.91020941, -37.06382628],[-10.91020941, -37.06382636],[-10.91020942, -37.0638264 ],[-10.91020943, -37.06382641],[-10.91021067, -37.06382699],[-10.91051354, -37.06396407],[-10.91086507, -37.06407459],[-10.91112765, -37.06418145],[-10.91112402, -37.06418525],[-10.91112739, -37.064179  ],[-10.91113069, -37.06417743],[-10.91113068, -37.06417746],[-10.91113069, -37.06417745],[-10.91113068, -37.06417741],[-10.91113062, -37.06417743],[-10.91113027, -37.06417782],[-10.91113022, -37.06417796],[-10.91113014, -37.06417815],[-10.91113018, -37.06417815],[-10.9111301 , -37.06417819],[-10.91113003, -37.06417818],[-10.91113018, -37.06417821],[-10.91121402, -37.06421624],[-10.91152921, -37.06426605],[-10.91195342, -37.06430617],[-10.91243864, -37.06431631],[-10.91301115, -37.06431624],[-10.91373203, -37.06430726],[-10.9143199 , -37.06424356],[-10.91526178, -37.06407409],[-10.91568718, -37.06396253],[-10.91601655, -37.06391468],[-10.91614016, -37.06400304],[-10.91613907, -37.06426894],[-10.91611837, -37.0645705 ],[-10.91620218, -37.06472138],[-10.91657107, -37.0648288 ],[-10.9170171 , -37.06493571],[-10.91728016, -37.06502682],[-10.91734995, -37.06509569],[-10.91735968, -37.06534346],[-10.91731253, -37.06557038],[-10.91730704, -37.06556575],[-10.91730599, -37.06555167]]))
 
 clustering = fred.discrete_klcenter(6, 8, curves, local_search = 10, fast_simplification=True)
-clustering.optimize_centers(curves)
+clustering.optimize_centers(curves, consecutive_call = True)
 
-fred.plot_clustering(clustering, curves)
+fred.plot_clustering(clustering, curves, vertex_markings=False)
 ```

@@ -33,16 +33,16 @@ public:
     inline Median_Coreset(const curve_number_t k, curve_size_t ell, const Curves &in, const parameter_t epsilon, const distance_t constant = 1) : in{in}, k{k}, ell{ell}, epsilon{epsilon}, constant{constant}, cluster_costs(k, 0), cluster_sizes(k, 0), lambda(in.size()), Lambda{2*k + 12*std::sqrt(k) + 18}, probabilities(in.size()), c_approx{Clustering::kl_median(k, ell, in)} {
         c_approx.compute_assignment(in);
         for (curve_number_t i = 0; i < k; ++i) {
-            for (curve_number_t j = 0; j < c_approx.assignment.count(i); ++j) {
-                cluster_costs[i] += Frechet::Continuous::distance(in[c_approx.assignment.get(i, j)], c_approx.centers[i]).value;
+            for (curve_number_t j = 0; j < c_approx.get_assignment().count(i); ++j) {
+                cluster_costs[i] += Frechet::Continuous::distance(in[c_approx.get_assignment().get(i, j)], c_approx.centers[i]).value;
                 cluster_sizes[i]++;
             }
         }
         
         for (curve_number_t i = 0; i < k; ++i) {
-            for (curve_number_t j = 0; j < c_approx.assignment.count(i); ++j) {
-                lambda[c_approx.assignment.get(i, j)] = (1+ std::sqrt(2*k/18)) * (6 * Frechet::Continuous::distance(in[c_approx.assignment.get(i, j)], c_approx.centers[i]).value / c_approx.value + 6 * cluster_costs[i] / (c_approx.value * cluster_sizes[i])) + (1 + std::sqrt(18/(2*k))) * 2 / cluster_sizes[i];
-                probabilities[c_approx.assignment.get(i, j)] = (lambda[c_approx.assignment.get(i, j)]) / Lambda;
+            for (curve_number_t j = 0; j < c_approx.get_assignment().count(i); ++j) {
+                lambda[c_approx.get_assignment().get(i, j)] = (1+ std::sqrt(2*k/18)) * (6 * Frechet::Continuous::distance(in[c_approx.get_assignment().get(i, j)], c_approx.centers[i]).value / c_approx.value + 6 * cluster_costs[i] / (c_approx.value * cluster_sizes[i])) + (1 + std::sqrt(18/(2*k))) * 2 / cluster_sizes[i];
+                probabilities[c_approx.get_assignment().get(i, j)] = (lambda[c_approx.get_assignment().get(i, j)]) / Lambda;
             }
         }
         
