@@ -24,28 +24,38 @@ std::string Distance::repr() const {
     return ss.str();
 }
     
-Points vertices_matching_points(const Curve &curve1, const Curve &curve2, const Distance &dist) {
-    if ((curve1.complexity() < 2) or (curve2.complexity() < 2)) {
+Points vertices_matching_points(const Curve &input_curve, const Curve &center_curve, const Distance &dist) {
+    if ((input_curve.complexity() < 2) or (center_curve.complexity() < 2)) {
         py::print("WARNING: curves must be of at least two points");
-        Points result(curve1.dimensions());
+        Points result(center_curve.dimensions());
         return result;
     }
+        
+    if (Config::verbosity > 1) py::print("DDTW: computing matching points from center_curve of complexity ", center_curve.complexity(), " to input_curve of complexity ", input_curve.complexity());
+    if (Config::verbosity > 2) py::print("DDTW: distance between input_curve and center_curve is ", dist.value);
     
-    if (Config::verbosity > 1) py::print("DDTW: computing matching points from curve1 of complexity ", curve1.complexity(), " to curve2 of complexity ", curve2.complexity());
-    if (Config::verbosity > 2) py::print("DDTW: distance between curve1 and curve2 is ", dist.value);
+    std::vector<Points> matching_points(center_curve.size(), Points(center_curve.dimensions()));    
     
-    std::vector<Points> matching_points(curve1.size(), Points(curve1.dimensions()));    
+    curve_number_t j, k;
     
     for (curve_number_t i = 0; i < dist.matching.size(); ++i) {
-        curve_number_t j = dist.matching[i].first, k = dist.matching[i].second;
-        matching_points[j].push_back(curve2[k]);
+        j = dist.matching[i].first;
+        k = dist.matching[i].second;
+        
+        if (Config::verbosity > 2) py::print("DDTW: matching point ", j, " on input_curve to point ", k, " on curve 2");
+        matching_points[k].push_back(input_curve[j]);
     }
     
-    Points result(curve1.size(), curve1.dimensions());
+    Points result(center_curve.size(), center_curve.dimensions());
     
-    for (curve_size_t i = 0; i < curve1.size(); ++i) {
+    if (Config::verbosity > 2) py::print("DDTW: computing centroids to aggregate multi-matching points");
+    
+    for (curve_size_t i = 0; i < center_curve.size(); ++i) {
+        if (Config::verbosity > 2) py::print("DDTW: computing centroid ", i);
         result[i] = matching_points[i].centroid();
     }
+
+    if (Config::verbosity > 2) py::print("DDTW: matching points computed");
         
     return result;
 }
@@ -70,12 +80,12 @@ Distance distance(const Curve &curve1, const Curve &curve2) {
 
     std::vector<std::vector<std::pair<curve_number_t, curve_number_t>>> multi_warp_counter(n1 + 1, std::vector<std::pair<curve_number_t, curve_number_t>>(n2 + 1, std::make_pair(0, 0)));
     std::vector<std::vector<std::pair<curve_number_t, curve_number_t>>> b(n1 + 1, std::vector<std::pair<curve_number_t, curve_number_t>>(n2 + 1, std::make_pair(0, 0)));
-    std::vector<std::vector<distance_t>> a(curve1.complexity() + 1, std::vector<distance_t>(curve2.complexity() + 1, infty));
-    std::vector<std::vector<distance_t>> dists(curve1.complexity(), std::vector<distance_t>(curve2.complexity()));
+    std::vector<std::vector<distance_t>> a(n1 + 1, std::vector<distance_t>(n2 + 1, infty));
+    std::vector<std::vector<distance_t>> dists(n1, std::vector<distance_t>(n2));
     
     #pragma omp parallel for collapse(2)
-    for (curve_size_t i = 0; i < curve1.complexity(); ++i) {
-        for (curve_size_t j = 0; j < curve2.complexity(); ++j) {
+    for (curve_size_t i = 0; i < n1; ++i) {
+        for (curve_size_t j = 0; j < n2; ++j) {
             dists[i][j] = curve1[i].dist(curve2[j]);
         }
     }
@@ -86,8 +96,8 @@ Distance distance(const Curve &curve1, const Curve &curve2) {
     distance_t min_ele;
     
     a[0][0] = 0;
-    for (curve_size_t i = 1; i <= curve1.complexity(); ++i) {
-        for (curve_size_t j = 1; j <= curve2.complexity(); ++j) {
+    for (curve_size_t i = 1; i <= n1; ++i) {
+        for (curve_size_t j = 1; j <= n2; ++j) {
             a[i][j] = dists[i-1][j-1];
             mwd = 0;
             
@@ -127,6 +137,8 @@ Distance distance(const Curve &curve1, const Curve &curve2) {
     }
     
     result.matching.push_back(std::make_pair(0, 0));
+    result.n = n1;
+    result.m = n2;
     
     const auto end = std::clock();
     result.time = (end - start) / CLOCKS_PER_SEC;

@@ -27,31 +27,31 @@ std::string Distance::repr() const {
     return ss.str();
 }
 
-Points vertices_matching_points(const Curve &curve1, const Curve &curve2, const Distance &dist) {
-    if ((curve1.complexity() < 2) or (curve2.complexity() < 2)) {
+Points vertices_matching_points(const Curve &input_curve, const Curve &center_curve, const Distance &dist) {
+    if ((center_curve.complexity() < 2) or (input_curve.complexity() < 2)) {
         py::print("WARNING: curves must be of at least two points");
-        Points result(curve1.dimensions());
+        Points result(center_curve.dimensions());
         return result;
     }
     
-    if (Config::verbosity > 1) py::print("CFD: computing matching points for distance ", dist.value, " from curve1 of complexity ", curve1.complexity(), " to curve2 of complexity ", curve2.complexity());
+    if (Config::verbosity > 1) py::print("CFD: computing matching points for distance ", dist.value, " from center_curve of complexity ", center_curve.complexity(), " to input_curve of complexity ", input_curve.complexity());
     
     const distance_t dist_sqr = dist.value * dist.value;
-    const curve_size_t n1 = curve1.complexity();
-    const curve_size_t n2 = curve2.complexity();
+    const curve_size_t n1 = center_curve.complexity();
+    const curve_size_t n2 = input_curve.complexity();
 
     std::vector<Intervals> free_intervals(n1, Intervals(n2, Interval()));
         
     #pragma omp parallel for collapse(2) if (n1 * n2 > 1000)
     for (curve_size_t i = 1; i < n1; ++i) {
         for (curve_size_t j = 0; j < n2 - 1; ++j) {
-            free_intervals[i][j] = curve1[i].ball_intersection_interval(dist_sqr, curve2[j], curve2[j+1]);
+            free_intervals[i][j] = center_curve[i].ball_intersection_interval(dist_sqr, input_curve[j], input_curve[j+1]);
         }
     }
     
     if (Config::verbosity > 1) py::print("CFD: free space computed, computing matching");
     
-    Points result(n1, curve1.dimensions());
+    Points result(n1, center_curve.dimensions());
     parameter_t p;
     curve_size_t jj(0);
         
@@ -68,11 +68,11 @@ Points vertices_matching_points(const Curve &curve1, const Curve &curve2, const 
                 break;
             }
         }
-        result[i] = curve2[jj].line_segment_point(curve2[jj+1], p);
-        if (Config::verbosity > 1) py::print("CFD: matching vertex ", i, "to ", p, "on segment ", jj, " to ", jj+1, " with distance ", result[i].dist(curve1[i]));
+        result[i] = input_curve[jj].line_segment_point(input_curve[jj+1], p);
+        if (Config::verbosity > 1) py::print("CFD: matching vertex ", i, "to ", p, "on segment ", jj, " to ", jj+1, " with distance ", result[i].dist(center_curve[i]));
     }
-    result[0] = curve2[0];
-    result[n1-1] = curve2[n2-1];
+    result[0] = input_curve[0];
+    result[n1-1] = input_curve[n2-1];
     
     return result;
 }

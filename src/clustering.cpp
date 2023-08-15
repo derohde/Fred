@@ -86,36 +86,58 @@ py::list Clustering_Result::compute_center_enclosing_balls(const Curves &in, con
         center_matching_points.push_back(std::vector<Points>(get(i).complexity(), get(i).dimensions()));
     }
     
+    curve_number_t ii, jj;    
+    Points tpoints(0);
+    
     for (curve_number_t i = 0; i < size(); ++i) {
         if (Config::verbosity > 2) py::print("Clustering Result: computing points for center ", i);
+        
         py::list center_list;
-        for (curve_number_t j = 0; j < (*assignment)[i].size(); ++j) {
-            Points tpoints(get(i).dimensions());
+        const Curve &center_curve = get(i);
+        
+        for (curve_number_t j = 0; j < (*assignment)[i].size(); ++j) {           
+            ii = (*assignment)[i][j];
+            const Curve &input_curve = in[ii];
+            
+            if (consecutive_call) jj = center_indices[i];
+            else jj = i;
+            
             switch (distance_func) {
                 case 0:
-                    if (Config::use_distance_matrix) tpoints = Frechet::Continuous::vertices_matching_points(get(i), in[(*assignment)[i][j]], dynamic_cast<const Frechet::Continuous::Distance&>(*distances[(*assignment)[i][j]][i]));
-                    else {
-                        Frechet::Continuous::Distance curr_dist = Frechet::Continuous::distance(get(i), in[(*assignment)[i][j]]);
-                        tpoints = Frechet::Continuous::vertices_matching_points(get(i), in[(*assignment)[i][j]], curr_dist);
+                    if (Config::use_distance_matrix) {
+                        const auto &dist = dynamic_cast<const Frechet::Continuous::Distance&>(*distances[ii][jj]);
+                        tpoints = Frechet::Continuous::vertices_matching_points(input_curve, center_curve, dist);
+                    } else {
+                        const Frechet::Continuous::Distance dist = Frechet::Continuous::distance(input_curve, center_curve);
+                        tpoints = Frechet::Continuous::vertices_matching_points(input_curve, center_curve, dist);
                     }
                     break;
                 case 1:
                     break;
                 case 2:
-                    if (Config::use_distance_matrix) tpoints = Dynamic_Time_Warping::Discrete::vertices_matching_points(get(i), in[(*assignment)[i][j]], dynamic_cast<const Dynamic_Time_Warping::Discrete::Distance&>(*distances[(*assignment)[i][j]][i]));
-                    else {
-                        Dynamic_Time_Warping::Discrete::Distance curr_dist = Dynamic_Time_Warping::Discrete::distance(get(i), in[(*assignment)[i][j]]);
-                        tpoints = Dynamic_Time_Warping::Discrete::vertices_matching_points(get(i), in[(*assignment)[i][j]], curr_dist);
+                    if (Config::use_distance_matrix) {
+                        const auto &dist = dynamic_cast<const Dynamic_Time_Warping::Discrete::Distance&>(*distances[ii][jj]);
+                        tpoints = Dynamic_Time_Warping::Discrete::vertices_matching_points(input_curve, center_curve, dist);
+                    } else {
+                        const Dynamic_Time_Warping::Discrete::Distance dist = Dynamic_Time_Warping::Discrete::distance(input_curve, center_curve);
+                        tpoints = Dynamic_Time_Warping::Discrete::vertices_matching_points(input_curve, center_curve, dist);
                     }
                     break;
                 default:
                     py::print("not implemented!");
             }
-            for (curve_size_t k = 0; k < get(i).complexity(); ++k) { 
-                center_matching_points[i][k].push_back(tpoints[k]);
+            
+            if (Config::verbosity > 2) py::print("Clustering Result: collecting matching points for center ", i);
+
+            for (curve_size_t k = 0; k < center_curve.complexity(); ++k) { 
+                if (Config::verbosity > 3) py::print("Clustering Result: collecting matching points for center ", i, " vertex ", k);
+                center_matching_points[i][k].push_back(tpoints.at(k));
             }
         }
-        for (curve_size_t k = 0; k < get(i).complexity(); ++k) {
+        
+        if (Config::verbosity > 2) py::print("Clustering Result: Computing input for stabbing algorithm");
+        
+        for (curve_size_t k = 0; k < center_curve.complexity(); ++k) {
             py::list b_r;
             switch (distance_func) {
                 case 0:
@@ -130,6 +152,7 @@ py::list Clustering_Result::compute_center_enclosing_balls(const Curves &in, con
                     break;
                 case 2:
                     {
+                        if (Config::verbosity > 2) py::print("Clustering Result: Computing mean of matching points for vertex ", k);
                         const auto mean = center_matching_points[i][k].centroid();
                         b_r.append(mean.as_ndarray());
                         b_r.append(0);
@@ -329,6 +352,7 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
                 }
             }
         }
+        curr_maxdist = cost;
     }
     
     if (median) {

@@ -32,6 +32,7 @@ namespace Discrete {
         std::string repr() const;
         
         std::vector<std::pair<curve_number_t, curve_number_t>> matching;
+        curve_size_t n, m;
     };
     
     Points vertices_matching_points(const Curve&, const Curve&, const Distance&);

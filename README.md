@@ -74,6 +74,7 @@ The parameter `distance_func` controls which distance function to use. Possible 
 #### Consecutive call option
 
 The parameter `consecutive_call` controls whether distances and simplifications already computed in a previous clustering call are resused (set to `true` then); defaults to `false`.
+Has no effect when `fred.config.use_distance_matrix == False`.
 
 #### discrete (k,l)-center clustering (continuous Fréchet)
 - from [**Approximating (k,l)-center clustering for curves**](https://dl.acm.org/doi/10.5555/3310435.3310616)
