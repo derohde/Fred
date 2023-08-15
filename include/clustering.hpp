@@ -63,6 +63,7 @@ struct Clustering_Result {
     void compute_assignment(const Curves&, const bool = false);
     void set_center_indices(const Curve_Numbers&);
     py::list compute_center_enclosing_balls(const Curves&, const bool);
+    const unsigned int get_distance_func() const;
     
 private:
     Curve_Numbers center_indices;

@@ -11,6 +11,7 @@ from .backend import *
 from .stabbing import stabbing_path as _stabbing_path
 
 import psutil
+import numpy as np
 
 virtual_memory = psutil.virtual_memory()
 available_memory = virtual_memory.available
@@ -21,7 +22,10 @@ config.available_memory = available_memory
 def _optimize_centers(self, curves, consecutive_call=False):
     all_balls = self.compute_center_enclosing_balls(curves, consecutive_call)
     for i, center_balls in enumerate(all_balls):
-        path, _ = _stabbing_path(center_balls)
+        if self.distance_func == 0:
+            path, _ = _stabbing_path(center_balls)
+        else:
+            path = np.array([b[0] for b in center_balls])
         self[i] = Curve(path, "{} (optimized)".format(self[i].name))
 
 Clustering_Result.optimize_centers = _optimize_centers

@@ -26,6 +26,10 @@ void Distance_Matrix::print() const {
     }
 }
 
+const unsigned int Clustering_Result::get_distance_func() const {
+    return distance_func;
+}
+
 const Curve& Clustering_Result::get(const curve_number_t i) const {
     return centers[i];
 }

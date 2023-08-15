@@ -178,6 +178,7 @@ PYBIND11_MODULE(backend, m) {
         .def_readwrite("value", &Clustering::Clustering_Result::value)
         .def_readwrite("time", &Clustering::Clustering_Result::running_time)
         .def_property_readonly("assignment", &Clustering::Clustering_Result::get_assignment, py::return_value_policy::reference)
+        .def_property_readonly("distance_func", &Clustering::Clustering_Result::get_distance_func)
         .def("__getitem__", &Clustering::Clustering_Result::get, py::return_value_policy::reference)
         .def("__setitem__", &Clustering::Clustering_Result::set)
         .def("__len__", &Clustering::Clustering_Result::size)
