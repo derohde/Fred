@@ -23,6 +23,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include "types.hpp"
 #include "curve.hpp"
 #include "frechet.hpp"
+#include "dynamic_time_warping.hpp"
 
 namespace py = pybind11;
 
@@ -48,8 +49,22 @@ public:
 Curve approximate_minimum_link_simplification(const Curve&, const distance_t);
 Curve approximate_minimum_error_simplification(const Curve&, const curve_size_t);
  
-};
- 
-};
+}
 
-};
+}
+
+}
+
+namespace Dynamic_Time_Warping {
+
+namespace Discrete {
+
+namespace Simplification {
+    
+Curve approximate_minimum_error_simplification(const Curve&, const curve_size_t);
+    
+}
+    
+}
+    
+}

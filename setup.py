@@ -73,14 +73,14 @@ class CMakeBuild(build_ext):
         subprocess.call(['git', 'init'])
         subprocess.call(['git', 'submodule', 'add', 'https://github.com/pybind/pybind11.git'])
         subprocess.call(['git', 'submodule', 'update', '--init', '--recursive'])
-        subprocess.check_call(['cmake', "{}".format(ext.sourcedir)] + cmake_args,
+        subprocess.check_call(['cmake', '-Wno-dev', f"{ext.sourcedir}"] + cmake_args,
                               cwd=self.build_temp, env=env)
         subprocess.check_call(['cmake', '--build', '.'] + build_args,
                               cwd=self.build_temp)
 
 setup(
     name='Fred-Frechet',
-    version='1.14.2',
+    version='1.14.3',
     author='Dennis Rohde',
     author_email='dennis.rohde@tu-dortmund.de',
     description='A fast, scalable and light-weight C++ Fréchet and DTW distance library, exposed to python and focused on clustering of polygonal curves.',

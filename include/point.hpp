@@ -67,10 +67,10 @@ public:
         return *this;
     }
     
-    inline Point& operator/=(const distance_t distance) {
+    inline Point& operator/=(const coordinate_t div) {
         #pragma omp simd
         for (dimensions_t i = 0; i < dimensions(); ++i){
-            operator[](i) /= distance;
+            operator[](i) /= div;
         }
         return *this;
     }
@@ -93,8 +93,7 @@ public:
         return result;
     }
     
-    template<typename T>
-    inline Point operator*(const T mult) const {
+    inline Point operator*(const coordinate_t mult) const {
         Point result = *this;
         #pragma omp simd
         for (dimensions_t i = 0; i < dimensions(); ++i){
@@ -112,11 +111,11 @@ public:
         return result;
     }
     
-    inline Point operator/(const distance_t dist) const {
+    inline Point operator/(const coordinate_t div) const {
         Point result = *this;
         #pragma omp simd
         for (dimensions_t i = 0; i < dimensions(); ++i){
-            result[i] /= dist;
+            result[i] /= div;
         }
         return result;
     }

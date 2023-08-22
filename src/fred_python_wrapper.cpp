@@ -30,21 +30,27 @@ namespace fc = Frechet::Continuous;
 namespace fd = Frechet::Discrete;
 namespace ddtw = Dynamic_Time_Warping::Discrete;
 
-Curve minimum_error_simplification(const Curve &curve, const curve_size_t l) {
-    Frechet::Continuous::Simplification::Subcurve_Shortcut_Graph graph(const_cast<Curve&>(curve));
+Curve fr_minimum_error_simplification(const Curve &curve, const curve_size_t l) {
+    fc::Simplification::Subcurve_Shortcut_Graph graph(const_cast<Curve&>(curve));
     auto scurve = graph.minimum_error_simplification(l);
     scurve.set_name("Simplification of " + curve.get_name());
     return scurve;
 }
 
-Curve approximate_minimum_link_simplification(const Curve &curve, const distance_t epsilon) {
-    auto scurve = Frechet::Continuous::Simplification::approximate_minimum_link_simplification(curve, epsilon);
+Curve fr_approximate_minimum_link_simplification(const Curve &curve, const distance_t epsilon) {
+    auto scurve = fc::Simplification::approximate_minimum_link_simplification(curve, epsilon);
     scurve.set_name("Simplification of " + curve.get_name());
     return scurve;
 }
 
-Curve approximate_minimum_error_simplification(const Curve &curve, const curve_size_t ell) {
-    auto scurve = Frechet::Continuous::Simplification::approximate_minimum_error_simplification(curve, ell);
+Curve fr_approximate_minimum_error_simplification(const Curve &curve, const curve_size_t ell) {
+    auto scurve = fc::Simplification::approximate_minimum_error_simplification(curve, ell);
+    scurve.set_name("Simplification of " + curve.get_name());
+    return scurve;
+}
+
+Curve dtw_approximate_minimum_error_simplification(const Curve &curve, const curve_size_t ell) {
+    auto scurve = ddtw::Simplification::approximate_minimum_error_simplification(curve, ell);
     scurve.set_name("Simplification of " + curve.get_name());
     return scurve;
 }
@@ -203,9 +209,10 @@ PYBIND11_MODULE(backend, m) {
     m.def("discrete_frechet", &fd::distance);
     m.def("discrete_dynamic_time_warping", &ddtw::distance);
     
-    m.def("minimum_error_simplification", &minimum_error_simplification);
-    m.def("approximate_minimum_link_simplification", &approximate_minimum_link_simplification);
-    m.def("approximate_minimum_error_simplification", &approximate_minimum_error_simplification);
+    m.def("frechet_minimum_error_simplification", &fr_minimum_error_simplification);
+    m.def("frechet_approximate_minimum_link_simplification", &fr_approximate_minimum_link_simplification);
+    m.def("frechet_approximate_minimum_error_simplification", &fr_approximate_minimum_error_simplification);
+    m.def("dtw_approximate_minimum_error_simplification", &dtw_approximate_minimum_error_simplification);
     
     m.def("dimension_reduction", &JLTransform::transform_naive, py::arg("curves"), py::arg("epsilon") = 0.5, py::arg("empirical_constant") = true);
 

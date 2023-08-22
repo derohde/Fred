@@ -7,17 +7,14 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-from .backend import *
+from .backend import Curve, Curves, continuous_frechet, discrete_dynamic_time_warping, discrete_frechet, discrete_klcenter, discrete_klmedian, dimension_reduction, dtw_approximate_minimum_error_simplification, frechet_approximate_minimum_error_simplification, frechet_approximate_minimum_link_simplification, frechet_minimum_error_simplification
 from .stabbing import stabbing_path as _stabbing_path
 
 import psutil
 import numpy as np
 
-virtual_memory = psutil.virtual_memory()
-available_memory = virtual_memory.available
-
-config = Config()
-config.available_memory = available_memory
+config = backend.Config()
+config.available_memory = psutil.virtual_memory().available
 
 def _optimize_centers(self, curves, consecutive_call=False):
     all_balls = self.compute_center_enclosing_balls(curves, consecutive_call)
@@ -28,7 +25,7 @@ def _optimize_centers(self, curves, consecutive_call=False):
             path = np.array([b[0] for b in center_balls])
         self[i] = Curve(path, "{} (optimized)".format(self[i].name))
 
-Clustering_Result.optimize_centers = _optimize_centers
+backend.Clustering_Result.optimize_centers = _optimize_centers
 
 def plot_curve(*curves, vertex_markings=True, savename=None, saveextension=None, return_fig=False, legend=True):
     import matplotlib.pyplot as plt
@@ -110,7 +107,7 @@ def plot_clustering(clustering_result, curves, vertex_markings=True, savename=No
     if not (isinstance(clustering_result, backend.Clustering_Result) and isinstance(curves, backend.Curves)):
         print("Check parameters!")
         return
-    if len(clustering_result.assignment) < 1:
+    if clustering_result.assignment is None:
         print("compute_assignment was not called! calling now")
         clustering_result.compute_assignment(curves)
     from mpl_toolkits.mplot3d import Axes3D

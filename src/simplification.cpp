@@ -22,7 +22,7 @@ Subcurve_Shortcut_Graph::Subcurve_Shortcut_Graph(const Curve &pcurve) : curve{co
     if (Config::verbosity > 1) py::print("SIMPL: computing shortcut graph");
     const curve_size_t complexity = curve.complexity();
     Curve segment(2, curve.front().dimensions());
-    auto distance = Frechet::Continuous::Distance();
+    Distance dist;
     
     for (curve_size_t i = 0; i < complexity - 1; ++i) {
         for (curve_size_t j = i + 1; j < complexity; ++j) {
@@ -34,8 +34,8 @@ Subcurve_Shortcut_Graph::Subcurve_Shortcut_Graph(const Curve &pcurve) : curve{co
             segment[0] = curve.front();
             segment[1] = curve.back();
             
-            distance = Frechet::Continuous::distance(curve, segment);
-            edges[i][j] = distance.value;
+            dist = distance(curve, segment);
+            edges[i][j] = dist.value;
             
             curve.reset_subcurve();
         }
@@ -116,19 +116,19 @@ Curve approximate_minimum_link_simplification(const Curve &pcurve, const distanc
     Curve simplification(curve.dimensions()), segment(2, curve.dimensions());
     simplification.push_back(curve.front());
     
-    distance_t distance = 0;
+    distance_t dist = 0;
     
     while (i < complexity - 1) {
         
         segment[0] = curve[i];
         j = 0;
-        distance = 0;
+        dist = 0;
         
         if (Config::verbosity > 1) py::print("ASIMPL: computing maximum length shortcut starting at ", i);
         
         if (Config::verbosity > 1) py::print("ASIMPL: exponential error search");
         
-        while (distance <= epsilon) {
+        while (dist <= epsilon) {
             ++j;
             
             if (i + std::pow(2, j) >= complexity) break;
@@ -137,7 +137,7 @@ Curve approximate_minimum_link_simplification(const Curve &pcurve, const distanc
             segment[1] = curve[i + std::pow(2, j)];
             curve.set_subcurve(i, i + std::pow(2, j));
             
-            distance = Frechet::Continuous::distance(curve, segment).value;
+            dist = distance(curve, segment).value;
         }
         
         low = std::pow(2, j - 1);
@@ -152,9 +152,9 @@ Curve approximate_minimum_link_simplification(const Curve &pcurve, const distanc
             segment[1] = curve[i + mid];
             curve.set_subcurve(i, i + mid);
             
-            distance = Frechet::Continuous::distance(curve, segment).value;
+            dist = distance(curve, segment).value;
                                     
-            if (distance > epsilon) high = mid - 1;
+            if (dist > epsilon) high = mid - 1;
             else low = mid;
         }
         
@@ -211,8 +211,97 @@ Curve approximate_minimum_error_simplification(const Curve &curve, const curve_s
     return simplification;
 }
 
-};
+}
 
-};
+}
 
-};
+}
+
+namespace Dynamic_Time_Warping {
+
+namespace Discrete {
+    
+namespace Simplification {
+    
+Curve approximate_minimum_error_simplification(const Curve &curve, const curve_size_t ell) {
+
+    const auto dist_f = [&](const curve_size_t i, const curve_size_t j, const Point x) {
+        distance_t result = 0;
+                        
+        for (curve_size_t k = i; k <= j; ++k) {
+            result += curve[k].dist(x);
+        }
+        
+        return result;
+    };
+    
+    const auto infty = std::numeric_limits<distance_t>::infinity();
+    const curve_size_t n = curve.size(), m = n - 1;
+    
+    std::vector<std::vector<distance_t>> d(n, std::vector<distance_t>(ell, infty));
+    std::vector<std::vector<Points>> c(n, std::vector<Points>(ell, Points(curve.dimensions())));
+    
+    
+    distance_t tdist, mindist;
+    curve_size_t minpoint, mip;
+    
+    // every prefix 0...i
+    for (curve_size_t i = 0; i < curve.size(); ++i) {
+        
+        mindist = infty;
+        
+        // point that best summarizes prefix
+        for (curve_size_t k = 0; k < curve.size(); ++k) {
+            tdist = dist_f(0, i, curve[k]);
+            
+            if (tdist < mindist) {
+                mindist = tdist;
+                minpoint = k;
+            }
+        }
+    
+        c[i][0].push_back(curve[minpoint]);
+        d[i][0] = mindist;
+    }
+        
+    // for every infix
+    for (curve_size_t i = 1; i < curve.size(); ++i) {
+        
+        // for every remaining simplification point
+        for (curve_size_t j = 1; j < ell; ++j) {
+            
+        mindist = infty;
+        
+            // check for best prefix
+            for (curve_size_t ip = 0; ip < i; ++ip) {
+                
+                // point that best summarizes prefix + infix
+                for (curve_size_t k = 0; k < curve.size(); ++k) {
+                    tdist = d[ip][j - 1] + dist_f(ip + 1, i, curve[k]);
+                    
+                    if (tdist < mindist) {
+                        mindist = tdist;
+                        minpoint = k;
+                        mip = ip;
+                    }
+                }
+                
+            }
+            
+            c[i][j] = c[mip][j - 1];
+            c[i][j].push_back(curve[minpoint]);
+            d[i][j] = mindist;
+                
+        }
+    }
+    
+    const curve_size_t min_ell = std::distance(d[m].begin(), std::min_element(d[m].begin(), d[m].end()));
+    return Curve(c[m][min_ell]);
+    
+}
+
+}
+    
+}
+    
+}

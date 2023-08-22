@@ -244,6 +244,7 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
     const auto simplify = [&](const curve_number_t i) {
         switch (distance_func) {
             case 0:
+                {
                 if (fast_simplification) {
                     if (Config::verbosity > 0) py::print("KL_CLUST: computing approximate vertex restricted minimum error simplification");
                     auto simplified_curve = Frechet::Continuous::Simplification::approximate_minimum_error_simplification(const_cast<Curve&>(in[i]), ell);
@@ -256,7 +257,13 @@ Clustering_Result kl_cluster(const curve_number_t num_centers, const curve_size_
                     simplified_curve.set_name("Simplification of " + in[i].get_name());
                     return simplified_curve;
                 }
-                break;
+                }
+            case 2:
+                {
+                auto simplified_curve = Dynamic_Time_Warping::Discrete::Simplification::approximate_minimum_error_simplification(in[i], ell);
+                simplified_curve.set_name("Simplification of " + in[i].get_name());
+                return simplified_curve;
+                }
             default:
                 return in[i];
         }
