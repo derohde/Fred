@@ -238,6 +238,8 @@ Curve approximate_minimum_error_simplification(const Curve &curve, const curve_s
     const auto infty = std::numeric_limits<distance_t>::infinity();
     const curve_size_t n = curve.size(), m = n - 1;
     
+    if (ell >= m) return curve;
+    
     std::vector<std::vector<distance_t>> d(n, std::vector<distance_t>(ell, infty));
     std::vector<std::vector<Points>> c(n, std::vector<Points>(ell, Points(curve.dimensions())));
     
