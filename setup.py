@@ -80,7 +80,7 @@ class CMakeBuild(build_ext):
 
 setup(
     name='Fred-Frechet',
-    version='1.14.4',
+    version='1.14.5',
     author='Dennis Rohde',
     author_email='dennis.rohde@tu-dortmund.de',
     description='A fast, scalable and light-weight C++ Fréchet and DTW distance library, exposed to python and focused on clustering of polygonal curves.',
@@ -90,7 +90,7 @@ setup(
     packages=setuptools.find_packages(),
     ext_package="Fred",
     ext_modules=[CMakeExtension('backend')],
-    install_requires=['cvxopt', 'matplotlib', 'scipy', 'psutil'],
+    install_requires=['cvxopt', 'matplotlib', 'scipy', 'psutil', 'cmake'],
     cmdclass=dict(build_ext=CMakeBuild),
     zip_safe=False,
 )

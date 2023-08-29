@@ -137,21 +137,29 @@ Has no effect when `fred.config.use_distance_matrix == False`.
 ### Requirements
 
 You have to have installed:
- - cmake
+ - C++ compiler
+ - CMake
  - git
- - openmp available (should be a part of your compiler)
+ - optional: openmp available (should be a part of your compiler)
  
-Thats it!
+That's it!
 
 #### Installing on Windows
 
-It's best to use the [Ubuntu subsystem](https://ubuntu.com/wsl), which is easy to install through powershell. Once you have this installed, use apt to install gcc, cmake and python. Afterwards you can follow the following procedure.
+It's best to use the [Ubuntu subsystem](https://ubuntu.com/wsl), which is easy to install through powershell. Once you have this installed, follow this procedure:
+```bash
+sudo apt update 
+sudo apt upgrade
+sudo apt install python3-pip cmake git gcc
+pip3 install --user fred-frechet
+```
 
 #### Installing on Mac
 
 Apple's clang does not really support openmp, which is now kind of an integral part of Fred. You can try to install libomp via homebrew, but the best way would be to get a virtual ubuntu running.
+Fred does install out of the box on Mac though, but without omp support.
 
-### Installation Procedure
+### Linux/Unix Installation Procedure
 
  - Variant 1: simply run `pip install Fred-Frechet`
  - Variant 2: clone repository and run `make` for installation into userdir

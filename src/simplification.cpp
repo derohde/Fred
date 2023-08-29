@@ -225,7 +225,7 @@ namespace Simplification {
     
 Curve approximate_minimum_error_simplification(const Curve &curve, const curve_size_t ell) {
 
-    const auto dist_f = [&](const curve_size_t i, const curve_size_t j, const Point x) {
+    const auto dist_f = [&](const curve_size_t i, const curve_size_t j, const Point &x) {
         distance_t result = 0;
                         
         for (curve_size_t k = i; k <= j; ++k) {
@@ -242,7 +242,6 @@ Curve approximate_minimum_error_simplification(const Curve &curve, const curve_s
     
     std::vector<std::vector<distance_t>> d(n, std::vector<distance_t>(ell, infty));
     std::vector<std::vector<Points>> c(n, std::vector<Points>(ell, Points(curve.dimensions())));
-    
     
     distance_t tdist, mindist;
     curve_size_t minpoint, mip;
